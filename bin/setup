@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+require "fileutils"
+require "rbconfig"
+require "securerandom"
+
+APP_ROOT = File.expand_path("..", __dir__)
+
+def system!(*args)
+  system(*args, exception: true)
+end
+
+FileUtils.chdir(APP_ROOT) do
+  unless File.exist?(".env")
+    template = File.read(".env.example")
+    File.write(".env", template.sub("replace-with-generated-local-password", SecureRandom.hex(32)))
+    puts "Created .env with a generated local database password."
+  end
+
+  puts "Installing Ruby dependencies..."
+  system(RbConfig.ruby, "-S", "bundle", "check") ||
+    system!(RbConfig.ruby, "-S", "bundle", "install")
+
+  puts "Installing JavaScript dependencies..."
+  system!(Gem.win_platform? ? "npm.cmd" : "npm", "ci")
+
+  puts "Starting PostgreSQL..."
+  system!("docker", "compose", "up", "-d", "--wait", "db")
+
+  puts "Preparing databases..."
+  system!(RbConfig.ruby, "bin/rails", "db:prepare")
+
+  puts "Building assets..."
+  system!(RbConfig.ruby, "bin/rails", "javascript:build", "tailwindcss:build")
+
+  puts "Setup complete. Start the application with: ruby bin/dev"
+end

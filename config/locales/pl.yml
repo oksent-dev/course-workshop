@@ -1,0 +1,16 @@
+pl:
+  app:
+    name: "Warsztat Kursów"
+    description: "Przestrzeń dla przemyślanych kursów i praktycznej nauki."
+  languages:
+    pl: "Polski"
+    en: "English"
+  navigation:
+    language: "Język"
+    skip_to_content: "Przejdź do treści"
+  home:
+    eyebrow: "Zrób miejsce na naukę"
+    title: "Buduj zrozumienie. Lekcja po lekcji."
+    description: "Poznawaj idee, analizuj przykłady i wykorzystuj nową wiedzę w praktyce."
+    library_title: "Twoja biblioteka kursów"
+    library_description: "Tutaj pojawią się Twoje kursy."

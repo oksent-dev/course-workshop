@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -e
+
+if [ "${1}" = "ruby" ] && [ "${2}" = "bin/rails" ] && [ "${3}" = "server" ]; then
+  ruby bin/rails db:prepare
+fi
+
+exec "$@"

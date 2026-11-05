@@ -1,0 +1,10 @@
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.ico binary
+*.woff2 binary
+db/schema.rb linguist-generated
+db/*_schema.rb linguist-generated
+vendor/* linguist-vendored

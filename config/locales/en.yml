@@ -1,0 +1,16 @@
+en:
+  app:
+    name: "Course Workshop"
+    description: "A workspace for thoughtful courses and practical learning."
+  languages:
+    pl: "Polski"
+    en: "English"
+  navigation:
+    language: "Language"
+    skip_to_content: "Skip to content"
+  home:
+    eyebrow: "Make room for learning"
+    title: "Build understanding. One lesson at a time."
+    description: "Explore ideas, work through examples, and turn new knowledge into practice."
+    library_title: "Your course library"
+    library_description: "Your courses will appear here."

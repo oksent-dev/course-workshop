@@ -1,0 +1,7 @@
+#!/usr/bin/env ruby
+require "rbconfig"
+
+Dir.chdir(File.expand_path("..", __dir__)) do
+  npm = Gem.win_platform? ? "npm.cmd" : "npm"
+  exec npm, "run", "dev"
+end

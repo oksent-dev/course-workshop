@@ -1,0 +1,27 @@
+{
+  "name": "course-workshop",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "engines": {
+    "node": ">=24 <25",
+    "npm": ">=11 <12"
+  },
+  "scripts": {
+    "build": "node esbuild.config.mjs",
+    "build:css": "ruby bin/rails tailwindcss:build",
+    "dev": "concurrently --kill-others --names web,js,css \"ruby bin/rails server -b 127.0.0.1\" \"npm run build -- --watch\" \"ruby bin/rails tailwindcss:watch\""
+  },
+  "dependencies": {
+    "@hotwired/stimulus": "3.2.2",
+    "@hotwired/turbo-rails": "8.0.23",
+    "chart.js": "4.6.1",
+    "katex": "0.19.1",
+    "mermaid": "12.3.0"
+  },
+  "devDependencies": {
+    "concurrently": "9.2.5",
+    "daisyui": "5.7.50",
+    "esbuild": "0.28.2"
+  }
+}

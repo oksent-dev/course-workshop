@@ -1,0 +1,33 @@
+default: &default
+  adapter: postgresql
+  encoding: unicode
+  host: <%= ENV.fetch("POSTGRES_HOST", "127.0.0.1") %>
+  port: <%= ENV.fetch("POSTGRES_PORT", 5432) %>
+  username: <%= ENV.fetch("POSTGRES_USER", "course_workshop") %>
+  password: <%= ENV["POSTGRES_PASSWORD"] %>
+  max_connections: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
+
+development:
+  <<: *default
+  database: course_workshop_development
+
+test:
+  <<: *default
+  database: course_workshop_test
+
+production:
+  primary: &primary_production
+    <<: *default
+    database: course_workshop_production
+  cache:
+    <<: *primary_production
+    database: course_workshop_production_cache
+    migrations_paths: db/cache_migrate
+  queue:
+    <<: *primary_production
+    database: course_workshop_production_queue
+    migrations_paths: db/queue_migrate
+  cable:
+    <<: *primary_production
+    database: course_workshop_production_cable
+    migrations_paths: db/cable_migrate

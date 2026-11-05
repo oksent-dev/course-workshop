@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="<%= I18n.locale %>">
+  <head>
+    <title><%= content_for(:title) || t("app.name") %></title>
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <meta name="description" content="<%= t("app.description") %>">
+    <%= csrf_meta_tags %>
+    <%= csp_meta_tag %>
+    <%= yield :head %>
+    <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
+    <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
+  </head>
+  <body class="min-h-screen bg-stone-50 font-sans text-stone-900 antialiased">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-10 focus:bg-white focus:p-4">
+      <%= t("navigation.skip_to_content") %>
+    </a>
+    <header class="border-b border-stone-200 bg-white">
+      <div class="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-5">
+        <%= link_to t("app.name"), localized_root_path, class: "text-lg font-semibold tracking-tight" %>
+        <nav aria-label="<%= t("navigation.language") %>" class="flex items-center gap-1 text-sm">
+          <% I18n.available_locales.each do |locale| %>
+            <% current = locale == I18n.locale %>
+            <%= link_to t("languages.#{locale}"), localized_root_path(locale: locale),
+                lang: locale, hreflang: locale,
+                aria: { current: current ? "page" : nil },
+                class: class_names("btn btn-sm", current ? "btn-neutral" : "btn-ghost") %>
+          <% end %>
+        </nav>
+      </div>
+    </header>
+    <main id="main-content" class="mx-auto max-w-5xl px-6 py-16 sm:py-24">
+      <%= yield %>
+    </main>
+  </body>
+</html>
