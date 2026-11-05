@@ -1,0 +1,32 @@
+category: Statystyka
+course:
+  slug: statystyka-na-co-dzien
+  language: pl
+  title: Statystyka na co dzień
+  description: Na przykładzie pięciu porannych dojazdów nauczysz się zbierać porównywalne pomiary, obliczać średnią i medianę oraz wybierać liczbę, która odpowiada na Twoje pytanie.
+lessons:
+  - title: Pięć poranków
+    body: |-
+      Ile trwa Twój zwykły dojazd? Zanim zaczniesz liczyć, ustal, co mierzysz. Przez pięć kolejnych dni włączasz stoper przy wyjściu z domu i zatrzymujesz go przy wejściu do biblioteki. Zapisujesz czas w minutach, także wtedy, gdy autobus się spóźnia.
+
+      Od poniedziałku do piątku zapisujesz kolejno: 8, 4, 12, 6 i 10 minut. Każda liczba opisuje jeden przejazd. Po uporządkowaniu od najkrótszego do najdłuższego otrzymujesz 4, 6, 8, 10 i 12 minut. W takim zapisie łatwo wskazać środek, ale znika informacja o dniach tygodnia. Zachowaj więc również pierwotny zapis.
+
+      Zastanów się, co by się zmieniło, gdyby w środę stoper ruszył dopiero na przystanku. Taki pomiar pomija drogę z domu. Oznacz go w notatkach, zanim użyjesz go do porównania z pozostałymi dniami.
+  - title: Średnia i mediana
+    body: |-
+      Pięć dojazdów trwało 4, 6, 8, 10 i 12 minut. Suma to 40 minut. Jeśli podzielisz ją po równo między pięć przejazdów, na każdy przypadnie 8 minut. To średnia arytmetyczna.
+
+      Ustaw te same czasy od najmniejszego do największego. Środkowy, trzeci pomiar to 8 minut. To mediana. Gdy liczba pomiarów jest parzysta, weź średnią dwóch środkowych wartości.
+
+      Teraz wyobraź sobie korek: zamiast 12 minut najdłuższy przejazd trwał 32 minuty. Przelicz obie miary, zanim przeczytasz wynik.
+
+      Suma wzrosła do 60 minut, więc średnia wynosi 12. W szeregu 4, 6, 8, 10, 32 środkową pozycję nadal zajmuje 8. Jeden korek przesunął średnią o 4 minuty, choć pozostałe cztery poranki wyglądały tak samo.
+  - title: Dobierz miarę do pytania
+    body: |-
+      W kolejnym tygodniu masz pięć wyników: 6, 7, 7, 8 i 32 minuty. Znajomy pyta, ile zwykle zajmuje droga. Którą liczbę mu podasz?
+
+      Mediana to 7 minut. Opisuje środek obserwacji i dobrze oddaje ten tydzień, w którym cztery z pięciu dojazdów trwały od 6 do 8 minut. Jeśli zamiast tego rozliczasz czas poświęcony na dojazdy, dodaj wszystkie wyniki: wyszło 60 minut, czyli średnio 12 minut dziennie. Korek też kosztował Cię czas.
+
+      A ile minut zaplanować, żeby zdążyć na ważne spotkanie? Ani 7, ani 12 nie daje gwarancji punktualności. Najdłuższy zaobserwowany dojazd trwał 32 minuty, a pięć obserwacji to za mało, by obiecać, że dłuższy się nie zdarzy.
+
+      Weź teraz pięć własnych pomiarów. Policz średnią i medianę, a potem dopisz do każdej jedno pytanie, na które pomaga odpowiedzieć.

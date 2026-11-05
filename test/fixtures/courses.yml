@@ -1,0 +1,13 @@
+listening:
+  category: music
+  slug: listening
+  language: en
+  title: Listening closely
+  description: Listen for pitch and rhythm.
+
+composition:
+  category: music
+  slug: composition
+  language: en
+  title: Writing a melody
+  description: Arrange sounds into a melody.

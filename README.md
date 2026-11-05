@@ -4,7 +4,7 @@ A workspace for creating and studying structured courses, with a Polish and Engl
 
 ## Status
 
-The application foundation is in place: Rails, PostgreSQL, localized navigation, asset builds, local file storage, tests, and CI. Course management, lesson rendering, progress tracking, and the Codex integration are planned; they are not implemented yet.
+The library groups courses by category. Each course has an outline and a reader with previous and next lesson links. A three-lesson Polish course on everyday statistics is included.
 
 ## Requirements
 
@@ -24,9 +24,11 @@ ruby bin/setup
 ruby bin/dev
 ```
 
-Setup installs dependencies, creates a private `.env` with a generated database password, starts PostgreSQL, prepares the development and test databases, and builds assets. Existing `.env` values are preserved. Review `.env.example` for available settings.
+Setup installs dependencies, creates a private `.env` with a generated database password, starts PostgreSQL, prepares the databases, loads the example course into development, and builds assets. Existing `.env` values are preserved. Review `.env.example` for available settings.
 
 Open [http://localhost:3000](http://localhost:3000). The application redirects to `/pl`; English is available at `/en`.
+
+Open **Statystyka na co dzień** in the library, then select the first lesson from the course outline. Follow the navigation to the final lesson or jump to a title in the outline. Switching the interface to English keeps the current lesson open and the original Polish text visible.
 
 The development command runs Rails, the JavaScript watcher, and the Tailwind watcher. Stop them with Ctrl+C. If PowerShell does not find Ruby, reopen the terminal after installing RubyInstaller.
 
@@ -40,6 +42,8 @@ docker compose stop db
 ```
 
 Database files live in the `postgres_data` named volume. Active Storage uses `storage/` locally. Both are private runtime data and are excluded from Git. Removing the database volume destroys its contents; changing the password in `.env` does not rotate the password in an existing PostgreSQL volume.
+
+For an existing checkout, run `ruby bin/rails db:prepare db:seed` to migrate the databases and refresh the example in development. The [seed material](db/seeds/everyday-statistics.yml) supplies the course slug and the lessons in reading order. Re-running the seed updates those records in place and preserves their links.
 
 Image variants use libvips, which must be available if transformations are used. Uploads and local file storage do not require image transformation.
 

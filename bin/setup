@@ -26,8 +26,8 @@ FileUtils.chdir(APP_ROOT) do
   puts "Starting PostgreSQL..."
   system!("docker", "compose", "up", "-d", "--wait", "db")
 
-  puts "Preparing databases..."
-  system!(RbConfig.ruby, "bin/rails", "db:prepare")
+  puts "Preparing databases and loading the example course..."
+  system!(RbConfig.ruby, "bin/rails", "db:prepare", "db:seed")
 
   puts "Building assets..."
   system!(RbConfig.ruby, "bin/rails", "javascript:build", "tailwindcss:build")

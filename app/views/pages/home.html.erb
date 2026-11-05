@@ -2,14 +2,25 @@
   <%= t("home.library_title") %>
 </h1>
 
-<section aria-labelledby="empty-library-heading" class="card mt-8 bg-base-200">
-  <div class="card-body grid items-center gap-6 p-6 sm:grid-cols-[1fr_auto] sm:p-12">
-    <div>
-      <h2 id="empty-library-heading" class="font-serif text-2xl leading-snug font-semibold">
-        <%= t("home.empty_title") %>
-      </h2>
-      <p class="mt-2 max-w-prose font-serif text-lg leading-relaxed text-muted-ink"><%= t("home.library_description") %></p>
+<% if @categories.any? %>
+  <% @categories.each do |category| %>
+    <section aria-labelledby="<%= dom_id(category) %>" class="mt-8">
+      <h2 id="<%= dom_id(category) %>" class="mb-4 font-serif text-2xl font-semibold"><%= category.name %></h2>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <%= render category.courses %>
+      </div>
+    </section>
+  <% end %>
+<% else %>
+  <section aria-labelledby="empty-library-heading" class="card mt-8 bg-base-200">
+    <div class="card-body grid items-center gap-6 p-6 sm:grid-cols-[1fr_auto] sm:p-12">
+      <div>
+        <h2 id="empty-library-heading" class="font-serif text-2xl leading-snug font-semibold">
+          <%= t("home.empty_title") %>
+        </h2>
+        <p class="mt-2 max-w-prose font-serif text-lg leading-relaxed text-muted-ink"><%= t("home.library_description") %></p>
+      </div>
+      <%= render "bookshelf" %>
     </div>
-    <%= render "bookshelf" %>
-  </div>
-</section>
+  </section>
+<% end %>

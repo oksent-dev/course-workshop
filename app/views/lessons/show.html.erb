@@ -1,0 +1,38 @@
+<% content_for :title, "#{@lesson.title} · #{@course.title}" %>
+<nav aria-label="<%= t("reader.location") %>" class="flex flex-wrap items-baseline gap-x-2 text-sm">
+  <%= link_to t("home.library_title"), localized_root_path, class: "inline-flex min-h-11 items-center text-primary underline underline-offset-4" %>
+  <span aria-hidden="true">/</span>
+  <%= link_to @course.title, course_path(@course), lang: @course.language, class: "inline-flex min-h-11 max-w-full items-center wrap-anywhere text-primary underline underline-offset-4" %>
+</nav>
+
+<div class="mt-8 grid items-start gap-6 md:grid-cols-[minmax(12rem,1fr)_minmax(0,2.6fr)] md:gap-8">
+  <aside class="hidden rounded-box bg-base-200 p-4 md:block" aria-label="<%= t("courses.outline") %>">
+    <h2 class="px-3 text-base font-semibold"><%= t("courses.outline") %></h2>
+    <%= render "outline", course: @course, lessons: @lessons, current_lesson: @lesson %>
+  </aside>
+  <details class="rounded-box bg-base-200 p-4 md:hidden">
+    <summary class="min-h-11 cursor-pointer content-center font-semibold"><%= t("courses.outline") %></summary>
+    <%= render "outline", course: @course, lessons: @lessons, current_lesson: @lesson %>
+  </details>
+
+  <article class="min-w-0 max-w-[65ch]">
+    <p class="text-sm font-medium text-muted-ink"><%= t("reader.position", number: @lesson_number, total: @lessons.size) %></p>
+    <h1 lang="<%= @course.language %>" class="mt-2 font-serif text-[clamp(2rem,5vw,3rem)] leading-[1.15] font-medium tracking-tight wrap-anywhere"><%= @lesson.title %></h1>
+    <div lang="<%= @course.language %>" class="mt-6 space-y-4 font-serif text-xl leading-relaxed wrap-anywhere">
+      <% @lesson.body.split(/\r?\n\s*\n/).each do |paragraph| %>
+        <p><%= paragraph %></p>
+      <% end %>
+    </div>
+
+    <nav aria-label="<%= t("reader.lesson_navigation") %>" class="mt-8 flex flex-wrap gap-3 border-t border-base-300 pt-6">
+      <% if @previous_lesson %>
+        <%= link_to t("reader.previous"), course_lesson_path(@course, @previous_lesson), rel: "prev", class: "btn btn-ghost min-h-11" %>
+      <% end %>
+      <% if @next_lesson %>
+        <%= link_to t("reader.next"), course_lesson_path(@course, @next_lesson), rel: "next", class: "btn btn-primary min-h-11" %>
+      <% else %>
+        <%= link_to t("reader.back_to_course"), course_path(@course), class: "btn btn-primary min-h-11" %>
+      <% end %>
+    </nav>
+  </article>
+</div>

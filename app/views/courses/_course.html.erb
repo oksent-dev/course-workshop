@@ -1,0 +1,9 @@
+<article class="card min-w-0 border border-base-300 bg-base-200 sm:only:col-span-2">
+  <div class="card-body gap-3 p-6 sm:p-8">
+    <h3 class="font-serif text-2xl leading-tight font-semibold">
+      <%= link_to course.title, course_path(course), lang: course.language, class: "inline-flex min-h-11 max-w-full items-center rounded-field wrap-anywhere text-primary underline decoration-1 underline-offset-4 hover:decoration-2" %>
+    </h3>
+    <p lang="<%= course.language %>" class="max-w-prose font-serif text-lg leading-relaxed"><%= course.description %></p>
+    <p class="text-sm text-muted-ink"><%= course_language_label(course) %></p>
+  </div>
+</article>
