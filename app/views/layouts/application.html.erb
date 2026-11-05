@@ -10,25 +10,30 @@
     <%= stylesheet_link_tag "tailwind", "data-turbo-track": "reload" %>
     <%= javascript_include_tag "application", "data-turbo-track": "reload", type: "module" %>
   </head>
-  <body class="min-h-screen bg-stone-50 font-sans text-stone-900 antialiased">
-    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:z-10 focus:bg-white focus:p-4">
+  <body class="min-h-screen bg-base-100 font-sans text-base-content antialiased">
+    <a href="#main-content" class="sr-only focus:not-sr-only focus:absolute focus:start-4 focus:top-4 focus:z-10 focus:rounded-field focus:bg-base-100 focus:p-3">
       <%= t("navigation.skip_to_content") %>
     </a>
-    <header class="border-b border-stone-200 bg-white">
-      <div class="mx-auto flex max-w-5xl items-center justify-between gap-6 px-6 py-5">
-        <%= link_to t("app.name"), localized_root_path, class: "text-lg font-semibold tracking-tight" %>
-        <nav aria-label="<%= t("navigation.language") %>" class="flex items-center gap-1 text-sm">
+    <header class="border-b border-base-300">
+      <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-4 sm:px-8">
+        <%= link_to localized_root_path, class: "inline-flex min-h-11 items-center gap-2 rounded-field font-medium" do %>
+          <svg aria-hidden="true" viewBox="0 0 32 32" class="size-8 rounded-field bg-secondary p-1.5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+            <path d="M3 6c5-1 9 0 13 3 4-3 8-4 13-3v20c-5-1-9 0-13 2-4-2-8-3-13-2zM16 9v19"/>
+          </svg>
+          <%= t("app.name") %>
+        <% end %>
+        <nav aria-label="<%= t("navigation.language") %>" class="flex items-center gap-1">
           <% I18n.available_locales.each do |locale| %>
             <% current = locale == I18n.locale %>
             <%= link_to t("languages.#{locale}"), localized_root_path(locale: locale),
                 lang: locale, hreflang: locale,
                 aria: { current: current ? "page" : nil },
-                class: class_names("btn btn-sm", current ? "btn-neutral" : "btn-ghost") %>
+                class: class_names("btn min-h-11 text-base font-medium", current ? "btn-primary underline underline-offset-4" : "btn-ghost") %>
           <% end %>
         </nav>
       </div>
     </header>
-    <main id="main-content" class="mx-auto max-w-5xl px-6 py-16 sm:py-24">
+    <main id="main-content" tabindex="-1" class="mx-auto max-w-5xl px-4 py-12 sm:px-8">
       <%= yield %>
     </main>
   </body>

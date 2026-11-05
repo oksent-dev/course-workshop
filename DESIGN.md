@@ -2,7 +2,7 @@
 
 Course Workshop is a place to sit with a lesson. Give the reading column the most space, keep the course outline nearby, and place an exercise beside the idea it explains. Warm paper, sage accents, and rounded panels tie the library, reader, and lesson conversation together.
 
-This is the design specification. The starter application currently uses the daisyUI light theme. Apply these values when introducing the Reading Room theme in the [Tailwind entry point](app/assets/tailwind/application.css).
+The library and site navigation use `reading-room`, the default light daisyUI theme. Edit its semantic colors, control sizes, and corner radii in the [Tailwind entry point](app/assets/tailwind/application.css). That file also defines the Tailwind font families and the muted ink text utility.
 
 ## Color and surfaces
 
@@ -31,6 +31,8 @@ Keep most of the viewport paper-colored. Use the wash to group things the learne
 | Code and numerical output | System monospace | 15–16 px, line height 1.5 |
 
 Use relative units and support browser zoom. Keep paragraphs around 60–70 characters wide. Ship Polish glyphs with any bundled font and keep the fallback usable while fonts load. Use 4, 8, 12, 16, 24, 32, and 48 px as the spacing scale. Put more space between sections than between a heading and its paragraph. Use a 10 px radius on controls and about 16 px on panels. Group ordinary prose with headings and whitespace. Reserve shadows for layers such as an open dialog.
+
+Rails serves the [font files](app/assets/fonts) from the same origin as the application. The [font declarations](app/assets/tailwind/fonts.css) use Latin and Latin Extended subsets with `font-display: swap`. Spectral includes the regular, medium, and semibold weights. DM Sans uses a variable weight file per subset. The WOFF2 files come from Fontsource's `@fontsource/spectral` and `@fontsource-variable/dm-sans`, both version 5.3.0. Their licenses are included for [Spectral](docs/licenses/spectral.txt) and [DM Sans](docs/licenses/dm-sans.txt).
 
 ## Screens and components
 

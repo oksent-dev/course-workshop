@@ -9,8 +9,6 @@ en:
     language: "Language"
     skip_to_content: "Skip to content"
   home:
-    eyebrow: "Make room for learning"
-    title: "Build understanding. One lesson at a time."
-    description: "Explore ideas, work through examples, and turn new knowledge into practice."
     library_title: "Your course library"
-    library_description: "Your courses will appear here."
+    empty_title: "Your shelf is empty"
+    library_description: "Your courses will appear here, ready to open and read."
