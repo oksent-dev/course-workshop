@@ -24,13 +24,17 @@ The library links to `/:locale/courses/:slug`. The course page lists its lessons
 
 `LessonMarkdown` renders the current body with Commonmarker, resolves image references within the lesson, restricts link schemes, and sanitizes the HTML. The view styles semantic elements within `.lesson-content`; wide code and tables have their own scroll containers.
 
+`LessonBlock` validates the explicit `math`, `mermaid`, and `exercise` fence formats. Math and diagram components keep escaped source as a fallback and load browser renderers through Stimulus. KaTeX uses untrusted-input settings; Mermaid receives a limited flowchart syntax and its SVG is sanitized before insertion. Exercises render sanitized prompt/answer Markdown with a native disclosure. Special blocks do not recursively render inside exercises. See [learning blocks](learning-blocks.md) for the full contract.
+
+esbuild splits the renderer bundles into content-hashed chunks. Chunk and font filenames use Propshaft's `.digested` convention so the browser can resolve imports after production precompilation. Rails provides the fingerprinted renderer entry URLs; ordinary library navigation does not fetch these modules.
+
 `LessonImage` stores a unique key per lesson and alternative text, and owns one Active Storage file. `LessonImages::Import` validates local image contents and performs repeatable imports through a Rails task or the seed. Missing files produce a text fallback, including when a request fails in the browser. See [lesson content](lesson-content.md) for syntax, limits, and storage behavior.
 
 The [seed script](../db/seeds.rb) loads the prepared course in a transaction. It reuses the category name and course slug, and updates the demo lessons by their one-based position in the source file. Those positions identify the seeded lessons across runs. Append new lessons or edit the material at its existing position to preserve the meaning of saved links.
 
 ## Planned course features
 
-Upcoming features include exercises and learning progress. Math, diagrams, and supported interactive elements will extend the reader through dedicated components.
+Upcoming features include learning progress and additional interactive components.
 
 Generated content will be treated as input: HTML output must be sanitized, and interactive blocks must use validated data rather than arbitrary generated JavaScript.
 

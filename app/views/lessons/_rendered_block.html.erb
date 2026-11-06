@@ -1,0 +1,14 @@
+<figure class="lesson-block"
+  data-controller="lesson-block"
+  data-lesson-block-module-value="<%= asset_path(block.kind == "math" ? "lesson_math.js" : "lesson_diagram.js") %>"
+  data-lesson-block-error-value="<%= t("reader.blocks.render_error") %>"
+  data-lesson-block-loading-value="<%= t("reader.blocks.loading") %>">
+  <div class="lesson-scroll lesson-block-output" role="region" tabindex="0"
+    aria-label="<%= t("reader.blocks.#{block.kind}") %>" hidden data-lesson-block-target="output"></div>
+  <p class="lesson-block-status" role="status" data-lesson-block-target="status"><%= t("reader.blocks.javascript_required") %></p>
+  <pre class="lesson-scroll" tabindex="0" role="region" aria-label="<%= t("reader.code_sample") %>"
+    data-lesson-block-target="source"><code><%= block.source %></code></pre>
+  <% if block.description.present? %>
+    <figcaption class="lesson-image-caption"><%= block.description %></figcaption>
+  <% end %>
+</figure>

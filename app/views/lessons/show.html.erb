@@ -1,4 +1,7 @@
 <% content_for :title, "#{@lesson.title} · #{@course.title}" %>
+<% content_for :head do %>
+  <%= stylesheet_link_tag "lesson_math", "data-turbo-track": "dynamic" %>
+<% end %>
 <nav aria-label="<%= t("reader.location") %>" class="flex flex-wrap items-baseline gap-x-2 text-sm">
   <%= link_to t("home.library_title"), localized_root_path, class: "inline-flex min-h-11 items-center text-primary underline underline-offset-4" %>
   <span aria-hidden="true">/</span>

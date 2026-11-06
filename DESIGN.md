@@ -48,6 +48,8 @@ Build with semantic HTML in ERB. Use daisyUI primitives such as `btn`, `card`, `
 
 Lesson Markdown uses the scoped `.lesson-content` rules in the Tailwind entry point. Section headings, lists, quotations, and code follow the same reading rhythm. Keep code and table overflow inside a keyboard-accessible `.lesson-scroll` region. Render a standalone image as a figure with its caption; a failed image keeps a readable description. See [lesson content](docs/lesson-content.md) for the supported source format.
 
+Display formulas and flow diagrams in quiet, bordered canvas panels. Preserve their natural size and let the panel scroll when necessary. Mermaid uses the same paper, sage, ink, and UI typeface as the reader; node corners are rounded. Keep a visible text description beneath a diagram. Practice exercises use the sage wash, with a clear prompt and a keyboard-accessible answer disclosure. Validation and rendering failures show a text notice and escaped source without interrupting nearby material. Source formats and limits are documented in [learning blocks](docs/learning-blocks.md).
+
 ## Review a screen
 
 - Check the primary action and heading at a narrow phone width (320 px) and a desktop width. At 200% zoom, text and controls must remain reachable. Confine overflow from a wide code sample or table to that element.

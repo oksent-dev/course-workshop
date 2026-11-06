@@ -2,17 +2,21 @@ require "uri"
 
 class LessonMarkdown
   TAGS = %w[p br h2 h3 h4 h5 h6 ul ol li strong em del blockquote pre code a hr
-    table thead tbody tr th td div span figure figcaption img].freeze
+    table thead tbody tr th td div span figure figcaption img section details summary].freeze
   ATTRIBUTES = %w[href title class start colspan rowspan scope alt src width height loading decoding
-    tabindex role aria-label data-controller data-action data-lesson-image-target].freeze
+    tabindex role aria-label hidden data-controller data-action data-lesson-image-target
+    data-lesson-block-module-value data-lesson-block-error-value data-lesson-block-loading-value
+    data-lesson-block-target].freeze
 
-  def initialize(lesson, view:)
+  def initialize(lesson, view:, source: lesson.body, blocks: true)
     @lesson = lesson
     @view = view
+    @source = source
+    @blocks = blocks
   end
 
   def render
-    html = Commonmarker.to_html(@lesson.body,
+    html = Commonmarker.to_html(@source,
       options: {
         render: { unsafe: false, escape: true, hardbreaks: false },
         extension: { header_ids: nil, tasklist: false, shortcodes: false }
@@ -23,11 +27,33 @@ class LessonMarkdown
     fragment.css("h1").each { |heading| heading.name = "h2" }
     fragment.css("a").each { |link| link.remove_attribute("href") unless allowed_link?(link["href"]) }
     render_images(fragment)
+    render_blocks(fragment) if @blocks
     wrap_scrollable_blocks(fragment)
     @view.sanitize(fragment.to_html, tags: TAGS, attributes: ATTRIBUTES)
   end
 
   private
+
+  def render_blocks(fragment)
+    count = 0
+    fragment.css("pre[lang]").each do |node|
+      kind = node["lang"]
+      next unless LessonBlock::KINDS.include?(kind)
+      count += 1
+      block = LessonBlock.new(kind, node.text)
+      markup = if count > 32 || !block.valid?
+        @view.render("lessons/invalid_block", source: node.text)
+      elsif kind == "exercise"
+        prompt, answer = block.data.values_at("prompt", "answer").map do |source|
+          self.class.new(@lesson, view: @view, source: source, blocks: false).render
+        end
+        @view.render("lessons/exercise", prompt: prompt, answer: answer)
+      else
+        @view.render("lessons/rendered_block", block: block)
+      end
+      node.replace(Nokogiri::HTML5.fragment(markup))
+    end
+  end
 
   def allowed_link?(url)
     return false if url.blank? || url.match?(/[\x00-\x20\\]/)
@@ -57,6 +83,7 @@ class LessonMarkdown
 
   def wrap_scrollable_blocks(fragment)
     fragment.css("pre, table").each do |node|
+      next if node.ancestors.any? { |parent| parent["data-controller"] == "lesson-block" || parent["class"]&.split&.include?("lesson-scroll") }
       label = @view.t("reader.#{node.name == "pre" ? "code_sample" : "data_table"}")
       wrapper = Nokogiri::XML::Node.new("div", fragment.document)
       wrapper["class"] = "lesson-scroll"

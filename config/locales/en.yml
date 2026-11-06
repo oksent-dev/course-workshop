@@ -51,6 +51,16 @@ en:
     start: "Start the first lesson"
     no_lessons: "This course has no lessons yet."
   reader:
+    blocks:
+      math: "Mathematical expression"
+      mermaid: "Flow diagram"
+      exercise: "Try it yourself"
+      reveal_answer: "Compare your answer"
+      view_source: "View source"
+      invalid: "This learning block has an unsupported format. The rest of the lesson is available."
+      render_error: "This block could not be displayed. Its source is shown below."
+      loading: "Preparing the learning material…"
+      javascript_required: "Enable JavaScript to display this block. Its source is shown below."
     image_unavailable: "Image unavailable: %{description}"
     image_without_description: "Illustration"
     code_sample: "Code sample"

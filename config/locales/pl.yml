@@ -51,6 +51,16 @@ pl:
     start: "Zacznij od pierwszej lekcji"
     no_lessons: "W tym kursie nie ma jeszcze lekcji."
   reader:
+    blocks:
+      math: "Wzór matematyczny"
+      mermaid: "Schemat przepływu"
+      exercise: "Sprawdź się"
+      reveal_answer: "Porównaj swoją odpowiedź"
+      view_source: "Zobacz źródło"
+      invalid: "Ten blok materiału ma nieobsługiwany format. Pozostała treść lekcji jest dostępna."
+      render_error: "Nie udało się wyświetlić tego bloku. Poniżej znajdziesz jego źródło."
+      loading: "Przygotowywanie materiału…"
+      javascript_required: "Włącz JavaScript, aby wyświetlić ten blok. Poniżej znajdziesz jego źródło."
     image_unavailable: "Obraz niedostępny: %{description}"
     image_without_description: "Ilustracja"
     code_sample: "Przykład kodu"

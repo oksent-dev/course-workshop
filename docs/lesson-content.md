@@ -30,7 +30,7 @@ puts times.sum.fdiv(times.length)
 [Reference](https://example.com/guide)
 ````
 
-Code is displayed as text and never executed. Code blocks and wide tables scroll inside labeled regions that can receive keyboard focus. Syntax highlighting, math, diagrams, and executable interactive blocks are not part of this renderer.
+Ordinary code is displayed as text and never executed. Code blocks and wide tables scroll inside labeled regions that can receive keyboard focus. The dedicated `math`, `mermaid`, and `exercise` fences render validated learning components; see [learning blocks](learning-blocks.md) for their formats and limits. Syntax highlighting and executable user-supplied code are not supported.
 
 Links allow HTTP, HTTPS, root-relative paths beginning with one slash, and fragment references. Unsupported URLs lose their link target while retaining the visible text. Raw HTML is displayed as text. Scripts, inline styles, event handlers, and arbitrary embedded media cannot enter the rendered document.
 

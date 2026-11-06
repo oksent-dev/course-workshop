@@ -48,7 +48,31 @@ lessons:
 
       Pięć dojazdów trwało 4, 6, 8, 10 i 12 minut. Suma to 40 minut. Jeśli podzielisz ją po równo między pięć przejazdów, na każdy przypadnie 8 minut. To średnia arytmetyczna.
 
+      We wzorze literą x oznaczamy pojedynczy pomiar, a literą n liczbę pomiarów. Symbol sumy mówi, aby dodać wszystkie wyniki:
+
+      ```math
+      \bar{x} = \frac{1}{n}\sum_{i=1}^{n}x_i = \frac{4+6+8+10+12}{5} = 8
+      ```
+
       Ustaw te same czasy od najmniejszego do największego. Środkowy, trzeci pomiar to 8 minut. To mediana. Gdy liczba pomiarów jest parzysta, weź średnią dwóch środkowych wartości.
+
+      ```mermaid
+      flowchart TD
+        accDescr: Średnia uwzględnia sumę wszystkich wyników. Mediana wymaga uporządkowania wyników i znalezienia środka.
+        data["Pięć pomiarów"]
+        sum["Dodaj wszystkie wyniki"]
+        divide["Podziel sumę przez pięć"]
+        mean["Średnia: 8 minut"]
+        sort["Uporządkuj wyniki"]
+        middle["Wybierz trzeci wynik"]
+        median["Mediana: 8 minut"]
+        data --> sum
+        sum --> divide
+        divide --> mean
+        data --> sort
+        sort --> middle
+        middle --> median
+      ```
 
       Możesz sprawdzić obliczenia w Ruby:
 
@@ -64,9 +88,14 @@ lessons:
 
       ## Co zmieni jeden korek?
 
-      Teraz wyobraź sobie korek: zamiast 12 minut najdłuższy przejazd trwał 32 minuty. Przelicz obie miary, zanim przeczytasz wynik.
+      Teraz wyobraź sobie korek: zamiast 12 minut najdłuższy przejazd trwał 32 minuty. Spróbuj przewidzieć, która miara się zmieni.
 
-      Suma wzrosła do 60 minut, więc średnia wynosi 12. W szeregu 4, 6, 8, 10, 32 środkową pozycję nadal zajmuje 8. Jeden korek przesunął średnią o 4 minuty, choć pozostałe cztery poranki wyglądały tak samo.
+      ```exercise
+      {
+        "prompt": "Dane po zmianie to **4, 6, 8, 10 i 32 minuty**.\n\n1. Oblicz średnią.\n2. Wskaż medianę.\n3. Wyjaśnij, dlaczego te miary dają teraz różne wyniki.\n\nZapisz własną odpowiedź, zanim odsłonisz rozwiązanie.",
+        "answer": "Suma wzrosła do 60 minut, więc średnia wynosi **12 minut**. W szeregu 4, 6, 8, 10, 32 środkową pozycję nadal zajmuje **8 minut** — to mediana.\n\nJeden korek przesunął średnią o 4 minuty, choć pozostałe cztery poranki wyglądały tak samo. Średnia zależy od każdej wartości, a mediana od położenia środka uporządkowanej listy."
+      }
+      ```
   - title: Dobierz miarę do pytania
     body: |-
       W kolejnym tygodniu masz pięć wyników: 6, 7, 7, 8 i 32 minuty. Znajomy pyta, ile zwykle zajmuje droga. Którą liczbę mu podasz?

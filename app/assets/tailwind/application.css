@@ -46,6 +46,73 @@
 }
 
 @layer components {
+  .lesson-block,
+  .lesson-exercise,
+  .lesson-block-error {
+    margin-block: 1.5rem;
+  }
+
+  .lesson-block-output { padding: 1rem; }
+  .lesson-block-output .katex-display { margin: 0; }
+  .lesson-block-output .katex { font-size: 1.1em; }
+  .lesson-block-output svg { display: block; margin-inline: auto; max-width: none; }
+  .lesson-block-output .node rect { rx: 10px; ry: 10px; }
+
+  .lesson-block-status,
+  .lesson-block-error {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.5;
+    color: var(--color-muted-ink);
+  }
+
+  .lesson-block-error {
+    padding: 1rem;
+    border: 1px solid var(--color-error-content);
+    border-radius: var(--radius-box);
+    color: var(--color-error-content);
+  }
+
+  .lesson-exercise {
+    padding: 1.5rem;
+    border-radius: var(--radius-box);
+    background: var(--color-secondary);
+  }
+
+  .lesson-content .lesson-exercise-title { margin-top: 0; }
+  .lesson-exercise-prompt { margin-top: 1rem; }
+  .lesson-exercise-prompt > * + *,
+  .lesson-exercise-solution > * + * { margin-top: 1rem; }
+
+  .lesson-exercise-answer {
+    margin-top: 1.5rem;
+    border-top: 1px solid var(--color-base-300);
+    padding-top: 0.75rem;
+  }
+
+  .lesson-exercise-answer summary,
+  .lesson-block-error summary {
+    min-height: 2.75rem;
+    align-content: center;
+    cursor: pointer;
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    font-weight: 600;
+  }
+
+  .lesson-exercise-solution { margin-top: 0.75rem; }
+
+  .lesson-diagram-sandbox {
+    position: absolute;
+    left: -10000px;
+    width: 1000px;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}
+
+
+@layer components {
   .lesson-content > * + * {
     margin-top: 1rem;
   }

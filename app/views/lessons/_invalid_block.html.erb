@@ -1,0 +1,7 @@
+<div class="lesson-block-error" role="note">
+  <p><%= t("reader.blocks.invalid") %></p>
+  <details>
+    <summary><%= t("reader.blocks.view_source") %></summary>
+    <pre><code><%= source.truncate(1_000) %></code></pre>
+  </details>
+</div>

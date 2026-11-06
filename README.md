@@ -8,6 +8,8 @@ The library groups courses by category. Each course has an outline and a reader 
 
 Lessons render Markdown with headings, lists, code, links, and tables. Local images use Active Storage, with descriptions and optional captions. The example course includes a prepared chart. See [lesson content and image import](docs/lesson-content.md) for authoring instructions.
 
+The statistics lesson also includes a KaTeX formula, a Mermaid flow diagram, and a practice exercise with a revealable answer. See [learning blocks](docs/learning-blocks.md) for the supported formats.
+
 An optional local tutor uses GPT-6.1 Sol through Codex App Server. Ask questions directly in a lesson and continue the conversation there. See [local AI setup and verification](docs/local-ai.md); AI is disabled by default and unavailable in production.
 
 ## Requirements
@@ -75,7 +77,7 @@ Tests use a separate `course_workshop_test` database. Browser tests run headless
 - Active Storage with the local disk adapter
 - Solid Queue, Solid Cache, and Solid Cable for production infrastructure
 
-Commonmarker renders lesson Markdown. KaTeX, Mermaid, Chart.js, and the Ruby MCP SDK are installed for upcoming math, diagram, interactive chart, and agent features; those features are not exposed yet.
+Commonmarker renders lesson Markdown, KaTeX renders math, and Mermaid with DOMPurify renders restricted flow diagrams. Chart.js and the Ruby MCP SDK are installed for upcoming interactive chart and agent features.
 
 ## Configuration and deployment
 

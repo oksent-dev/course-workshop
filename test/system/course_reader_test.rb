@@ -16,6 +16,7 @@ class CourseReaderTest < ApplicationSystemTestCase
     assert_selector "html[lang=en]"
     assert_selector "h1[lang=pl]", text: "Średnia i mediana"
     assert_text "Lesson 2 of 3"
+    find("summary", text: "Compare your answer").click
     assert_text "Suma wzrosła do 60 minut"
     click_link "Next lesson"
     assert_selector "h1", text: "Dobierz miarę do pytania"
