@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_100000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_120000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -89,6 +89,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_100000) do
     t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "exchanges_valid_status"
   end
 
+  create_table "learner_profiles", force: :cascade do |t|
+    t.string "key", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["key"], name: "index_learner_profiles_on_key", unique: true
+  end
+
   create_table "lesson_images", force: :cascade do |t|
     t.bigint "lesson_id", null: false
     t.string "key", null: false
@@ -96,6 +103,17 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_100000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["lesson_id", "key"], name: "index_lesson_images_on_lesson_id_and_key", unique: true
+  end
+
+  create_table "lesson_progresses", force: :cascade do |t|
+    t.bigint "learner_profile_id", null: false
+    t.bigint "lesson_id", null: false
+    t.datetime "last_opened_at", null: false
+    t.datetime "completed_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["learner_profile_id", "lesson_id"], name: "index_lesson_progresses_on_learner_profile_id_and_lesson_id", unique: true
+    t.index ["lesson_id"], name: "index_lesson_progresses_on_lesson_id"
   end
 
   create_table "lessons", force: :cascade do |t|
@@ -115,5 +133,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_100000) do
   add_foreign_key "courses", "categories"
   add_foreign_key "exchanges", "conversations"
   add_foreign_key "lesson_images", "lessons"
+  add_foreign_key "lesson_progresses", "learner_profiles"
+  add_foreign_key "lesson_progresses", "lessons"
   add_foreign_key "lessons", "courses"
 end

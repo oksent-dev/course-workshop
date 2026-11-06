@@ -20,7 +20,7 @@ The language switcher generates the current route with the chosen locale. Catego
 | Course | Category, unique URL slug, title, description, content language | The library sorts courses by title within a category. The slug identifies the course independently of the interface locale. |
 | Lesson | Parent course, title, body, position | A foreign key requires a course. PostgreSQL requires a positive position and enforces uniqueness of the course and position pair. |
 
-The library links to `/:locale/courses/:slug`. The course page lists its lessons and links to the first one. The reader at `/:locale/courses/:course_slug/lessons/:id` looks up the lesson through that course. An unrelated lesson ID returns 404. The outline loads lesson headings in position order and supplies adjacent links even when the stored positions have gaps.
+The library links to `/:locale/courses/:slug` and offers a direct start, resume, or review action. The course page lists its lessons and offers the same action. The reader at `/:locale/courses/:course_slug/lessons/:id` looks up the lesson through that course. An unrelated lesson ID returns 404. The outline loads lesson headings in position order and supplies adjacent links even when the stored positions have gaps.
 
 `LessonMarkdown` renders the current body with Commonmarker, resolves image references within the lesson, restricts link schemes, and sanitizes the HTML. The view styles semantic elements within `.lesson-content`; wide code and tables have their own scroll containers.
 
@@ -32,9 +32,15 @@ esbuild splits the renderer bundles into content-hashed chunks. Chunk and font f
 
 The [seed script](../db/seeds.rb) loads the prepared course in a transaction. It reuses the category name and course slug, and updates the demo lessons by their one-based position in the source file. Those positions identify the seeded lessons across runs. Append new lessons or edit the material at its existing position to preserve the meaning of saved links.
 
+## Learning progress
+
+`LearnerContext` resolves a shared local profile for loopback development requests or an anonymous browser profile from an encrypted persistent cookie. Production always uses browser profiles. `LearnerProfile` owns `LessonProgress` rows, unique per profile and lesson, with separate visit and completion timestamps.
+
+`CourseProgress` calculates counts and resume targets from current lessons. Library queries batch outlines and progress across courses. `CompletionsController` scopes the lesson through its course and writes only to the current profile. Standard Rails forms provide CSRF protection and work with or without Turbo. Personalized responses disable caching; prefetch and HEAD requests do not record visits. See [learning progress](learning-progress.md) for behavior and persistence boundaries.
+
 ## Planned course features
 
-Upcoming features include learning progress and additional interactive components.
+Upcoming features include course drafting through MCP, generation, and additional interactive components.
 
 Generated content will be treated as input: HTML output must be sanitized, and interactive blocks must use validated data rather than arbitrary generated JavaScript.
 

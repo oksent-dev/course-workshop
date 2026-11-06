@@ -50,6 +50,8 @@ Lesson Markdown uses the scoped `.lesson-content` rules in the Tailwind entry po
 
 Display formulas and flow diagrams in quiet, bordered canvas panels. Preserve their natural size and let the panel scroll when necessary. Mermaid uses the same paper, sage, ink, and UI typeface as the reader; node corners are rounded. Keep a visible text description beneath a diagram. Practice exercises use the sage wash, with a clear prompt and a keyboard-accessible answer disclosure. Validation and rendering failures show a text notice and escaped source without interrupting nearby material. Source formats and limits are documented in [learning blocks](docs/learning-blocks.md).
 
+Progress uses a native daisyUI progress bar paired with an explicit count. Course outlines keep the current-page treatment and add a check with a translated completion label independently. Put the completion action after the lesson material in a sage-wash panel, with a reversible action after completion. The library and course outline offer start, resume, or review according to the current state; reviewing never clears progress.
+
 ## Review a screen
 
 - Check the primary action and heading at a narrow phone width (320 px) and a desktop width. At 200% zoom, text and controls must remain reachable. Confine overflow from a wide code sample or table to that element.

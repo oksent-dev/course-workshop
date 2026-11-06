@@ -5,6 +5,7 @@ Rails.application.routes.draw do
     root "pages#home", as: :localized_root
     resources :courses, only: :show, param: :slug do
       resources :lessons, only: :show do
+        resource :completion, only: [ :create, :destroy ]
         resource :conversation, only: :show do
           resources :exchanges, only: [ :create, :destroy ], controller: :conversations
         end

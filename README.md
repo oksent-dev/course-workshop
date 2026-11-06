@@ -6,6 +6,8 @@ A workspace for creating and studying structured courses, with a Polish and Engl
 
 The library groups courses by category. Each course has an outline and a reader with previous and next lesson links. A three-lesson Polish course on everyday statistics is included.
 
+Mark lessons complete, undo completion, and resume from the library. Development shares a local profile across browsers; production keeps separate browser profiles without requiring sign-in. See [learning progress](docs/learning-progress.md) for ownership, persistence, and resume rules.
+
 Lessons render Markdown with headings, lists, code, links, and tables. Local images use Active Storage, with descriptions and optional captions. The example course includes a prepared chart. See [lesson content and image import](docs/lesson-content.md) for authoring instructions.
 
 The statistics lesson also includes a KaTeX formula, a Mermaid flow diagram, and a practice exercise with a revealable answer. See [learning blocks](docs/learning-blocks.md) for the supported formats.

@@ -1,0 +1,11 @@
+<% if progress.total.positive? %>
+  <% label = t("learning_progress.count", completed: progress.completed_count, total: progress.total) %>
+  <div class="space-y-2" data-course-progress>
+    <p class="text-sm text-muted-ink"><%= label %></p>
+    <progress class="progress progress-primary block h-2 w-full" value="<%= progress.completed_count %>"
+      max="<%= progress.total %>" aria-label="<%= label %>"></progress>
+    <% if progress.complete? %>
+      <p class="text-sm font-semibold text-primary"><span aria-hidden="true">✓ </span><%= t("learning_progress.course_completed") %></p>
+    <% end %>
+  </div>
+<% end %>

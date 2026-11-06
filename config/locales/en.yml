@@ -1,4 +1,15 @@
 en:
+  learning_progress:
+    count: "%{completed} of %{total} lessons completed"
+    resume: "Resume course"
+    review: "Review course"
+    completed: "Completed"
+    course_completed: "Course completed"
+    heading: "Your progress"
+    lesson_completed: "This lesson is marked complete."
+    hint: "Finished studying? Mark this lesson complete when you are ready."
+    mark_complete: "Mark complete"
+    undo: "Mark as incomplete"
   conversation:
     open: "Ask about this lesson"
     context: "GPT-6.1 Sol receives this lesson and your question. The conversation is saved for this browser."
