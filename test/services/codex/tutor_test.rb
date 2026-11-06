@@ -4,7 +4,7 @@ require_relative "../../support/fake_codex_protocol"
 class CodexTutorTest < ActiveSupport::TestCase
   test "the adapter pins Sol, restricts capabilities, and sends only the explicit lesson context" do
     conversation = lessons(:pitch).conversations.create!(browser_key: SecureRandom.hex(32))
-    exchange = conversation.ask!(question: "Explain pitch", request_key: SecureRandom.uuid, locale: "en")
+    exchange = conversation.ask!(question: "Explain pitch", selected_text: "a high note", request_key: SecureRandom.uuid, locale: "en")
     connection = FakeCodexProtocol.new
 
     answer = Codex::Tutor.new(connection: connection).reply(exchange,
@@ -21,6 +21,7 @@ class CodexTutorTest < ActiveSupport::TestCase
     turn = connection.calls.assoc("turn/start").last
     payload = JSON.parse(turn[:input].first[:text])
     assert_equal exchange.lesson_context, payload["lesson"]
+    assert_equal "a high note", payload["lesson"]["selected_text"]
     assert_equal exchange.question, payload["question"]
     assert_equal "en", payload["response_language"]
 

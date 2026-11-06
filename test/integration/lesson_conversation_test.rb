@@ -55,6 +55,38 @@ class LessonConversationTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
+  test "a selected passage is saved with its question and is not reused by the next turn" do
+    passage = "Listen to a high note"
+    perform_enqueued_jobs { ask("Explain this part", selected_text: passage) }
+    exchange = Exchange.last
+    assert_equal passage, exchange.selected_text
+    assert_equal passage, @tutor.calls.last[:context]["selected_text"]
+    assert_equal @lesson.body, @tutor.calls.last[:context]["body"]
+    @lesson.update!(body: "Revised lesson")
+    get @path, headers: @local
+    assert_includes response.parsed_body["html"], passage
+
+    perform_enqueued_jobs { ask("A different question") }
+    assert_nil Exchange.last.selected_text
+    assert_nil @tutor.calls.last[:context]["selected_text"]
+    assert_equal passage, exchange.reload.selected_text
+  end
+
+  test "selection limits and repeated delivery are enforced before calling the tutor" do
+    assert_no_enqueued_jobs { ask("Explain", selected_text: "a" * 2001) }
+    assert_response :unprocessable_content
+    assert_equal 0, Exchange.count
+
+    key = SecureRandom.uuid
+    assert_enqueued_jobs 1 do
+      ask("Explain", key: key, selected_text: "a" * 2000)
+      ask("Explain", key: key, selected_text: "Changed after delivery")
+    end
+    assert_response :success
+    assert_equal 1, Exchange.count
+    assert_equal "a" * 2000, Exchange.last.selected_text
+  end
+
   test "disabled AI and nonlocal requests cannot enqueue work" do
     @settings.enabled = false
     assert_no_enqueued_jobs { ask("Explain pitch") }
@@ -132,16 +164,17 @@ class LessonConversationTest < ActionDispatch::IntegrationTest
 
   test "questions and model output are escaped" do
     @tutor.answer = "<script>alert(1)</script>"
-    perform_enqueued_jobs { ask("<img src=x onerror=alert(1)>") }
+    perform_enqueued_jobs { ask("<img src=x onerror=alert(1)>", selected_text: "<script>quoted()</script>") }
     get @path, headers: @local
     fragment = Nokogiri::HTML.fragment(response.parsed_body["html"])
     assert_empty fragment.css("script, img")
     assert_includes fragment.text, @tutor.answer
+    assert_equal "<script>quoted()</script>", fragment.at_css("blockquote").text
   end
 
   private
 
-  def ask(question, key: SecureRandom.uuid)
-    post @create_path, params: { question: question, request_key: key }, headers: @local
+  def ask(question, key: SecureRandom.uuid, selected_text: nil)
+    post @create_path, params: { question: question, request_key: key, selected_text: selected_text }, headers: @local
   end
 end

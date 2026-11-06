@@ -1,0 +1,41 @@
+@layer components {
+  .lesson-chat-launcher {
+    position: fixed;
+    z-index: 30;
+    right: max(1rem, env(safe-area-inset-right));
+    bottom: max(1rem, env(safe-area-inset-bottom));
+    box-shadow: 0 4px 20px #303b3226;
+  }
+
+  .lesson-chat-launcher[aria-expanded="true"] { visibility: hidden; }
+
+  .lesson-chat-panel {
+    position: fixed;
+    z-index: 40;
+    inset: auto max(0.75rem, env(safe-area-inset-right)) calc(var(--chat-viewport-bottom, 0px) + max(0.75rem, env(safe-area-inset-bottom))) auto;
+    margin: 0;
+    width: min(26rem, calc(100% - 1.5rem));
+    height: min(40rem, calc(var(--chat-viewport-height, 100dvh) - 1.5rem));
+    max-width: none;
+    max-height: calc(var(--chat-viewport-height, 100dvh) - 1.5rem);
+    padding: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    border: 1px solid var(--color-base-300);
+    border-radius: var(--radius-box);
+    background: var(--color-base-100);
+    color: var(--color-base-content);
+    box-shadow: 0 8px 40px #303b3226;
+  }
+
+  .lesson-chat-panel[open] { display: flex; flex-direction: column; }
+  .lesson-chat-panel:not([open]) { display: none; }
+  .lesson-chat-transcript { flex: 1 1 auto; min-height: 4rem; overflow-y: auto; overscroll-behavior: contain; }
+
+  .lesson-selection-action {
+    position: fixed;
+    z-index: 50;
+    max-width: calc(100% - 1.5rem);
+    filter: drop-shadow(0 3px 8px #303b3226);
+  }
+}

@@ -1,23 +1,62 @@
-<details class="mt-8 rounded-box border border-base-300 bg-base-200 p-4 sm:p-6"
-  data-controller="conversation"
+<div class="lesson-selection-action" hidden data-lesson-chat-target="selectionAction">
+  <button type="button" class="btn btn-primary min-h-11 h-auto max-w-full whitespace-normal py-3"
+    aria-keyshortcuts="Alt+Enter" title="Alt+Enter" data-lesson-chat-target="selectionButton"
+    data-action="pointerdown->lesson-chat#preserveSelection click->lesson-chat#askSelection"><%= t("conversation.ask_selection") %></button>
+</div>
+
+<div data-controller="conversation"
   data-conversation-url-value="<%= course_lesson_conversation_path(course, lesson) %>"
   data-conversation-network-error-value="<%= t("conversation.network_error") %>"
   data-conversation-sending-value="<%= t("conversation.sending") %>"
-  data-action="toggle->conversation#toggle">
-  <summary class="min-h-11 cursor-pointer content-center font-semibold"><%= t("conversation.open") %></summary>
-  <p class="mt-3 text-sm text-muted-ink"><%= t("conversation.context", model: "GPT-6.1 Sol") %></p>
-  <div class="mt-6" role="log" aria-live="polite" aria-label="<%= t("conversation.history") %>" data-conversation-target="transcript"></div>
-  <p role="status" class="mt-3 text-sm text-error-content" data-conversation-target="status"></p>
-  <button type="button" class="btn btn-ghost mt-2 min-h-11 hidden" data-conversation-target="refresh" data-action="conversation#refresh"><%= t("conversation.refresh") %></button>
-  <%= form_with url: course_lesson_conversation_exchanges_path(course, lesson), data: { turbo: false, action: "submit->conversation#send", conversation_target: "form" }, class: "mt-6" do |form| %>
-    <%= form.label :question, t("conversation.question"), class: "block font-medium" %>
-    <%= form.text_area :question, required: true, maxlength: 4000, rows: 3,
-      class: "textarea mt-2 w-full border-muted-ink bg-base-100 text-base",
-      data: { conversation_target: "question" } %>
-    <div class="mt-3 flex flex-wrap gap-3">
-      <%= form.submit t("conversation.send"), class: "btn btn-primary min-h-11", disabled: true, data: { conversation_target: "submit" } %>
-      <button type="button" class="btn btn-ghost min-h-11 hidden" data-conversation-target="cancel" data-action="conversation#cancel"><%= t("conversation.cancel") %></button>
+  data-action="lesson-chat:opened->conversation#open lesson-chat:closed->conversation#close lesson-chat:quoted->conversation#quote">
+  <button type="button" class="lesson-chat-launcher btn btn-primary btn-circle size-16 p-4" disabled
+    aria-label="<%= t("conversation.open") %>" title="<%= t("conversation.open") %>"
+    aria-expanded="false" aria-controls="lesson-chat-panel" aria-haspopup="dialog"
+    data-lesson-chat-target="launcher" data-action="lesson-chat#open">
+    <svg aria-hidden="true" viewBox="0 0 24 24" class="size-7 shrink-0" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M20 11.5a8 8 0 0 1-8 8H5l-3 2v-10a9 9 0 0 1 18 0Z"/>
+      <path d="M7 10h8M7 14h5"/>
+    </svg>
+  </button>
+  <dialog id="lesson-chat-panel" class="lesson-chat-panel" aria-labelledby="lesson-chat-heading"
+    data-lesson-chat-target="panel" data-action="close->lesson-chat#closed">
+    <header class="shrink-0 border-b border-base-300 bg-base-200 p-4">
+      <div class="flex items-start justify-between gap-3">
+        <div class="min-w-0">
+          <h2 id="lesson-chat-heading" class="font-serif text-2xl font-semibold"><%= t("conversation.heading") %></h2>
+          <p lang="<%= course.language %>" class="mt-1 text-sm text-muted-ink wrap-anywhere"><%= lesson.title %></p>
+        </div>
+        <button type="button" class="btn btn-ghost btn-circle min-h-11 min-w-11 shrink-0"
+          aria-label="<%= t("conversation.close") %>" title="<%= t("conversation.close") %>" data-action="lesson-chat#close">
+          <svg aria-hidden="true" viewBox="0 0 24 24" class="size-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m6 6 12 12M18 6 6 18"/></svg>
+        </button>
+      </div>
+      <p class="mt-2 text-sm text-muted-ink"><%= t("conversation.context") %></p>
+    </header>
+    <div class="lesson-chat-transcript p-4" role="log" aria-live="polite" aria-label="<%= t("conversation.history") %>"
+      tabindex="0" data-conversation-target="transcript"></div>
+    <div class="shrink-0 border-t border-base-300 p-4">
+      <p role="status" class="text-sm text-error-content" data-conversation-target="status"></p>
+      <button type="button" class="btn btn-ghost mb-2 min-h-11 hidden" data-conversation-target="refresh" data-action="conversation#refresh"><%= t("conversation.refresh") %></button>
+      <%= form_with url: course_lesson_conversation_exchanges_path(course, lesson), data: { turbo: false, action: "submit->conversation#send", conversation_target: "form" } do |form| %>
+        <div class="mb-3 rounded-field bg-secondary p-3" hidden data-conversation-target="quotePreview">
+          <div class="flex items-center justify-between gap-2">
+            <p class="text-sm font-semibold"><%= t("conversation.selected_passage") %></p>
+            <button type="button" class="btn btn-ghost min-h-11 h-auto px-2 text-sm" data-conversation-target="removeQuote" data-action="conversation#removeQuote"><%= t("conversation.remove_selection") %></button>
+          </div>
+          <blockquote class="max-h-20 overflow-y-auto border-s-2 border-primary ps-3 text-sm whitespace-pre-wrap wrap-anywhere" tabindex="0" data-conversation-target="quoteText"></blockquote>
+        </div>
+        <%= form.label :question, t("conversation.question"), class: "block text-sm font-medium" %>
+        <%= form.text_area :question, required: true, maxlength: 4000, rows: 2,
+          placeholder: t("conversation.placeholder"),
+          class: "textarea mt-2 max-h-36 w-full border-muted-ink bg-base-100 text-base",
+          data: { conversation_target: "question", lesson_chat_target: "question" } %>
+        <div class="mt-3 flex flex-wrap gap-2">
+          <%= form.submit t("conversation.send"), class: "btn btn-primary min-h-11", disabled: true, data: { conversation_target: "submit" } %>
+          <button type="button" class="btn btn-ghost min-h-11 hidden" data-conversation-target="cancel" data-action="conversation#cancel"><%= t("conversation.cancel") %></button>
+        </div>
+      <% end %>
     </div>
-  <% end %>
-  <noscript><p class="mt-3"><%= t("conversation.javascript_required") %></p></noscript>
-</details>
+  </dialog>
+  <noscript><p class="mt-6"><%= t("conversation.javascript_required") %></p></noscript>
+</div>

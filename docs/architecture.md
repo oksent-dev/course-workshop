@@ -64,7 +64,9 @@ Cancellation revokes the token immediately. Resume starts a new attempt and thre
 
 ## Lesson conversations and the agent boundary
 
-The optional lesson panel uses a Stimulus controller to submit questions and poll Rails for saved outcomes. `ConversationsController` resolves the lesson through its course, then scopes the conversation to a random key in the browser session. `Conversation` owns ordered `Exchange` records containing question, lesson snapshot, answer, and status.
+The optional floating lesson panel separates interface and transport. `LessonChatController` opens a non-modal dialog, manages focus and viewport placement, and captures text selected within the current lesson body. `ConversationController` submits questions and polls Rails for saved outcomes while open, retaining an unsent question and optional quote across panel close/reopen. Navigation creates a fresh widget for the new lesson.
+
+`ConversationsController` resolves the lesson through its course, then scopes the conversation to a random key in the browser session. `Conversation` owns ordered `Exchange` records containing question, lesson snapshot, answer, and status. An optional `selected_text` key in that snapshot preserves the submitted passage for the transcript and tutor. `Exchange` limits it to 2,000 characters. Subsequent questions do not inherit the selection automatically.
 
 `LessonReplyJob` calls a replaceable tutor adapter outside the HTTP request. `Codex::Tutor` manages thread and turn semantics; `Codex::Connection` owns the stdio process, JSON-lines transport, deadline, and cleanup. The adapter pins GPT-6.1 Sol and resumes the conversation's Codex thread for follow-ups. Only final answer text is saved, never raw reasoning or tool events.
 

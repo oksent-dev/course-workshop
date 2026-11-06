@@ -1,24 +1,50 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static targets = ["transcript", "form", "question", "submit", "cancel", "status", "refresh"];
+  static targets = ["transcript", "form", "question", "submit", "cancel", "status", "refresh", "quotePreview", "quoteText", "removeQuote"];
   static values = { url: String, networkError: String, sending: String };
 
   connect() {
     this.requestKey = crypto.randomUUID();
     this.busy = false;
     this.ready = false;
-    if (this.element.open) this.refresh();
+    this.opened = false;
+    this.selectedText = "";
   }
 
   disconnect() {
+    this.opened = false;
     clearTimeout(this.timer);
     this.abortController?.abort();
   }
 
-  toggle() {
-    if (this.element.open) this.refresh();
-    else clearTimeout(this.timer);
+  open() {
+    this.opened = true;
+    this.refresh();
+  }
+
+  close() {
+    this.opened = false;
+    clearTimeout(this.timer);
+  }
+
+  quote(event) {
+    if (this.submitting) return;
+    this.selectedText = event.detail.text;
+    this.quoteTextTarget.textContent = this.selectedText;
+    this.quotePreviewTarget.hidden = false;
+  }
+
+  removeQuote() {
+    if (this.submitting) return;
+    this.clearQuote();
+    this.questionTarget.focus({ preventScroll: true });
+  }
+
+  clearQuote() {
+    this.selectedText = "";
+    this.quoteTextTarget.textContent = "";
+    this.quotePreviewTarget.hidden = true;
   }
 
   async refresh() {
@@ -29,20 +55,28 @@ export default class extends Controller {
   async send(event) {
     event.preventDefault();
     if (!this.ready || this.loading || this.busy || !this.formTarget.reportValidity()) return;
-    if (this.lastQuestion !== this.questionTarget.value) {
+    const submission = JSON.stringify({ question: this.questionTarget.value, selected_text: this.selectedText });
+    if (this.lastSubmission !== submission) {
       this.requestKey = crypto.randomUUID();
-      this.lastQuestion = this.questionTarget.value;
+      this.lastSubmission = submission;
     }
+    this.submitting = true;
+    this.questionTarget.readOnly = true;
+    this.removeQuoteTarget.disabled = true;
     this.statusTarget.textContent = this.sendingValue;
     const accepted = await this.load(this.formTarget.action, {
       method: "POST",
-      body: JSON.stringify({ question: this.questionTarget.value, request_key: this.requestKey }),
+      body: JSON.stringify({ ...JSON.parse(submission), request_key: this.requestKey }),
     });
+    this.submitting = false;
+    this.questionTarget.readOnly = false;
+    this.removeQuoteTarget.disabled = false;
     if (accepted) {
       this.questionTarget.value = "";
+      this.clearQuote();
       this.requestKey = crypto.randomUUID();
-      this.lastQuestion = null;
-      this.questionTarget.focus();
+      this.lastSubmission = null;
+      if (this.opened) this.questionTarget.focus({ preventScroll: true });
     }
   }
 
@@ -70,7 +104,12 @@ export default class extends Controller {
       if (!response.ok || typeof data.html !== "string") {
         throw Object.assign(new Error(data.error || this.networkErrorValue), { userFacing: true });
       }
-      if (this.transcriptTarget.innerHTML !== data.html) this.transcriptTarget.innerHTML = data.html;
+      const transcript = this.transcriptTarget;
+      const followLatest = !this.ready || options.method === "POST" || transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight < 64;
+      if (transcript.innerHTML !== data.html) {
+        transcript.innerHTML = data.html;
+        if (followLatest) transcript.scrollTop = transcript.scrollHeight;
+      }
       this.busy = data.busy;
       this.ready = true;
       this.cancelUrl = data.cancel_url;
@@ -78,7 +117,7 @@ export default class extends Controller {
       this.cancelTarget.disabled = data.cancelling;
       this.statusTarget.textContent = "";
       this.refreshTarget.classList.add("hidden");
-      if (data.busy && this.element.open) this.timer = setTimeout(() => this.refresh(), 1000);
+      if (data.busy && this.opened) this.timer = setTimeout(() => this.refresh(), 1000);
       return true;
     } catch (error) {
       if (error.name !== "AbortError") {

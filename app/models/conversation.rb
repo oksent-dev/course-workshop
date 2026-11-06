@@ -6,7 +6,7 @@ class Conversation < ApplicationRecord
 
   validates :browser_key, presence: true
 
-  def ask!(question:, request_key:, locale:)
+  def ask!(question:, request_key:, locale:, selected_text: nil)
     with_lock do
       existing = exchanges.find_by(request_key: request_key)
       return existing if existing
@@ -16,7 +16,8 @@ class Conversation < ApplicationRecord
         question: question.to_s.strip, request_key: request_key, locale: locale,
         lesson_context: {
           course: lesson.course.title, title: lesson.title,
-          language: lesson.course.language, body: lesson.body
+          language: lesson.course.language, body: lesson.body,
+          selected_text: selected_text.to_s.strip.presence
         }
       )
     end

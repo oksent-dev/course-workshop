@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @import "./fonts.css";
 @import "./code.css";
+@import "./conversation.css";
 
 @plugin "daisyui" {
   themes: false;

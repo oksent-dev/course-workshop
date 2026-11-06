@@ -16,7 +16,7 @@ Lessons render Markdown with headings, lists, syntax-highlighted code, links, an
 
 The statistics lesson also includes a KaTeX formula, a Mermaid flow diagram, and a practice exercise with a revealable answer. See [learning blocks](docs/learning-blocks.md) for the supported formats.
 
-An optional local tutor uses GPT-6.1 Sol through Codex App Server. Ask questions directly in a lesson and continue the conversation there. See [local AI setup and verification](docs/local-ai.md); AI is disabled by default and unavailable in production.
+An optional local tutor uses GPT-6.1 Sol through Codex App Server. Open the floating chat while reading, or select a lesson passage and attach it to your question. Each saved question retains its quoted passage. See [local AI setup and verification](docs/local-ai.md); AI is disabled by default and unavailable in production.
 
 ## Requirements
 

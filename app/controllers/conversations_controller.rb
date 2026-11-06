@@ -9,10 +9,11 @@ class ConversationsController < ApplicationController
 
   def create
     @conversation.expire_stale!
-    input = params.permit(:question, :request_key)
+    input = params.permit(:question, :request_key, :selected_text)
     exchange = @conversation.ask!(
       question: input[:question],
       request_key: input[:request_key],
+      selected_text: input[:selected_text],
       locale: I18n.locale.to_s
     )
     if exchange.previously_new_record? && !LessonReplyJob.perform_later(exchange)
