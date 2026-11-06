@@ -6,6 +6,8 @@ A workspace for creating and studying structured courses, with a Polish and Engl
 
 The library groups courses by category. Each course has an outline and a reader with previous and next lesson links. A three-lesson Polish course on everyday statistics is included.
 
+Lessons render Markdown with headings, lists, code, links, and tables. Local images use Active Storage, with descriptions and optional captions. The example course includes a prepared chart. See [lesson content and image import](docs/lesson-content.md) for authoring instructions.
+
 An optional local tutor uses GPT-6.1 Sol through Codex App Server. Ask questions directly in a lesson and continue the conversation there. See [local AI setup and verification](docs/local-ai.md); AI is disabled by default and unavailable in production.
 
 ## Requirements
@@ -14,6 +16,7 @@ An optional local tutor uses GPT-6.1 Sol through Codex App Server. Ask questions
 - Node.js 24 and npm 11
 - Docker with the Compose plugin
 - Chrome or Chromium for browser tests
+- libvips for validating and importing lesson images
 
 On Windows, use RubyInstaller with MSYS2/Devkit. Native gems may install build dependencies during the first bundle installation.
 
@@ -47,7 +50,7 @@ Database files live in the `postgres_data` named volume. Active Storage uses `st
 
 For an existing checkout, run `ruby bin/rails db:prepare db:seed` to migrate the databases and refresh the example in development. The [seed material](db/seeds/everyday-statistics.yml) supplies the course slug and the lessons in reading order. Re-running the seed updates those records in place and preserves their links.
 
-Image variants use libvips, which must be available if transformations are used. Uploads and local file storage do not require image transformation.
+Image imports use libvips to validate the file contents and dimensions. Install libvips before importing images or running the seed and tests. The production Dockerfile and CI already include it.
 
 ## Checks
 
@@ -72,7 +75,7 @@ Tests use a separate `course_workshop_test` database. Browser tests run headless
 - Active Storage with the local disk adapter
 - Solid Queue, Solid Cache, and Solid Cable for production infrastructure
 
-Commonmarker, KaTeX, Mermaid, Chart.js, and the Ruby MCP SDK are installed for the upcoming lesson and agent features. They do not expose a renderer, chart editor, or MCP endpoint yet.
+Commonmarker renders lesson Markdown. KaTeX, Mermaid, Chart.js, and the Ruby MCP SDK are installed for upcoming math, diagram, interactive chart, and agent features; those features are not exposed yet.
 
 ## Configuration and deployment
 

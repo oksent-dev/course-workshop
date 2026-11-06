@@ -46,6 +46,8 @@ Rails serves the [font files](app/assets/fonts) from the same origin as the appl
 
 Build with semantic HTML in ERB. Use daisyUI primitives such as `btn`, `card`, `input`, and `progress`. Define colors and radii once in the theme and use semantic utilities in templates. Prefer a Rails partial for repeated domain markup such as a course card. Use Stimulus for local behavior such as updating an exercise result. Keep interface strings in the locale dictionaries and preserve the content language when the reader changes the interface language.
 
+Lesson Markdown uses the scoped `.lesson-content` rules in the Tailwind entry point. Section headings, lists, quotations, and code follow the same reading rhythm. Keep code and table overflow inside a keyboard-accessible `.lesson-scroll` region. Render a standalone image as a figure with its caption; a failed image keeps a readable description. See [lesson content](docs/lesson-content.md) for the supported source format.
+
 ## Review a screen
 
 - Check the primary action and heading at a narrow phone width (320 px) and a desktop width. At 200% zoom, text and controls must remain reachable. Confine overflow from a wide code sample or table to that element.

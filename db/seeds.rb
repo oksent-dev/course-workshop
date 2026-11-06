@@ -9,6 +9,13 @@ Category.transaction do
   course.update!(course_attributes)
 
   demo.fetch("lessons").each.with_index(1) do |attributes, position|
-    course.lessons.find_or_initialize_by(position: position).update!(attributes)
+    lesson = course.lessons.find_or_initialize_by(position: position)
+    lesson.update!(attributes.except("images"))
+    attributes.fetch("images", []).each do |image|
+      LessonImages::Import.call(
+        lesson: lesson, key: image.fetch("key"), alt_text: image.fetch("alt_text"),
+        path: Rails.root.join("db/seeds/images", image.fetch("file"))
+      )
+    end
   end
 end

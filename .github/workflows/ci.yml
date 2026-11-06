@@ -51,6 +51,9 @@ jobs:
       - name: Install JavaScript dependencies
         run: npm ci
 
+      - name: Install image processing library
+        run: sudo apt-get update -qq && sudo apt-get install -y libvips
+
       - name: Prepare test database
         run: ruby bin/rails db:prepare
 

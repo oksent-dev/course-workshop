@@ -18,10 +18,8 @@
   <article class="min-w-0 max-w-[65ch]">
     <p class="text-sm font-medium text-muted-ink"><%= t("reader.position", number: @lesson_number, total: @lessons.size) %></p>
     <h1 lang="<%= @course.language %>" class="mt-2 font-serif text-[clamp(2rem,5vw,3rem)] leading-[1.15] font-medium tracking-tight wrap-anywhere"><%= @lesson.title %></h1>
-    <div lang="<%= @course.language %>" class="mt-6 space-y-4 font-serif text-xl leading-relaxed wrap-anywhere">
-      <% @lesson.body.split(/\r?\n\s*\n/).each do |paragraph| %>
-        <p><%= paragraph %></p>
-      <% end %>
+    <div lang="<%= @course.language %>" class="lesson-content mt-6 font-serif text-xl leading-relaxed wrap-anywhere">
+      <%= render_lesson_body(@lesson) %>
     </div>
 
     <nav aria-label="<%= t("reader.lesson_navigation") %>" class="mt-8 flex flex-wrap gap-3 border-t border-base-300 pt-6">

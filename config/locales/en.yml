@@ -51,6 +51,10 @@ en:
     start: "Start the first lesson"
     no_lessons: "This course has no lessons yet."
   reader:
+    image_unavailable: "Image unavailable: %{description}"
+    image_without_description: "Illustration"
+    code_sample: "Code sample"
+    data_table: "Data table"
     location: "Breadcrumbs"
     position: "Lesson %{number} of %{total}"
     lesson_navigation: "Lesson navigation"

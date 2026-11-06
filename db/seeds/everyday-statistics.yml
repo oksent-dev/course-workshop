@@ -6,17 +6,63 @@ course:
   description: Na przykładzie pięciu porannych dojazdów nauczysz się zbierać porównywalne pomiary, obliczać średnią i medianę oraz wybierać liczbę, która odpowiada na Twoje pytanie.
 lessons:
   - title: Pięć poranków
+    images:
+      - key: commute-times
+        file: commute-times.png
+        alt_text: "Wykres słupkowy czasu dojazdu: poniedziałek 8, wtorek 4, środa 12, czwartek 6, piątek 10 minut."
     body: |-
+      ## Mierz to samo
+
       Ile trwa Twój zwykły dojazd? Zanim zaczniesz liczyć, ustal, co mierzysz. Przez pięć kolejnych dni włączasz stoper przy wyjściu z domu i zatrzymujesz go przy wejściu do biblioteki. Zapisujesz czas w minutach, także wtedy, gdy autobus się spóźnia.
 
-      Od poniedziałku do piątku zapisujesz kolejno: 8, 4, 12, 6 i 10 minut. Każda liczba opisuje jeden przejazd. Po uporządkowaniu od najkrótszego do najdłuższego otrzymujesz 4, 6, 8, 10 i 12 minut. W takim zapisie łatwo wskazać środek, ale znika informacja o dniach tygodnia. Zachowaj więc również pierwotny zapis.
+      Ustal jedną regułę dla wszystkich dni:
+
+      1. **Start:** wyjście z domu.
+      2. **Koniec:** wejście do biblioteki.
+      3. **Jednostka:** minuty.
+
+      ## Zapisz obserwacje
+
+      Od poniedziałku do piątku zapisujesz kolejno: **8, 4, 12, 6 i 10 minut**. Każda liczba opisuje jeden przejazd.
+
+      ![](image:commute-times "Pięć pomiarów z jednego tygodnia. Każdy słupek opisuje osobny poranek.")
+
+      | Dzień | Czas dojazdu (min) |
+      | --- | --- |
+      | Poniedziałek | 8 |
+      | Wtorek | 4 |
+      | Środa | 12 |
+      | Czwartek | 6 |
+      | Piątek | 10 |
+
+      Po uporządkowaniu od najkrótszego do najdłuższego otrzymujesz 4, 6, 8, 10 i 12 minut. W takim zapisie łatwo wskazać środek, ale znika informacja o dniach tygodnia. Zachowaj więc również pierwotny zapis.
+
+      ## Sprawdź porównywalność
 
       Zastanów się, co by się zmieniło, gdyby w środę stoper ruszył dopiero na przystanku. Taki pomiar pomija drogę z domu. Oznacz go w notatkach, zanim użyjesz go do porównania z pozostałymi dniami.
+
+      > Zmiana reguły pomiaru może wyjaśniać różnicę lepiej niż sam wynik.
   - title: Średnia i mediana
     body: |-
+      ## Dwa sposoby podsumowania
+
       Pięć dojazdów trwało 4, 6, 8, 10 i 12 minut. Suma to 40 minut. Jeśli podzielisz ją po równo między pięć przejazdów, na każdy przypadnie 8 minut. To średnia arytmetyczna.
 
       Ustaw te same czasy od najmniejszego do największego. Środkowy, trzeci pomiar to 8 minut. To mediana. Gdy liczba pomiarów jest parzysta, weź średnią dwóch środkowych wartości.
+
+      Możesz sprawdzić obliczenia w Ruby:
+
+      ```ruby
+      commute_times = [4, 6, 8, 10, 12]
+      mean = commute_times.sum.fdiv(commute_times.length)
+      median = commute_times.sort[commute_times.length / 2]
+
+      puts "Mean: #{mean} minutes; median: #{median} minutes"
+      ```
+
+      Ten zapis mediany dotyczy **nieparzystej** liczby wyników. Metoda `fdiv` wykonuje dzielenie zmiennoprzecinkowe; opis znajdziesz w [dokumentacji Ruby](https://docs.ruby-lang.org/en/4.0/Integer.html#method-i-fdiv).
+
+      ## Co zmieni jeden korek?
 
       Teraz wyobraź sobie korek: zamiast 12 minut najdłuższy przejazd trwał 32 minuty. Przelicz obie miary, zanim przeczytasz wynik.
 

@@ -1,0 +1,12 @@
+<%= content_tag(standalone ? :figure : :span, class: "lesson-image", data: { controller: "lesson-image" }) do %>
+  <% if image %>
+    <%= image_tag rails_blob_path(image.file, disposition: "inline"),
+      alt: alt_text, loading: "lazy", decoding: "async",
+      width: image.file.metadata["width"], height: image.file.metadata["height"],
+      data: { lesson_image_target: "image", action: "error->lesson-image#failed load->lesson-image#loaded" } %>
+  <% end %>
+  <span class="lesson-image-unavailable <%= "hidden" if image %>" role="img" aria-label="<%= alt_text %>" data-lesson-image-target="fallback"><%= t("reader.image_unavailable", description: alt_text) %></span>
+  <% if caption.present? %>
+    <%= content_tag(standalone ? :figcaption : :span, caption, class: "lesson-image-caption") %>
+  <% end %>
+<% end %>

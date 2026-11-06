@@ -51,6 +51,10 @@ pl:
     start: "Zacznij od pierwszej lekcji"
     no_lessons: "W tym kursie nie ma jeszcze lekcji."
   reader:
+    image_unavailable: "Obraz niedostępny: %{description}"
+    image_without_description: "Ilustracja"
+    code_sample: "Przykład kodu"
+    data_table: "Tabela danych"
     location: "Ścieżka nawigacji"
     position: "Lekcja %{number} z %{total}"
     lesson_navigation: "Nawigacja między lekcjami"

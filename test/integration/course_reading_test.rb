@@ -45,13 +45,13 @@ class CourseReadingTest < ActionDispatch::IntegrationTest
     assert_response :not_found
   end
 
-  test "lesson source is rendered as escaped paragraphs" do
+  test "raw HTML in a lesson is rendered as text" do
     lesson = lessons(:pitch)
     lesson.update!(body: "Read the example.\n\n<script>alert(1)</script>")
 
     get course_lesson_path(lesson.course, lesson, locale: :en)
 
     assert_select "article script", count: 0
-    assert_select "article p", "<script>alert(1)</script>"
+    assert_select ".lesson-content", text: /<script>alert\(1\)<\/script>/
   end
 end

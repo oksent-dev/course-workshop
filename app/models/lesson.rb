@@ -1,5 +1,6 @@
 class Lesson < ApplicationRecord
   has_many :conversations, dependent: :destroy
+  has_many :lesson_images, dependent: :destroy
   belongs_to :course
 
   scope :outline, -> { select(:id, :course_id, :position, :title) }

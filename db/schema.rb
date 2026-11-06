@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_100000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -89,6 +89,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
     t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "exchanges_valid_status"
   end
 
+  create_table "lesson_images", force: :cascade do |t|
+    t.bigint "lesson_id", null: false
+    t.string "key", null: false
+    t.text "alt_text", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lesson_id", "key"], name: "index_lesson_images_on_lesson_id_and_key", unique: true
+  end
+
   create_table "lessons", force: :cascade do |t|
     t.bigint "course_id", null: false
     t.integer "position", null: false
@@ -105,5 +114,6 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
   add_foreign_key "conversations", "lessons"
   add_foreign_key "courses", "categories"
   add_foreign_key "exchanges", "conversations"
+  add_foreign_key "lesson_images", "lessons"
   add_foreign_key "lessons", "courses"
 end
