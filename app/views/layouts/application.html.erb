@@ -36,6 +36,7 @@
       </div>
     </header>
     <main id="main-content" tabindex="-1" class="mx-auto max-w-5xl px-4 py-12 sm:px-8">
+      <% if notice %><p role="status" class="mb-6 rounded-box bg-secondary p-4"><%= notice %></p><% end %>
       <%= yield %>
     </main>
   </body>

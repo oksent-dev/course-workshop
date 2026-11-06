@@ -1,4 +1,16 @@
 en:
+  drafts:
+    title: "Course drafts"
+    introduction: "Review your latest drafts before adding them to the library."
+    empty: "There are no course drafts yet."
+    preview: "Draft preview"
+    approval: "Course approval"
+    review_hint: "Read each lesson and check the material. Approval adds this course to the library and ends draft editing."
+    approve: "Approve and add to library"
+    published: "The course has been added to your library."
+    errors:
+      revision_conflict: "The draft changed while you were reviewing it. Review the latest version before approving."
+      invalid_content: "This draft is not ready. Check that it has lessons in order and valid learning blocks and image references."
   learning_progress:
     count: "%{completed} of %{total} lessons completed"
     resume: "Resume course"

@@ -8,6 +8,8 @@ The library groups courses by category. Each course has an outline and a reader 
 
 Mark lessons complete, undo completion, and resume from the library. Development shares a local profile across browsers; production keeps separate browser profiles without requiring sign-in. See [learning progress](docs/learning-progress.md) for ownership, persistence, and resume rules.
 
+Local MCP tools can create and revise course drafts. Review them in the local draft preview and explicitly approve a course before it appears in the library. See [course authoring](docs/course-authoring.md) for the tool contract, Codex configuration, and retry rules.
+
 Lessons render Markdown with headings, lists, code, links, and tables. Local images use Active Storage, with descriptions and optional captions. The example course includes a prepared chart. See [lesson content and image import](docs/lesson-content.md) for authoring instructions.
 
 The statistics lesson also includes a KaTeX formula, a Mermaid flow diagram, and a practice exercise with a revealable answer. See [learning blocks](docs/learning-blocks.md) for the supported formats.
@@ -79,7 +81,7 @@ Tests use a separate `course_workshop_test` database. Browser tests run headless
 - Active Storage with the local disk adapter
 - Solid Queue, Solid Cache, and Solid Cable for production infrastructure
 
-Commonmarker renders lesson Markdown, KaTeX renders math, and Mermaid with DOMPurify renders restricted flow diagrams. Chart.js and the Ruby MCP SDK are installed for upcoming interactive chart and agent features.
+Commonmarker renders lesson Markdown, KaTeX renders math, and Mermaid with DOMPurify renders restricted flow diagrams. The Ruby MCP SDK serves local course-authoring tools. Chart.js is installed for upcoming interactive chart features.
 
 ## Configuration and deployment
 

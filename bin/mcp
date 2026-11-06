@@ -1,0 +1,10 @@
+#!/usr/bin/env ruby
+protocol_output = $stdout
+$stdout = $stderr
+require_relative "../config/environment"
+abort "Course authoring requires development/test and COURSE_AUTHORING_ENABLED=true." unless LocalAuthoring.enabled?
+Rails.logger = ActiveSupport::Logger.new($stderr, level: Logger::WARN)
+server = CourseMcp::Server.build
+$stdout = protocol_output
+$stdout.sync = true
+MCP::Server::Transports::StdioTransport.new(server, max_line_bytes: 512 * 1024).open

@@ -1,4 +1,5 @@
 listening:
+  status: published
   category: music
   slug: listening
   language: en
@@ -6,6 +7,7 @@ listening:
   description: Listen for pitch and rhythm.
 
 composition:
+  status: published
   category: music
   slug: composition
   language: en

@@ -52,6 +52,8 @@ Display formulas and flow diagrams in quiet, bordered canvas panels. Preserve th
 
 Progress uses a native daisyUI progress bar paired with an explicit count. Course outlines keep the current-page treatment and add a check with a translated completion label independently. Put the completion action after the lesson material in a sage-wash panel, with a reversible action after completion. The library and course outline offer start, resume, or review according to the current state; reviewing never clears progress.
 
+Draft previews reuse the reader's typography, material renderer, and nearby outline. Label the page as a draft and place a clear approval panel above its lessons. Keep the regular library for approved courses. Previewing material does not display completion controls or count toward learning progress. A stale approval presents an inline text error and the current draft for another review.
+
 ## Review a screen
 
 - Check the primary action and heading at a narrow phone width (320 px) and a desktop width. At 200% zoom, text and controls must remain reachable. Confine overflow from a wide code sample or table to that element.

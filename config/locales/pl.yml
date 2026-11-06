@@ -1,4 +1,16 @@
 pl:
+  drafts:
+    title: "Szkice kursów"
+    introduction: "Przejrzyj ostatnie szkice, zanim dodasz je do biblioteki."
+    empty: "Nie ma jeszcze szkiców kursów."
+    preview: "Podgląd szkicu"
+    approval: "Zatwierdzenie kursu"
+    review_hint: "Przeczytaj każdą lekcję i sprawdź materiał. Zatwierdzenie doda kurs do biblioteki i zakończy edycję szkicu."
+    approve: "Zatwierdź i dodaj do biblioteki"
+    published: "Kurs został dodany do Twojej biblioteki."
+    errors:
+      revision_conflict: "Szkic zmienił się podczas przeglądania. Sprawdź najnowszą wersję przed zatwierdzeniem."
+      invalid_content: "Szkic nie jest gotowy. Sprawdź kolejność lekcji, format bloków materiału i odwołania do obrazów."
   learning_progress:
     count: "Ukończone lekcje: %{completed} z %{total}"
     resume: "Wznów kurs"

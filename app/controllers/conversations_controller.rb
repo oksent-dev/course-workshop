@@ -40,7 +40,7 @@ class ConversationsController < ApplicationController
   end
 
   def set_conversation
-    course = Course.find_by!(slug: params[:course_slug])
+    course = Course.published.find_by!(slug: params[:course_slug])
     lesson = course.lessons.find(params[:lesson_id])
     browser_key = session[:lesson_chat_key] ||= SecureRandom.hex(32)
     @conversation = lesson.conversations.find_or_create_by!(browser_key: browser_key)

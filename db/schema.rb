@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_120000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_130000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -66,8 +66,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_120000) do
     t.string "language", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "status", default: "draft", null: false
+    t.integer "revision", default: 0, null: false
     t.index ["category_id"], name: "index_courses_on_category_id"
     t.index ["slug"], name: "index_courses_on_slug", unique: true
+    t.check_constraint "revision >= 0", name: "courses_nonnegative_revision"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying]::text[])", name: "courses_valid_status"
+  end
+
+  create_table "draft_operations", force: :cascade do |t|
+    t.uuid "request_key", null: false
+    t.string "fingerprint", null: false
+    t.jsonb "result", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["request_key"], name: "index_draft_operations_on_request_key", unique: true
   end
 
   create_table "exchanges", force: :cascade do |t|

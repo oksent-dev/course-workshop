@@ -6,7 +6,7 @@ Category.transaction do
   Category.insert_all([ { name: category_name } ], unique_by: :name)
   category = Category.lock.find_by!(name: category_name)
   course = category.courses.find_or_initialize_by(slug: course_attributes.fetch("slug"))
-  course.update!(course_attributes)
+  course.update!(course_attributes.merge("status" => "published"))
 
   demo.fetch("lessons").each.with_index(1) do |attributes, position|
     lesson = course.lessons.find_or_initialize_by(position: position)

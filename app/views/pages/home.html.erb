@@ -1,13 +1,16 @@
 <h1 class="font-serif text-[clamp(2rem,5vw,3rem)] leading-[1.15] font-medium tracking-tight">
   <%= t("home.library_title") %>
 </h1>
+<% if LocalAuthoring.available?(request) %>
+  <%= link_to t("drafts.title"), drafts_path, class: "btn btn-ghost mt-4 min-h-11" %>
+<% end %>
 
 <% if @categories.any? %>
   <% @categories.each do |category| %>
     <section aria-labelledby="<%= dom_id(category) %>" class="mt-8">
       <h2 id="<%= dom_id(category) %>" class="mb-4 font-serif text-2xl font-semibold"><%= category.name %></h2>
       <div class="grid gap-4 sm:grid-cols-2">
-        <%= render category.courses %>
+        <%= render category.published_courses %>
       </div>
     </section>
   <% end %>

@@ -2,7 +2,7 @@ class LessonsController < ApplicationController
   include LearnerContext
 
   def show
-    @course = Course.find_by!(slug: params[:course_slug])
+    @course = Course.published.find_by!(slug: params[:course_slug])
     @lesson = @course.lessons.find(params[:id])
     @lessons = @course.lessons.outline.to_a
     unless request.head? || request.headers["X-Sec-Purpose"] == "prefetch" || request.headers["Sec-Purpose"]&.include?("prefetch")

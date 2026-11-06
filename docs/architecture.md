@@ -40,9 +40,19 @@ The [seed script](../db/seeds.rb) loads the prepared course in a transaction. It
 
 ## Planned course features
 
-Upcoming features include course drafting through MCP, generation, and additional interactive components.
+Upcoming features include in-app course generation and additional interactive components.
 
 Generated content will be treated as input: HTML output must be sanitized, and interactive blocks must use validated data rather than arbitrary generated JavaScript.
+
+## Draft authoring
+
+Courses start as drafts. The migration preserves existing courses as published, and the demo seed explicitly publishes its prepared content. Public controllers only resolve published courses; local draft preview and approval use a separate controller guarded by `LocalAuthoring`.
+
+`bin/mcp` starts the Ruby MCP SDK over stdio. `CourseMcp::Server` defines strict tool schemas and maps errors to tool results. `Drafts::Catalog` returns bounded course metadata, outlines, and individual lessons. `Drafts::Editor` serializes edits and approval with a course row lock and revision check. `Drafts::LessonContent` applies authoring limits and reuses the learning-block validators.
+
+`DraftOperation` atomically stores each successful mutation's request-key fingerprint and result. Its unique index coordinates concurrent retries across server processes. Reusing a key with different input fails; a matching retry replays the saved result. Failed operations leave no receipt or partial changes. No model call happens inside these transactions.
+
+Publication is a human action in the local preview, outside the MCP tool set. See [course authoring](course-authoring.md) for the contracts, authority boundary, and examples.
 
 ## Lesson conversations and the agent boundary
 
@@ -50,7 +60,7 @@ The optional lesson panel uses a Stimulus controller to submit questions and pol
 
 `LessonReplyJob` calls a replaceable tutor adapter outside the HTTP request. `Codex::Tutor` manages thread and turn semantics; `Codex::Connection` owns the stdio process, JSON-lines transport, deadline, and cleanup. The adapter pins GPT-6.1 Sol and resumes the conversation's Codex thread for follow-ups. Only final answer text is saved, never raw reasoning or tool events.
 
-The integration is opt-in and restricted to local development. Production rejects all conversation endpoints. See [local AI](local-ai.md) for access checks, cancellation, data retention, queue limitations, and the verification procedure. A future MCP interface will expose focused course operations separately.
+The integration is opt-in and restricted to local development. Production rejects all conversation endpoints. See [local AI](local-ai.md) for access checks, cancellation, data retention, queue limitations, and the verification procedure. The separate MCP interface exposes course operations; the lesson tutor continues to disable all MCP tools.
 
 ## Development and production
 
