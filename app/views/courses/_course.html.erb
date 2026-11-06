@@ -1,16 +1,24 @@
-<article class="card min-w-0 border border-base-300 bg-base-200 sm:only:col-span-2" data-motion="enter" data-motion-delay="<%= local_assigns.fetch(:course_counter, 0) % 3 + 1 %>">
-  <div class="card-body gap-3 p-6 sm:p-8">
-    <h3 class="font-serif text-2xl leading-tight font-semibold">
-      <%= link_to course.title, course_path(course), lang: course.language, class: "inline-flex min-h-11 max-w-full items-center rounded-field wrap-anywhere text-primary underline decoration-1 underline-offset-4 hover:decoration-2" %>
-    </h3>
-    <p lang="<%= course.language %>" class="max-w-prose font-serif text-lg leading-relaxed"><%= course.description %></p>
-    <p class="text-sm text-muted-ink"><%= course_language_label(course) %></p>
-    <% progress = @progress_by_course.fetch(course.id) %>
-    <%= render "courses/progress", progress: progress %>
-    <% if progress.resume_lesson %>
-      <div class="card-actions mt-2">
-        <%= link_to course_progress_action(progress), course_lesson_path(course, progress.resume_lesson), class: "btn btn-primary min-h-11 max-w-full h-auto py-3" %>
+<article class="card min-w-0 border border-base-300 bg-base-100" data-motion="enter" data-motion-delay="<%= local_assigns.fetch(:course_counter, 0) % 3 + 1 %>" data-course-card>
+  <%= link_to course_path(course), class: "group block rounded-t-box focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary", aria: { label: course.title } do %>
+    <%= render "courses/cover", course: course, eager: local_assigns.fetch(:course_counter, 0) < 3 %>
+    <div class="px-5 pt-5">
+      <span class="badge h-auto max-w-full border-0 bg-secondary px-3 py-1 text-xs text-secondary-content whitespace-normal wrap-anywhere"><%= course.category.name %></span>
+      <h2 lang="<%= course.language %>" class="mt-3 font-serif text-2xl leading-tight font-semibold wrap-anywhere group-hover:underline group-hover:underline-offset-4"><%= course.title %></h2>
+    </div>
+  <% end %>
+  <div class="card-body gap-4 p-5 pt-3">
+    <p lang="<%= course.language %>" class="line-clamp-3 text-base leading-relaxed text-muted-ink"><%= course.description %></p>
+    <div class="mt-auto space-y-4 pt-2">
+      <p class="text-xs text-muted-ink"><%= course_language_label(course) %></p>
+      <% progress = @progress_by_course.fetch(course.id) %>
+      <%= render "courses/progress", progress: progress %>
+      <div class="card-actions">
+        <% if progress.resume_lesson %>
+          <%= link_to course_progress_action(progress), course_lesson_path(course, progress.resume_lesson), class: "btn btn-primary min-h-11 h-auto w-full py-3 whitespace-normal" %>
+        <% else %>
+          <%= link_to t("courses.outline"), course_path(course), class: "btn btn-ghost min-h-11 h-auto w-full border-base-300 py-3 whitespace-normal" %>
+        <% end %>
       </div>
-    <% end %>
+    </div>
   </div>
 </article>

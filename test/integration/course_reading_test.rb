@@ -1,6 +1,36 @@
 require "test_helper"
 
 class CourseReadingTest < ActionDispatch::IntegrationTest
+  test "the library filters published cards and preserves the filter when changing language" do
+    category = Category.create!(name: "Statistics")
+    course = category.courses.create!(title: "Everyday statistics", slug: "everyday-statistics", description: "Learn with everyday data.", language: "en", status: :published)
+    hidden = Category.create!(name: "Draft category")
+    hidden.courses.create!(title: "Unfinished", slug: "unfinished", description: "Not ready.", language: "en", status: :draft)
+
+    get localized_root_path(locale: :en)
+    assert_select "[data-course-card]", count: 3
+    assert_select "nav[aria-label='Filter courses by category']" do
+      assert_select "a", text: /All\s+3/
+      assert_select "a", text: /Music\s+2/
+      assert_select "a", text: /Statistics\s+1/
+      assert_select "a", text: /Draft category/, count: 0
+    end
+
+    get localized_root_path(locale: :en, category: category.id)
+    assert_response :success
+    assert_select "[data-course-card]", count: 1
+    assert_select "[data-course-card] h2", course.title
+    assert_select "[data-course-card] .badge", category.name
+    assert_select "nav[aria-label='Filter courses by category'] a[aria-current=page]", text: /Statistics/
+    assert_select "a[hreflang=pl][href=?]", localized_root_path(locale: :pl, category: category.id)
+    assert_select "[data-course-cover-target=fallback]", count: 1
+
+    get localized_root_path(locale: :en, category: hidden.id)
+    assert_response :not_found
+    get localized_root_path(locale: :en, category: "not-a-category")
+    assert_response :not_found
+  end
+
   test "the library keeps its empty state when there are no courses" do
     Course.destroy_all
 

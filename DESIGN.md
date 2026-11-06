@@ -38,7 +38,7 @@ Rails serves the [font files](app/assets/fonts) from the same origin as the appl
 
 | Surface | Composition and behavior |
 | --- | --- |
-| Library | Group courses by category. A course card shows its title, a short description, progress in words, and a link to start or resume. An empty library explains what will appear there. |
+| Library | Use a grid of cover cards: one column on phones, two from 640 px, three from 1024 px. Each card shows a 16:9 cover, category badge, title, three-line description, content language, progress, and a start/resume action. Place category filters with counts above the grid. An empty library explains what will appear there. |
 | Lesson reader | Put a compact course outline to the left of the reading column when both fit. Show the current lesson by name and position. On small screens, move the outline above the article behind a labeled disclosure. Keep the heading, prose, and exercises in reading order. |
 | Worked example or exercise | Use a sage-wash panel with a short prompt, the material or control, and its result. Keep figures, equations, and code close to the text that introduces them. Label chart units and offer the values or a text summary. Give images meaningful alternative text and a caption when it adds context. |
 | Progress | Pair a progress bar with a count such as “2 of 5 lessons completed.” Distinguish the open lesson from a completed one. Use a verb such as “Mark complete” for a change of state. |
@@ -68,9 +68,13 @@ Draft previews reuse the reader's typography, material renderer, and nearby outl
 
 Course creation uses a labeled topic field, content language and lesson count in one quiet panel. Explain the model's use of the topic and draft before submission. The progress screen shows saved lessons against the requested count, with the ordered plan and a clear cancel or resume action. Describe partial results honestly; do not present a timed percentage estimate. Keep keyboard focus stable during polling and provide a manual refresh after a connection failure. A ready result links to draft review rather than approving itself.
 
+Course covers use a consistent, quiet editorial illustration style: warm paper, sage accents, soft light, and no embedded titles or logos. Treat them as decorative next to the visible title. Reserve the image's aspect ratio before loading; reuse the bookshelf illustration if a cover is absent or fails. Keep every card within one column, even when there is only one course. Titles remain complete; descriptions may be clamped because the course outline exposes the full text.
+
+Category filters are wrapping links with at least 44 px touch targets, visible selected styling, and `aria-current`. Counts include published courses only. Preserve the selected category in the URL, browser history, and language switch. Category names are catalog content; changing the interface language does not translate them.
+
 ## Motion
 
-Use a short fade-up to introduce a new screen, not to pace the learner's reading. Page headings, course cards, outlines, lesson articles, and forms enter once when rendered, including Turbo navigation. Animate the lesson article as one surface; scrolling does not hide or reveal individual paragraphs. The site header stays steady. Never transform an ancestor of the fixed chat widget.
+Use a short fade-up to introduce a new screen, not to pace the learner's reading. Page headings, library filters and result counts, course cards, outlines, lesson articles, and forms enter once when rendered, including Turbo navigation. Animate the lesson article as one surface; scrolling does not hide or reveal individual paragraphs. The site header stays steady. Never transform an ancestor of the fixed chat widget.
 
 | Interaction | Duration | Vertical movement |
 | --- | --- | --- |

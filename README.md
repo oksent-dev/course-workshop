@@ -4,7 +4,7 @@ A workspace for creating and studying structured courses, with a Polish and Engl
 
 ## Status
 
-The library groups courses by category. Each course has an outline and a reader with previous and next lesson links. A three-lesson Polish course on everyday statistics is included.
+The library displays cover cards with category filters, descriptions, and learning progress. Each course has an outline and a reader with previous and next lesson links. A three-lesson Polish course on everyday statistics is included. Optional covers use local Active Storage with optimized WebP thumbnails; see [course covers](docs/course-covers.md) for import and the verified Codex image-generation workflow.
 
 Mark lessons complete, undo completion, and resume from the library. Development shares a local profile across browsers; production keeps separate browser profiles without requiring sign-in. See [learning progress](docs/learning-progress.md) for ownership, persistence, and resume rules.
 

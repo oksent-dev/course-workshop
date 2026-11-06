@@ -27,7 +27,7 @@
         <nav aria-label="<%= t("navigation.language") %>" class="flex items-center gap-1">
           <% I18n.available_locales.each do |locale| %>
             <% current = locale == I18n.locale %>
-            <%= link_to t("languages.#{locale}"), url_for(request.path_parameters.merge(locale: locale)),
+            <%= link_to t("languages.#{locale}"), language_switch_path(locale),
                 lang: locale, hreflang: locale,
                 aria: { current: current ? "page" : nil },
                 class: class_names("btn min-h-11 text-base font-medium", current ? "btn-primary underline underline-offset-4" : "btn-ghost") %>

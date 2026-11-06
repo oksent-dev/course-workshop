@@ -1,0 +1,10 @@
+<div class="relative aspect-video overflow-hidden rounded-t-box bg-base-200" data-controller="course-cover" aria-hidden="true">
+  <div class="absolute inset-0 flex items-center justify-center bg-secondary p-8" data-course-cover-target="fallback">
+    <%= render "pages/bookshelf" %>
+  </div>
+  <% if course.cover.attached? %>
+    <%= image_tag course.cover.variant(:card), alt: "", width: 960, height: 540,
+      loading: eager ? "eager" : "lazy", decoding: "async", class: "relative h-full w-full object-cover",
+      data: { course_cover_target: "image", action: "error->course-cover#failed load->course-cover#loaded" } %>
+  <% end %>
+</div>

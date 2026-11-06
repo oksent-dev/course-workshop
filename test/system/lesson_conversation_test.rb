@@ -69,6 +69,9 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     code = "puts \"<example>\"\n"
     lesson.update!(body: "A passage to explain.\n\n```ruby\n#{code}```")
     visit course_lesson_path(lesson.course, lesson, locale: :en)
+    assert_selector "article" do |article|
+      article.evaluate_script("this.getAnimations().length === 0")
+    end
     select_text(".lesson-content pre code")
     assert_button "Ask about this passage"
     page.execute_script("document.querySelector('.lesson-content p').style.paddingBottom = '40px'")

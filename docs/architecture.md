@@ -10,14 +10,14 @@ PostgreSQL is the application database. Active Storage stores file metadata in P
 
 The UI supports `pl` and `en`. URLs contain the selected locale, and an `around_action` applies it only for the current request. Locale dictionaries contain interface strings. Development and tests raise on missing translations.
 
-The language switcher generates the current route with the chosen locale. Category names, course titles and descriptions, and lesson text come from the catalog. The `courses.language` column identifies the content language, including for assistive technology in the reader.
+The language switcher generates the current route with the chosen locale, preserving the library's category filter. Category names, course titles and descriptions, and lesson text come from the catalog. The `courses.language` column identifies the content language, including for assistive technology in the reader.
 
 ## Library and reader
 
 | Record | Owns | Constraints and ordering |
 | --- | --- | --- |
-| Category | Named group of courses | Unique name. The library shows groups with courses, in name order. |
-| Course | Category, unique URL slug, title, description, content language | The library sorts courses by title within a category. The slug identifies the course independently of the interface locale. |
+| Category | Named group of courses | Unique name. Library filters include only categories with published courses, in name order. |
+| Course | Category, unique URL slug, title, description, content language, optional Active Storage cover | The library sorts published cards by title and ID. The slug identifies the course independently of the interface locale. |
 | Lesson | Parent course, title, body, position | A foreign key requires a course. PostgreSQL requires a positive position and enforces uniqueness of the course and position pair. |
 
 The library links to `/:locale/courses/:slug` and offers a direct start, resume, or review action. The course page lists its lessons and offers the same action. The reader at `/:locale/courses/:course_slug/lessons/:id` looks up the lesson through that course. An unrelated lesson ID returns 404. The outline loads lesson headings in position order and supplies adjacent links even when the stored positions have gaps.
@@ -31,6 +31,8 @@ esbuild splits the renderer bundles into content-hashed chunks. Chunk and font f
 `LessonImage` stores a unique key per lesson and alternative text, and owns one Active Storage file. `LessonImages::Import` validates local image contents and performs repeatable imports through a Rails task or the seed. Missing files produce a text fallback, including when a request fails in the browser. See [lesson content](lesson-content.md) for syntax, limits, and storage behavior.
 
 The [seed script](../db/seeds.rb) loads the prepared course in a transaction. It reuses the category name and course slug, and updates the demo lessons by their one-based position in the source file. Those positions identify the seeded lessons across runs. Append new lessons or edit the material at its existing position to preserve the meaning of saved links.
+
+The library uses `?category=ID` for filtering. Counts are computed from published courses before filtering. An unknown category, or one containing only drafts, returns 404. Covers, categories, lesson outlines, and learner progress are loaded in batches for the selected courses. `CourseCovers::Import` and `LessonImages::Import` share `ImageUpload` for content detection, size limits, and full image decoding. Course covers use a named 960 × 540 WebP variant. The browser's image-fallback controller is shared with lesson images. See [course covers](course-covers.md).
 
 ## Learning progress
 

@@ -1,6 +1,28 @@
 require "application_system_test_case"
 
 class CourseReaderTest < ApplicationSystemTestCase
+  test "category navigation keeps its selection and loaded covers have a usable fallback" do
+    category = Category.create!(name: "Statistics")
+    course = category.courses.create!(title: "Everyday statistics", slug: "everyday-statistics", description: "Understand everyday data.", language: "en", status: :published)
+    CourseCovers::Import.call(course: course, path: Rails.root.join("db/seeds/images/commute-times.png"))
+    visit localized_root_path(locale: :en)
+    assert_selector "[data-course-card]", count: 3
+    within("nav[aria-label='Filter courses by category']") { find_link("Statistics").send_keys(:enter) }
+    assert_selector "[data-course-card]", count: 1
+    assert_selector "[data-course-card] img" do |image|
+      image.evaluate_script("this.complete && this.naturalWidth > 0")
+    end
+    assert_no_selector "[data-course-cover-target=fallback]"
+    click_link "Polski"
+    assert_current_path localized_root_path(locale: :pl, category: category.id)
+    assert_selector "[data-course-card]", count: 1
+    page.execute_script("document.querySelector('[data-course-card] img').src = '/missing-course-cover.webp'")
+    assert_selector "[data-course-cover-target=fallback]"
+    assert_no_selector "[data-course-card] img"
+    click_link "Everyday statistics"
+    assert_selector "h1", text: course.title
+  end
+
   test "a reader can follow the demo course and switch the interface language mid-lesson" do
     Rails.application.load_seed
     visit localized_root_path(locale: :pl)

@@ -112,6 +112,15 @@ pl:
     language: "Język"
     skip_to_content: "Przejdź do treści"
   home:
+    introduction: "Wybierz coś do odkrycia lub wróć do rozpoczętej nauki."
+    category_filters: "Filtruj kursy po kategorii"
+    all_categories: "Wszystkie"
+    course_list: "Kursy"
+    results:
+      one: "%{count} kurs"
+      few: "%{count} kursy"
+      many: "%{count} kursów"
+      other: "%{count} kursu"
     library_title: "Twoja biblioteka kursów"
     empty_title: "Twoja półka jest jeszcze pusta"
     library_description: "Tutaj pojawią się Twoje kursy. Z tego miejsca przejdziesz do lekcji."

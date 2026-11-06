@@ -1,7 +1,7 @@
 class LessonImage < ApplicationRecord
-  CONTENT_TYPES = %w[image/png image/jpeg image/webp].freeze
-  MAX_BYTES = 5.megabytes
-  MAX_PIXELS = 20_000_000
+  CONTENT_TYPES = ImageUpload::CONTENT_TYPES
+  MAX_BYTES = ImageUpload::MAX_BYTES
+  MAX_PIXELS = ImageUpload::MAX_PIXELS
 
   belongs_to :lesson
   has_one_attached :file

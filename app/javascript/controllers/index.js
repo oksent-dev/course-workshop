@@ -7,6 +7,7 @@ import LessonChatController from "./lesson_chat_controller.js";
 
 application.register("conversation", ConversationController);
 application.register("lesson-image", LessonImageController);
+application.register("course-cover", LessonImageController);
 application.register("lesson-block", LessonBlockController);
 application.register("generation", GenerationController);
 application.register("lesson-chat", LessonChatController);

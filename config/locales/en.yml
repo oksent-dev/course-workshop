@@ -112,6 +112,13 @@ en:
     language: "Language"
     skip_to_content: "Skip to content"
   home:
+    introduction: "Find something to explore, or pick up where you left off."
+    category_filters: "Filter courses by category"
+    all_categories: "All"
+    course_list: "Courses"
+    results:
+      one: "%{count} course"
+      other: "%{count} courses"
     library_title: "Your course library"
     empty_title: "Your shelf is empty"
     library_description: "Your courses will appear here, ready to open and read."
