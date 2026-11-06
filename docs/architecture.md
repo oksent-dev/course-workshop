@@ -22,7 +22,7 @@ The language switcher generates the current route with the chosen locale. Catego
 
 The library links to `/:locale/courses/:slug` and offers a direct start, resume, or review action. The course page lists its lessons and offers the same action. The reader at `/:locale/courses/:course_slug/lessons/:id` looks up the lesson through that course. An unrelated lesson ID returns 404. The outline loads lesson headings in position order and supplies adjacent links even when the stored positions have gaps.
 
-`LessonMarkdown` renders the current body with Commonmarker, resolves image references within the lesson, restricts link schemes, and sanitizes the HTML. The view styles semantic elements within `.lesson-content`; wide code and tables have their own scroll containers.
+`LessonMarkdown` renders the current body with Commonmarker, resolves image references within the lesson, restricts link schemes, and sanitizes the HTML. `LessonCode` applies Rouge to bounded, explicitly labeled ordinary code fences before learning blocks are expanded. Token classes survive the final sanitizer, while code text stays inert. The view styles semantic elements within `.lesson-content`; wide code and tables have their own scroll containers.
 
 `LessonBlock` validates the explicit `math`, `mermaid`, and `exercise` fence formats. Math and diagram components keep escaped source as a fallback and load browser renderers through Stimulus. KaTeX uses untrusted-input settings; Mermaid receives a limited flowchart syntax and its SVG is sanitized before insertion. Exercises render sanitized prompt/answer Markdown with a native disclosure. Special blocks do not recursively render inside exercises. See [learning blocks](learning-blocks.md) for the full contract.
 

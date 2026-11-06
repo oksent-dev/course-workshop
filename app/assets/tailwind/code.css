@@ -1,0 +1,32 @@
+@layer components {
+  .lesson-code :is(.k, .kc, .kd, .kn, .kp, .kr, .kt, .ow) {
+    color: #71527f;
+    font-weight: 600;
+  }
+
+  .lesson-code :is(.s, .sa, .sb, .sc, .sd, .s1, .s2, .se, .sh, .si, .sr, .ss, .sx) {
+    color: #8a422c;
+  }
+
+  .lesson-code :is(.m, .mb, .mf, .mh, .mi, .il, .mo, .mx) {
+    color: #79551a;
+  }
+
+  .lesson-code :is(.nf, .fm, .nb, .nc, .nd, .ne, .nn, .nt) {
+    color: #315f78;
+  }
+
+  .lesson-code :is(.na, .nv, .vc, .vg, .vi, .vm) {
+    color: #32685e;
+  }
+
+  .lesson-code :is(.c, .ch, .cm, .cp, .cpf, .c1, .cs) {
+    color: var(--color-muted-ink);
+    font-style: italic;
+  }
+
+  .lesson-code :is(.gd, .gr) { color: #793d33; }
+  .lesson-code :is(.gi, .gu) { color: #435f48; }
+  .lesson-code .gs { font-weight: 600; }
+  .lesson-code .ge { font-style: italic; }
+}

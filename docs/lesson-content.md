@@ -30,7 +30,17 @@ puts times.sum.fdiv(times.length)
 [Reference](https://example.com/guide)
 ````
 
-Ordinary code is displayed as text and never executed. Code blocks and wide tables scroll inside labeled regions that can receive keyboard focus. The dedicated `math`, `mermaid`, and `exercise` fences render validated learning components; see [learning blocks](learning-blocks.md) for their formats and limits. Syntax highlighting and executable user-supplied code are not supported.
+Ordinary code is displayed as text and never executed. Code blocks and wide tables scroll inside labeled regions that can receive keyboard focus. The dedicated `math`, `mermaid`, and `exercise` fences render validated learning components; see [learning blocks](learning-blocks.md) for their formats and limits.
+
+### Syntax highlighting
+
+Specify the language after the opening fence, such as `ruby`, `sql`, or `typescript`. Rouge generates token spans on the server; colors come from the Reading Room stylesheet. Highlighting works in the reader, draft preview, and exercise prompts/answers, including after Turbo navigation, without a client-side highlighting runtime. Inline code keeps its neutral styling.
+
+Supported languages include Ruby/ERB, JavaScript/TypeScript/JSX/TSX, Python, SQL, HTML/CSS, JSON/YAML, shell, PowerShell, Java, C/C++/C#, Go, Rust, Dockerfile, TOML, Markdown and diff. Rouge aliases such as `rb`, `js`, `ts`, `py`, `yml`, `bash` and `sh` are accepted. Language detection is explicit; missing or unsupported labels leave plain text.
+
+`LessonCode` limits highlighting to 20,000 bytes per block. The renderer considers the first 32 ordinary fenced blocks per Markdown fragment. Larger blocks, unsupported languages and highlighting failures retain their full escaped source. Generated token HTML passes through the same final sanitizer as the rest of the lesson; inline styles and executable HTML remain prohibited. Math, diagrams and exercise JSON keep their dedicated renderers.
+
+Rouge was selected for its Ruby integration, class-based HTML output, and language coverage. The bundled Commonmarker highlighter was also evaluated: its class-based mode removes the fence language attribute used by the learning-block renderer, and the installed grammar set does not highlight TypeScript. Highlight.js and Shiki are viable JavaScript alternatives; this implementation keeps highlighting in the existing server rendering path.
 
 Links allow HTTP, HTTPS, root-relative paths beginning with one slash, and fragment references. Unsupported URLs lose their link target while retaining the visible text. Raw HTML is displayed as text. Scripts, inline styles, event handlers, and arbitrary embedded media cannot enter the rendered document.
 
@@ -82,4 +92,4 @@ Tests cover Markdown structure, unsafe markup and URLs, local image scoping, rej
 ruby bin/rails test:all
 ```
 
-Implementation references: [Commonmarker](https://github.com/gjtorikian/commonmarker) and [Active Storage](https://guides.rubyonrails.org/active_storage_overview.html).
+Implementation references: [Commonmarker](https://github.com/gjtorikian/commonmarker), [Rouge](https://github.com/rouge-ruby/rouge), and [Active Storage](https://guides.rubyonrails.org/active_storage_overview.html).

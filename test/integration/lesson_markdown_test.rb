@@ -73,6 +73,55 @@ class LessonMarkdownTest < ActionDispatch::IntegrationTest
     assert_select ".lesson-image-unavailable", text: "Image unavailable: Remote illustration"
   end
 
+  test "Ruby, SQL and TypeScript fences receive syntax colors while preserving their source" do
+    samples = {
+      "rb" => "class Course < ApplicationRecord\n  validates :title, presence: true\nend\n",
+      "sql" => "SELECT title FROM courses WHERE id = 1;\n",
+      "typescript" => "const title: string = \"Course\";\n"
+    }
+    @lesson.update!(body: samples.map { |language, source| "```#{language}\n#{source}```" }.join("\n\n"))
+    get @path
+    assert_select ".lesson-scroll pre code.lesson-code", count: 3 do |nodes|
+      assert_equal samples.values, nodes.map(&:text)
+      nodes.each { |node| assert node.css("span").any? }
+    end
+    assert_select ".lesson-code .k", text: "class"
+    assert_select ".lesson-code [style]", count: 0
+  end
+
+  test "HTML and ERB examples remain inert after highlighting" do
+    source = "<script>window.codeExecuted = true</script>\n<img src=x onerror=alert(1)>\n<%= dangerous_method %>\n"
+    @lesson.update!(body: "```erb\n#{source}```")
+    get @path
+    assert_select "code.lesson-code" do |nodes|
+      assert_equal source, nodes.first.text
+    end
+    assert_select ".lesson-code span"
+    assert_select ".lesson-content script, .lesson-content img, .lesson-content [onerror], .lesson-content [style]", count: 0
+  end
+
+  test "unknown, missing and oversized fence languages keep readable plain code" do
+    large_source = "puts 'large'\n" * 2_000
+    @lesson.update!(body: "```unknown-language\nputs 'unknown'\n```\n\n```\nputs 'plain'\n```\n\n```ruby\n#{large_source}```\n\nUse `inline_code`.")
+    get @path
+    assert_select "pre code", count: 3
+    assert_select ".lesson-code", count: 0
+    assert_select "pre code" do |nodes|
+      assert_equal large_source, nodes.last.text
+    end
+    assert_select "p code", text: "inline_code"
+  end
+
+  test "code in exercise prompts and solutions is highlighted once while reserved blocks keep their renderer" do
+    exercise = JSON.generate(prompt: "Explain:\n\n```ruby\nputs 1\n```", answer: "```ruby\nputs 2\n```")
+    @lesson.update!(body: "```exercise\n#{exercise}\n```\n\n```math\nx = 1\n```\n\n```mermaid\nflowchart TD\naccDescr: A step.\nA[\"Start\"]\n```")
+    get @path
+    assert_select ".lesson-exercise code.lesson-code", count: 2
+    assert_select ".lesson-code .lesson-code", count: 0
+    assert_select "[data-controller='lesson-block']", count: 2
+    assert_select "[data-lesson-block-target='source'] code.lesson-code", count: 0
+  end
+
   test "an attached image has a local URL, an accessible description, and an escaped caption" do
     image = import_image
     @lesson.update!(body: '![](image:sample "A <caption>")')

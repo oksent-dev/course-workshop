@@ -27,12 +27,24 @@ class LessonMarkdown
     fragment.css("h1").each { |heading| heading.name = "h2" }
     fragment.css("a").each { |link| link.remove_attribute("href") unless allowed_link?(link["href"]) }
     render_images(fragment)
+    highlight_code(fragment)
     render_blocks(fragment) if @blocks
     wrap_scrollable_blocks(fragment)
     @view.sanitize(fragment.to_html, tags: TAGS, attributes: ATTRIBUTES)
   end
 
   private
+
+  def highlight_code(fragment)
+    fragment.css("pre[lang]").reject { |node| LessonBlock::KINDS.include?(node["lang"]) }.first(32).each do |node|
+      code = node.at_css("code")
+      next unless code
+      highlighted = LessonCode.highlight(code.text, language: node["lang"])
+      next unless highlighted
+      code.inner_html = highlighted
+      code["class"] = "lesson-code"
+    end
+  end
 
   def render_blocks(fragment)
     count = 0
