@@ -6,6 +6,8 @@ A workspace for creating and studying structured courses, with a Polish and Engl
 
 The library groups courses by category. Each course has an outline and a reader with previous and next lesson links. A three-lesson Polish course on everyday statistics is included.
 
+An optional local tutor uses GPT-6.1 Sol through Codex App Server. Ask questions directly in a lesson and continue the conversation there. See [local AI setup and verification](docs/local-ai.md); AI is disabled by default and unavailable in production.
+
 ## Requirements
 
 - Ruby 4.0.9 and Bundler 4.0.20

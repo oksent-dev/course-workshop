@@ -1,0 +1,25 @@
+<% if exchanges.empty? %>
+  <p class="text-muted-ink"><%= t("conversation.empty") %></p>
+<% else %>
+  <ol class="space-y-6">
+    <% exchanges.each do |exchange| %>
+      <li class="space-y-3">
+        <div class="rounded-box bg-secondary p-4">
+          <p class="text-sm font-semibold"><%= t("conversation.you") %></p>
+          <p class="mt-1 whitespace-pre-wrap wrap-anywhere"><%= exchange.question %></p>
+        </div>
+        <div class="px-1">
+          <p class="text-sm font-semibold"><%= t("conversation.tutor") %></p>
+          <% if exchange.completed? %>
+            <p class="mt-1 whitespace-pre-wrap wrap-anywhere"><%= exchange.answer %></p>
+          <% elsif exchange.failed? %>
+            <p class="mt-1 text-error-content"><%= t("conversation.errors.#{exchange.error_code}", default: t("conversation.errors.unavailable")) %></p>
+            <p class="mt-1 text-sm text-muted-ink"><%= t("conversation.retry_hint") %></p>
+          <% else %>
+            <p class="mt-1 text-muted-ink"><%= t("conversation.states.#{exchange.cancel_requested_at? && exchange.pending? ? "cancelling" : exchange.status}") %></p>
+          <% end %>
+        </div>
+      </li>
+    <% end %>
+  </ol>
+<% end %>

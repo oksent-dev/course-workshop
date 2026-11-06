@@ -34,5 +34,8 @@
         <%= link_to t("reader.back_to_course"), course_path(@course), class: "btn btn-primary min-h-11" %>
       <% end %>
     </nav>
+    <% if LocalAi.available?(request) %>
+      <%= render "conversations/panel", course: @course, lesson: @lesson %>
+    <% end %>
   </article>
 </div>

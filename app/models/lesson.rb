@@ -1,4 +1,5 @@
 class Lesson < ApplicationRecord
+  has_many :conversations, dependent: :destroy
   belongs_to :course
 
   scope :outline, -> { select(:id, :course_id, :position, :title) }

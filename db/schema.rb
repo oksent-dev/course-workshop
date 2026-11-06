@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_05_144307) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_090000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -49,6 +49,15 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_144307) do
     t.index ["name"], name: "index_categories_on_name", unique: true
   end
 
+  create_table "conversations", force: :cascade do |t|
+    t.bigint "lesson_id", null: false
+    t.string "browser_key", null: false
+    t.string "runtime_thread_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["lesson_id", "browser_key"], name: "index_conversations_on_lesson_id_and_browser_key", unique: true
+  end
+
   create_table "courses", force: :cascade do |t|
     t.bigint "category_id", null: false
     t.string "slug", null: false
@@ -59,6 +68,25 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_144307) do
     t.datetime "updated_at", null: false
     t.index ["category_id"], name: "index_courses_on_category_id"
     t.index ["slug"], name: "index_courses_on_slug", unique: true
+  end
+
+  create_table "exchanges", force: :cascade do |t|
+    t.bigint "conversation_id", null: false
+    t.string "request_key", null: false
+    t.text "question", null: false
+    t.text "answer"
+    t.jsonb "lesson_context", null: false
+    t.string "locale", null: false
+    t.string "status", default: "queued", null: false
+    t.string "error_code"
+    t.datetime "cancel_requested_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["conversation_id", "request_key"], name: "index_exchanges_on_conversation_id_and_request_key", unique: true
+    t.index ["conversation_id"], name: "index_exchanges_on_conversation_id"
+    t.index ["conversation_id"], name: "one_pending_exchange_per_conversation", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'running'::character varying])::text[]))"
+    t.check_constraint "char_length(question) >= 1 AND char_length(question) <= 4000", name: "exchanges_question_length"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "exchanges_valid_status"
   end
 
   create_table "lessons", force: :cascade do |t|
@@ -74,6 +102,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_05_144307) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "conversations", "lessons"
   add_foreign_key "courses", "categories"
+  add_foreign_key "exchanges", "conversations"
   add_foreign_key "lessons", "courses"
 end

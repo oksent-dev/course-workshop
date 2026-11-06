@@ -1,0 +1,23 @@
+<details class="mt-8 rounded-box border border-base-300 bg-base-200 p-4 sm:p-6"
+  data-controller="conversation"
+  data-conversation-url-value="<%= course_lesson_conversation_path(course, lesson) %>"
+  data-conversation-network-error-value="<%= t("conversation.network_error") %>"
+  data-conversation-sending-value="<%= t("conversation.sending") %>"
+  data-action="toggle->conversation#toggle">
+  <summary class="min-h-11 cursor-pointer content-center font-semibold"><%= t("conversation.open") %></summary>
+  <p class="mt-3 text-sm text-muted-ink"><%= t("conversation.context", model: "GPT-6.1 Sol") %></p>
+  <div class="mt-6" role="log" aria-live="polite" aria-label="<%= t("conversation.history") %>" data-conversation-target="transcript"></div>
+  <p role="status" class="mt-3 text-sm text-error-content" data-conversation-target="status"></p>
+  <button type="button" class="btn btn-ghost mt-2 min-h-11 hidden" data-conversation-target="refresh" data-action="conversation#refresh"><%= t("conversation.refresh") %></button>
+  <%= form_with url: course_lesson_conversation_exchanges_path(course, lesson), data: { turbo: false, action: "submit->conversation#send", conversation_target: "form" }, class: "mt-6" do |form| %>
+    <%= form.label :question, t("conversation.question"), class: "block font-medium" %>
+    <%= form.text_area :question, required: true, maxlength: 4000, rows: 3,
+      class: "textarea mt-2 w-full border-muted-ink bg-base-100 text-base",
+      data: { conversation_target: "question" } %>
+    <div class="mt-3 flex flex-wrap gap-3">
+      <%= form.submit t("conversation.send"), class: "btn btn-primary min-h-11", disabled: true, data: { conversation_target: "submit" } %>
+      <button type="button" class="btn btn-ghost min-h-11 hidden" data-conversation-target="cancel" data-action="conversation#cancel"><%= t("conversation.cancel") %></button>
+    </div>
+  <% end %>
+  <noscript><p class="mt-3"><%= t("conversation.javascript_required") %></p></noscript>
+</details>

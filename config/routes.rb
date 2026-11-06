@@ -4,7 +4,11 @@ Rails.application.routes.draw do
   scope "/:locale", locale: /pl|en/ do
     root "pages#home", as: :localized_root
     resources :courses, only: :show, param: :slug do
-      resources :lessons, only: :show
+      resources :lessons, only: :show do
+        resource :conversation, only: :show do
+          resources :exchanges, only: [ :create, :destroy ], controller: :conversations
+        end
+      end
     end
   end
 

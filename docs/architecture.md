@@ -26,15 +26,17 @@ The [seed script](../db/seeds.rb) loads the prepared course in a transaction. It
 
 ## Planned course features
 
-Upcoming features include exercises, learning progress, and lesson conversations. Markdown rendering will extend the reader. Math, diagrams, and supported interactive elements will use dedicated components.
+Upcoming features include exercises and learning progress. Markdown rendering will extend the reader. Math, diagrams, and supported interactive elements will use dedicated components.
 
 Generated content will be treated as input: HTML output must be sanitized, and interactive blocks must use validated data rather than arbitrary generated JavaScript.
 
-## Planned agent boundary
+## Lesson conversations and the agent boundary
 
-The embedded chat will use an adapter to a local Codex runtime, initially evaluated through Codex App Server. A separate MCP interface will expose focused course operations to the agent.
+The optional lesson panel uses a Stimulus controller to submit questions and poll Rails for saved outcomes. `ConversationsController` resolves the lesson through its course, then scopes the conversation to a random key in the browser session. `Conversation` owns ordered `Exchange` records containing question, lesson snapshot, answer, and status.
 
-This integration is not implemented in the foundation. It must keep application access rules in the application, pass explicit lesson context, and handle cancellation and failures. Public demonstration deployments will need an explicit policy for disabling live AI operations.
+`LessonReplyJob` calls a replaceable tutor adapter outside the HTTP request. `Codex::Tutor` manages thread and turn semantics; `Codex::Connection` owns the stdio process, JSON-lines transport, deadline, and cleanup. The adapter pins GPT-6.1 Sol and resumes the conversation's Codex thread for follow-ups. Only final answer text is saved, never raw reasoning or tool events.
+
+The integration is opt-in and restricted to local development. Production rejects all conversation endpoints. See [local AI](local-ai.md) for access checks, cancellation, data retention, queue limitations, and the verification procedure. A future MCP interface will expose focused course operations separately.
 
 ## Development and production
 
