@@ -1,7 +1,7 @@
 module Drafts
   class Catalog
     def self.course(course)
-      course.attributes.slice("id", "slug", "title", "description", "language", "status", "revision")
+      course.attributes.slice("id", "slug", "title", "description", "language", "status", "revision", "category_id")
         .merge("category" => course.category.name)
     end
 

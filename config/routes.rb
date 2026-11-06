@@ -7,6 +7,7 @@ Rails.application.routes.draw do
     resources :generations, only: [ :new, :create, :show ] do
       post :cancel, on: :member
       post :retry, on: :member, action: :retry_generation
+      post :retry_cover, on: :member
     end
     resources :courses, only: :show, param: :slug do
       resources :lessons, only: :show do

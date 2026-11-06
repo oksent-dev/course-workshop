@@ -1,0 +1,58 @@
+class CourseCoverGeneration < ApplicationRecord
+  TIMEOUT = 300
+  EXPIRY = 7.minutes
+
+  belongs_to :course
+  enum :status, %w[queued running completed failed].index_with(&:itself)
+  after_create_commit :enqueue
+
+  def pending?
+    queued? || running?
+  end
+
+  def enqueue
+    current_attempt = attempt
+    fail!(current_attempt, "unavailable") unless CourseCoverGenerationJob.perform_later(self, current_attempt)
+  rescue ActiveJob::EnqueueError
+    fail!(current_attempt, "unavailable")
+  end
+
+  def claim!(expected_attempt)
+    with_lock do
+      return false unless queued? && attempt == expected_attempt && expires_at.future?
+      update!(status: :running, expires_at: EXPIRY.from_now)
+    end
+  end
+
+  def complete!(expected_attempt, upload:)
+    with_lock do
+      return unless running? && attempt == expected_attempt && expires_at.future?
+      course.with_lock do
+        unless course.cover.attached?
+          course.cover = upload.attributes
+          course.save!
+        end
+        update!(status: :completed, error_code: nil)
+      end
+    end
+  end
+
+  def fail!(expected_attempt, code)
+    with_lock do
+      update!(status: :failed, error_code: code) if pending? && attempt == expected_attempt
+    end
+  end
+
+  def expire_stale!
+    with_lock do
+      update!(status: :failed, error_code: "timeout") if pending? && expires_at.past?
+    end
+  end
+
+  def retry!(expected_attempt)
+    with_lock do
+      return false unless failed? && attempt == expected_attempt
+      update!(status: :queued, attempt: attempt + 1, error_code: nil, expires_at: EXPIRY.from_now)
+    end
+  end
+end

@@ -9,9 +9,9 @@ class ImageUpload
   MAX_BYTES = 5.megabytes
   MAX_PIXELS = 20_000_000
 
-  def initialize(path)
-    @filename = File.basename(path)
-    @bytes = File.binread(path, MAX_BYTES + 1)
+  def initialize(path = nil, bytes: nil, filename: nil)
+    @filename = filename || File.basename(path)
+    @bytes = bytes || File.binread(path, MAX_BYTES + 1)
     raise InvalidImage, "Images must be at most 5 MB." if @bytes.bytesize > MAX_BYTES
 
     @content_type = Marcel::MimeType.for(StringIO.new(@bytes))

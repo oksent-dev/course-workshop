@@ -2,16 +2,16 @@ module Drafts
   class Editor
     MAX_LESSONS = 60
 
-    def self.create_course(slug:, title:, description:, language:, category:)
+    def self.create_course(slug:, title:, description:, language:, category: nil, category_id: nil)
       record = Course.create!(slug: slug, title: title, description: description, language: language,
-        category: Category.find_or_create_by!(name: category), status: "draft")
+        category: Category.resolve!(category: category, category_id: category_id), status: "draft")
       { course: Catalog.course(record) }
     end
 
-    def self.update_course(course_id:, expected_revision:, title:, description:, language:, category:)
+    def self.update_course(course_id:, expected_revision:, title:, description:, language:, category: nil, category_id: nil)
       change(course_id, expected_revision) do |course|
         course.assign_attributes(title: title, description: description, language: language,
-          category: Category.find_or_create_by!(name: category))
+          category: Category.resolve!(category: category, category_id: category_id))
         {}
       end
     end

@@ -14,7 +14,7 @@ class CourseMcpStdioTest < ActiveSupport::TestCase
     replies = output.lines.map { |line| JSON.parse(line) }
     assert_equal [ 1, 2 ], replies.map { |reply| reply["id"] }
     assert_equal "course_workshop", replies.first.dig("result", "serverInfo", "name")
-    assert_equal 8, replies.last.dig("result", "tools").size
+    assert_equal 9, replies.last.dig("result", "tools").size
   end
 
   test "the launcher refuses to expose tools when disabled" do

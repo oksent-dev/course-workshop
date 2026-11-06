@@ -10,9 +10,19 @@ class CourseMcpServerTest < ActiveSupport::TestCase
 
   teardown { @settings.enabled = @previous_enabled }
 
+  test "authors can list and reuse category IDs without creating translated duplicates" do
+    catalog = call("list_categories").dig("structuredContent", "categories")
+    assert_includes catalog, { "id" => categories(:music).id, "name" => "Music" }
+    assert_no_difference "Category.count" do
+      result = call("create_course_draft", **metadata.except(:category), category_id: categories(:music).id, request_key: SecureRandom.uuid)
+      assert_equal categories(:music).id, result.dig("structuredContent", "course", "category_id")
+      assert_equal "Music", result.dig("structuredContent", "course", "category")
+    end
+  end
+
   test "the protocol exposes bounded schemas and no publication, deletion or file tools" do
     tools = rpc("tools/list").fetch("result").fetch("tools")
-    assert_equal %w[create_course_draft get_authoring_guide list_courses read_course read_lesson reorder_draft_lessons save_draft_lesson update_course_draft], tools.map { |tool| tool["name"] }.sort
+    assert_equal %w[create_course_draft get_authoring_guide list_categories list_courses read_course read_lesson reorder_draft_lessons save_draft_lesson update_course_draft], tools.map { |tool| tool["name"] }.sort
     tools.each do |tool|
       assert_equal false, tool.dig("inputSchema", "additionalProperties")
       assert tool["outputSchema"]

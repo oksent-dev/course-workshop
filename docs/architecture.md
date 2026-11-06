@@ -16,7 +16,7 @@ The language switcher generates the current route with the chosen locale, preser
 
 | Record | Owns | Constraints and ordering |
 | --- | --- | --- |
-| Category | Named group of courses | Unique name. Library filters include only categories with published courses, in name order. |
+| Category | Named group of courses | Whitespace-normalized name with case-insensitive uniqueness. Authoring reuses stable IDs. Library filters include only categories with published courses, in name order. |
 | Course | Category, unique URL slug, title, description, content language, optional Active Storage cover | The library sorts published cards by title and ID. The slug identifies the course independently of the interface locale. |
 | Lesson | Parent course, title, body, position | A foreign key requires a course. PostgreSQL requires a positive position and enforces uniqueness of the course and position pair. |
 
@@ -63,6 +63,10 @@ Publication is a human action in the local preview, outside the MCP tool set. Se
 `Codex::CourseGenerator` uses the shared `Codex::Runtime` capability restrictions, then enables live web search and a dedicated `CourseMcp::GenerationServer`. This server is bound to one generation and a revocable attempt token. It saves an immutable plan and complete lessons by position, using the same content validation and operation receipts as ordinary authoring. No course identifier supplied by the model can change the scope.
 
 Cancellation revokes the token immediately. Resume starts a new attempt and thread while retaining the draft, plan and existing lesson IDs. Completeness is checked in the application before the draft becomes eligible for human approval. The development queue remains Async; expired records require an explicit resume. See [course generation](course-generation.md) for lifecycle, limits and recovery.
+
+Generation state includes the existing category catalog. The model selects a suitable category ID before considering a new name; both scoped and ordinary MCP authoring share the same category resolver. PostgreSQL prevents duplicate names regardless of case.
+
+Completed form generations reserve a `CourseCoverGeneration` in the completion transaction and enqueue its job after commit. `Codex::CoverGenerator` opens a separate restricted session with native image generation enabled and no MCP or web access. Validated inline image bytes become the course's local Active Storage attachment. Cover status, expiry and retries are independent of the completed lessons; old attempts cannot attach late results, and manual covers are preserved. The progress screen polls both records and offers a cover-only retry. See [course covers](course-covers.md).
 
 ## Lesson conversations and the agent boundary
 

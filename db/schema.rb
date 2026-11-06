@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_150000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_170000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -46,6 +46,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_150000) do
     t.string "name", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.index "lower((name)::text)", name: "index_categories_on_normalized_name", unique: true
     t.index ["name"], name: "index_categories_on_name", unique: true
   end
 
@@ -56,6 +57,19 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_150000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["lesson_id", "browser_key"], name: "index_conversations_on_lesson_id_and_browser_key", unique: true
+  end
+
+  create_table "course_cover_generations", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.string "status", default: "queued", null: false
+    t.integer "attempt", default: 1, null: false
+    t.string "error_code"
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_course_cover_generations_on_course_id", unique: true
+    t.check_constraint "attempt > 0", name: "covers_positive_attempt"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "covers_valid_status"
   end
 
   create_table "course_generations", force: :cascade do |t|
@@ -164,6 +178,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_150000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "conversations", "lessons"
+  add_foreign_key "course_cover_generations", "courses"
   add_foreign_key "course_generations", "courses"
   add_foreign_key "courses", "categories"
   add_foreign_key "exchanges", "conversations"

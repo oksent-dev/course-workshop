@@ -22,11 +22,25 @@ The importer accepts decoded PNG, JPEG, and WebP files up to 5 MB and 20 million
 
 The task prepares a 960 × 540 WebP card variant at quality 82. A fixed 16:9 frame prevents layout shifts. Cover images use empty alternative text because the adjacent course title supplies the link's accessible name. A missing or failed image falls back to a decorative bookshelf without blocking navigation.
 
+## Automatic generation
+
+New courses created through the local form get a cover after their lessons finish. A separate job uses the authenticated Codex App Server and GPT-6.1 Sol to invoke native image generation. It needs a runtime/account reporting `imageGeneration` support; version `0.166.0-alpha.6` was verified locally. No separate Image API key is used. This consumes the Codex account's image allowance. There are no model calls during setup, tests, seeding or ordinary navigation.
+
+`CourseCoverGeneration` persists the course, status (`queued`, `running`, `completed`, `failed`), attempt, expiry and error code. Its unique course index and locked claim prevent duplicate delivery from creating more images. Completion creates this record in the same transaction as the finished lessons and enqueues it after commit. Images have a five-minute runtime deadline and a seven-minute persisted expiry. The local Async queue is not durable across restarts; the progress page expires stale work and offers an explicit retry.
+
+The progress screen distinguishes lesson completion from image creation. **Retry cover** increments only the image attempt, leaving lesson IDs, text and approval unchanged. Late results from an earlier attempt cannot attach an image. A manually imported cover is preserved even when the image job finishes afterwards. Quota, unsupported runtime, invalid image and other failures have localized explanations. Course review and approval remain available without a cover, using the normal bookshelf fallback.
+
+The image session receives only the course title, description and category plus a fixed Reading Room visual brief. It disables MCP, web search, shell, apps, plugins and project instructions. The adapter accepts only a matching `imageGeneration` completion item's inline base64 result, within the existing decoded byte/pixel limits. It never follows file paths or URLs from model prose, `savedPath` or `fileId`. A runtime that supplies only a file reference produces a retryable error rather than reading an arbitrary file. No raw image response is stored in PostgreSQL or application logs.
+
+Automatic covers currently belong to the form workflow. Manually authored MCP drafts and older completed generations retain their existing covers or fallback; import an image for those with the task above.
+
 ## Codex verification
 
 On 2026-11-06, a local App Server 0.166.0-alpha.6 session using GPT-6.1 Sol successfully called built-in image generation. The `imageGeneration` completion item provided a local `savedPath`. Its PNG was inspected, imported into the statistics course, downloaded from Active Storage, and compared by SHA-256. A repeated import preserved the blob ID. The original was 2,569,649 bytes and the WebP card variant was 54,900 bytes.
 
-The trial used the native Codex image tool, not the separately billed Image API. [OpenAI's image-generation documentation](https://learn.chatgpt.com/docs/image-generation) describes this capability and its usage limits. Generation is not yet part of the course-generation form; this change provides cover storage, import, and display. No model request runs during setup, tests, or ordinary library navigation.
+The trial used the native Codex image tool, not the separately billed Image API. [OpenAI's image-generation documentation](https://learn.chatgpt.com/docs/image-generation) describes this capability and its usage limits. The automatic adapter now uses the same tool's inline result, validating the bytes before attachment.
+
+The complete form workflow was also verified on 2026-11-06: a three-lesson English course about commute-time variability reused the existing Polish statistics category and automatically saved a 1,518,184-byte PNG on its first image attempt. Its WebP card is 17,198 bytes. The draft and image remained available after reload, in both interface languages, at 320 px and 200% zoom. The draft was left for human review.
 
 ## Trial prompt
 
@@ -48,4 +62,4 @@ Generate the actual image with your built-in image generation tool. Do not just 
 
 ## Verification
 
-Run `ruby bin/rails test:all`. Tests cover import round trips, idempotency, file recovery, invalid replacement, WebP output, filtering, draft exclusion, language-switch continuity, keyboard navigation, and image failure fallback. The existing lesson-image tests exercise the shared decoder's format, byte, and pixel limits.
+Run `ruby bin/rails test:all`. Tests cover import round trips, idempotency, file recovery, invalid replacement, WebP output, filtering, draft exclusion, language-switch continuity, keyboard navigation, and image failure fallback. Generation tests use a fake adapter and exercise duplicate jobs, failure and independent retry, stale results, manual replacement, polling and local HTTP boundaries. Protocol tests reject wrong-turn events, invalid/oversized results and quota failures. The existing lesson-image tests exercise the shared decoder's format, byte, and pixel limits.

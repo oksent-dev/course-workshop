@@ -14,7 +14,7 @@ CODEX_EXECUTABLE=codex
 
 On Windows, use an absolute path to the installed Codex executable when needed. Restart `ruby bin/dev` after changing configuration. Both PostgreSQL and the local application must remain running. The generator launches its own scoped MCP child process; it does not require registering a global MCP server.
 
-The form explains that the topic and draft are sent to the model, that the model can research online, and that it can save this draft. Submitting it authorizes these operations for that generation. Course content language is independent of the interface language.
+The form explains that the topic and draft are sent to the model, that it can research online and save this draft, and that a cover uses the account's image allowance. Submitting it authorizes these operations for that generation. Course content language is independent of the interface language.
 
 ## State and recovery
 
@@ -42,7 +42,11 @@ Submission atomically creates the generation and its draft. Repeated delivery of
 
 The model sets metadata and an ordered plan once. That plan must contain exactly the requested number of nonempty, distinct titles. The model then saves complete lesson bodies into those positions. Each mutation uses the existing `DraftOperation` receipt mechanism, inside a short transaction with the generation and course locks. There are no model or network calls inside database transactions.
 
-Completion requires every planned position exactly once, titles matching the plan, at least 200 characters per body, and the existing Markdown, image and learning-block validation. Educational accuracy, sufficient depth, and full browser math rendering still require review. The prompt requests examples, practice exercises and relevant primary-source links. The model can use live web search to check current or uncertain facts. Images must already be attached; the generator does not import them.
+`read_generation` includes all available category IDs and names, excluding the temporary `Drafts` placeholder. The instructions prefer an existing suitable subject, including broader categories and names in another language. `plan_course` accepts exactly one of `category_id` (reuse) or `category` (a new broad name when none fits). Names are whitespace-normalized and matched case-insensitively; a database unique index prevents concurrent case variants. Semantic matching is a model decision, not a deterministic synonym dictionary. Existing labels are preserved when the content language changes.
+
+Completion requires every planned position exactly once, titles matching the plan, at least 200 characters per body, and the existing Markdown, image and learning-block validation. Educational accuracy, sufficient depth, and full browser math rendering still require review. The prompt requests examples, practice exercises and relevant primary-source links. The model can use live web search to check current or uncertain facts. Inline lesson images must already be attached; the lesson generator does not import them.
+
+Successful completion atomically reserves an independent `CourseCoverGeneration` unless the course already has a cover. After commit, a separate job asks Codex to generate one illustration and stores its validated bytes in Active Storage. Progress keeps polling until both jobs settle. An image failure leaves the completed lessons ready for review and offers **Retry cover**. Approval does not wait for the image. Existing completed courses are not backfilled automatically; use the [cover importer](course-covers.md) for those.
 
 Incomplete drafts remain hidden from the regular library. Ordinary authoring tools and approval cannot modify a generated draft until generation completes. Partial content can be inspected in the preview. Approval remains a separate action; neither the job nor its MCP tools can publish.
 
@@ -53,8 +57,8 @@ Incomplete drafts remain hidden from the regular library. Ordinary authoring too
 | Tool | Purpose |
 | --- | --- |
 | `get_authoring_guide` | Content formats, limits and generation workflow |
-| `read_generation` | This topic, saved plan, draft metadata and lesson outline |
-| `plan_course` | Set metadata and ordered lesson titles once |
+| `read_generation` | This topic, saved plan, draft metadata, lesson outline and category catalog |
+| `plan_course` | Set metadata, one category selection and ordered lesson titles once |
 | `read_generated_lesson` | Read one saved lesson by planned position |
 | `save_generated_lesson` | Insert or replace one lesson at its planned position |
 

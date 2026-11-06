@@ -1,0 +1,13 @@
+<section class="mt-6 border-t border-base-300 pt-5" aria-labelledby="cover-heading">
+  <h3 id="cover-heading" class="font-semibold"><%= t("generation.cover.heading") %></h3>
+  <p class="mt-2 text-sm text-muted-ink" role="status"><%= t("generation.cover.statuses.#{generation.status}") %></p>
+  <% if generation.completed? && generation.course.cover.attached? %>
+    <div class="mt-4 overflow-hidden rounded-box"><%= render "courses/cover", course: generation.course, eager: true %></div>
+  <% elsif generation.failed? %>
+    <p class="mt-3 text-sm leading-relaxed" role="alert"><%= t("generation.cover.errors.#{generation.error_code}", default: t("generation.cover.errors.unavailable")) %></p>
+    <p class="mt-2 text-sm text-muted-ink"><%= t("generation.cover.retry_hint") %></p>
+    <%= button_to t("generation.cover.retry"), retry_cover_generation_path(@generation), params: { attempt: generation.attempt }, id: "cover-retry", class: "btn btn-outline mt-4 min-h-11" %>
+  <% else %>
+    <p class="mt-2 text-sm leading-relaxed text-muted-ink"><%= t("generation.cover.wait_hint") %></p>
+  <% end %>
+</section>

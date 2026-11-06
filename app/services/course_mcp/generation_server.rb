@@ -48,11 +48,11 @@ module CourseMcp
       [
         tool("get_authoring_guide", "Read content formats and the generation workflow.", {}, [], { guide: { type: "string" } }),
         tool("read_generation", "Read this generation's topic, immutable plan, draft and saved lesson IDs.", {}, [],
-          { topic: { type: "string" }, lesson_count: position, plan: { type: "array", items: title }, course: Server::COURSE, lessons: { type: "array", items: Server::LESSON } }),
+          { topic: { type: "string" }, lesson_count: position, plan: { type: "array", items: title }, categories: { type: "array", items: Server::CATEGORY }, course: Server::COURSE, lessons: { type: "array", items: Server::LESSON } }),
         tool("plan_course", "Set metadata and the ordered lesson titles once. On retry, preserve the existing plan.",
-          { request_key: Server::REQUEST_KEY, title: title, description: Server::METADATA[:description], category: Server::METADATA[:category],
+          { request_key: Server::REQUEST_KEY, title: title, description: Server::METADATA[:description], category: Server::METADATA[:category], category_id: Server::ID,
             lesson_titles: { type: "array", items: title, minItems: 3, maxItems: 6, uniqueItems: true } },
-          %w[request_key title description category lesson_titles], { course: Server::COURSE, plan: { type: "array", items: title } }, write: true),
+          %w[request_key title description lesson_titles], { course: Server::COURSE, plan: { type: "array", items: title } }, write: true),
         tool("read_generated_lesson", "Read one saved lesson by its plan position.", { position: position }, %w[position], { lesson: Server::LESSON }),
         tool("save_generated_lesson", "Save a complete lesson at a planned position, preserving its ID on retry. Use 250–450 words, an example and an exercise.",
           { request_key: Server::REQUEST_KEY, position: position, body: { type: "string", minLength: 200, maxLength: 40_000 } },
@@ -75,7 +75,7 @@ module CourseMcp
       when "get_authoring_guide"
         { guide: "#{Server::GUIDE}\nFor this scoped server, Rails already reserved the course. Read generation state, set plan_course exactly once, then save_generated_lesson by position. No course IDs or expected_revision are accepted. Each write needs a UUID request_key. Preserve the plan and existing lessons on retry. Use read_generated_lesson to review saved material. Include a practice exercise in every lesson. Never include placeholder content or claim unsaved work is complete." }
       when "read_generation"
-        { topic: generation.topic, lesson_count: generation.lesson_count, plan: generation.plan,
+        { topic: generation.topic, lesson_count: generation.lesson_count, plan: generation.plan, categories: Category.catalog,
           course: Drafts::Catalog.course(course), lessons: course.lessons.map { |lesson| Drafts::Catalog.lesson(lesson) } }
       when "read_generated_lesson"
         { lesson: Drafts::Catalog.lesson(course.lessons.find_by!(position: arguments.fetch(:position)), body: true) }
@@ -89,12 +89,12 @@ module CourseMcp
       end
     end
 
-    def plan(generation, course, title:, description:, category:, lesson_titles:)
+    def plan(generation, course, title:, description:, lesson_titles:, category: nil, category_id: nil)
       raise Drafts::Error.new("plan_exists", "A plan already exists. Read and preserve it.") if generation.plan.any?
       unless lesson_titles.size == generation.lesson_count && lesson_titles.all?(&:present?)
         raise Drafts::Error.new("invalid_plan", "Provide exactly the requested number of nonempty lesson titles.")
       end
-      course.assign_attributes(title: title, description: description, category: Category.find_or_create_by!(name: category))
+      course.assign_attributes(title: title, description: description, category: Category.resolve!(category: category, category_id: category_id))
       generation.update!(plan: lesson_titles)
       { plan: generation.plan }
     end

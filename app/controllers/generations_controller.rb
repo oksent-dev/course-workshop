@@ -1,7 +1,7 @@
 class GenerationsController < ApplicationController
   before_action :require_local_generation
-  before_action :set_generation, only: [ :show, :cancel, :retry_generation ]
-  helper_method :generation_version
+  before_action :set_generation, only: [ :show, :cancel, :retry_generation, :retry_cover ]
+  helper_method :generation_version, :generation_busy?
 
   def new
     @generation = CourseGeneration.new(language: I18n.locale, lesson_count: 4, request_key: SecureRandom.uuid)
@@ -22,10 +22,12 @@ class GenerationsController < ApplicationController
 
   def show
     @generation.expire_stale!
+    @cover_generation = @generation.course.cover_generation
+    @cover_generation&.expire_stale!
     @saved_positions = @generation.course.lessons.pluck(:position)
     respond_to do |format|
       format.html
-      format.json { render json: { html: render_to_string(partial: "status", formats: [ :html ]), busy: @generation.pending?, version: generation_version } }
+      format.json { render json: { html: render_to_string(partial: "status", formats: [ :html ]), busy: generation_busy?, version: generation_version } }
     end
   end
 
@@ -37,6 +39,13 @@ class GenerationsController < ApplicationController
   def retry_generation
     @generation.expire_stale!
     enqueue if @generation.retry!(params[:attempt].to_i)
+    redirect_to generation_path(@generation), status: :see_other
+  end
+
+  def retry_cover
+    cover = @generation.course.cover_generation
+    cover&.expire_stale!
+    cover.enqueue if @generation.completed? && cover&.retry!(params[:attempt].to_i)
     redirect_to generation_path(@generation), status: :see_other
   end
 
@@ -52,7 +61,11 @@ class GenerationsController < ApplicationController
   end
 
   def generation_version
-    [ @generation.updated_at.to_f, @generation.course.updated_at.to_f, @saved_positions ].to_json
+    [ @generation.updated_at.to_f, @generation.course.updated_at.to_f, @cover_generation&.updated_at&.to_f, @saved_positions ].to_json
+  end
+
+  def generation_busy?
+    @generation.pending? || @cover_generation&.pending? || false
   end
 
   def enqueue

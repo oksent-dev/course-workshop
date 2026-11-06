@@ -23,7 +23,7 @@ module Codex
         "web_search" => "disabled",
         "plugins._default.enabled" => false
       }
-      %w[shell_tool unified_exec view_image apps plugins remote_plugin memories hooks multi_agent goals js_repl computer_use browser_use].each do |feature|
+      %w[shell_tool unified_exec view_image image_generation apps plugins remote_plugin memories hooks multi_agent goals js_repl computer_use browser_use].each do |feature|
         overrides["features.#{feature}"] = false
       end
       %w[mcp_servers plugins].each do |section|

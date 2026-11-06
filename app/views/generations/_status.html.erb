@@ -17,6 +17,7 @@
     <%= button_to t("generation.cancel"), cancel_generation_path(@generation), params: { attempt: @generation.attempt }, id: "generation-cancel", class: "btn btn-outline mt-5 min-h-11" %>
   <% elsif @generation.completed? %>
     <p class="mt-5"><%= t("generation.review_hint") %></p>
+    <%= render "cover", generation: @cover_generation if @cover_generation %>
   <% else %>
     <% if @generation.failed? %><p role="alert" class="mt-5"><%= t("generation.errors.#{@generation.error_code}", default: t("generation.errors.unavailable")) %></p><% end %>
     <p class="mt-3 text-sm leading-relaxed text-muted-ink"><%= t("generation.retry_hint") %></p>

@@ -12,6 +12,27 @@ class CourseMcpGenerationServerTest < ActiveSupport::TestCase
 
   teardown { Rails.configuration.x.local_ai.enabled, Rails.configuration.x.local_authoring.enabled = @old }
 
+  test "the state supplies reusable category IDs and planning preserves their labels" do
+    catalog = call("read_generation").dig("structuredContent", "categories")
+    assert_includes catalog, { "id" => categories(:music).id, "name" => "Music" }
+    assert_not_includes catalog.map { |row| row["name"] }, "Drafts"
+    assert_no_difference "Category.count" do
+      result = call("plan_course", **plan_arguments.except(:category).merge(category_id: categories(:music).id))
+      assert_not result["isError"]
+    end
+    assert_equal categories(:music), @generation.course.reload.category
+  end
+
+  test "new categories are created only through an exclusive name selection" do
+    args = plan_arguments
+    assert call("plan_course", **args.merge(category_id: categories(:music).id))["isError"]
+    assert call("plan_course", **args.except(:category))["isError"]
+    assert_difference "Category.count", 1 do
+      assert_not call("plan_course", **args)["isError"]
+    end
+    assert_equal "Programming", @generation.course.reload.category.name
+  end
+
   test "the scoped catalog exposes no other courses, files or publication tools" do
     list = JSON.parse(@server.handle_json(JSON.generate(jsonrpc: "2.0", id: 1, method: "tools/list"))).dig("result", "tools")
     assert_equal CourseMcp::GenerationServer::TOOL_NAMES.sort, list.map { |tool| tool["name"] }.sort

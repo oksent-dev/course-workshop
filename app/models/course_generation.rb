@@ -97,6 +97,7 @@ class CourseGeneration < ApplicationRecord
           raise LocalAi::Error, "incomplete" if lesson.body.length < 200
         end
         update!(status: :completed, token_digest: nil, error_code: nil)
+        course.create_cover_generation!(expires_at: CourseCoverGeneration::EXPIRY.from_now) unless course.cover.attached? || course.cover_generation
       end
     end
   end

@@ -2,6 +2,7 @@ class Course < ApplicationRecord
   belongs_to :category
   has_many :lessons, -> { order(:position) }, inverse_of: :course, dependent: :destroy
   has_one :course_generation, dependent: :destroy
+  has_one :cover_generation, class_name: "CourseCoverGeneration", dependent: :destroy
   has_one_attached :cover do |attachment|
     attachment.variant :card, resize_to_fill: [ 960, 540 ], format: :webp, saver: { quality: 82 }
   end

@@ -51,7 +51,14 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
     assert generation.course.reload.draft?
     perform_enqueued_jobs
     get generation_path(generation, locale: :pl, format: :json), headers: @local
+    assert_equal true, response.parsed_body["busy"]
+    assert_includes response.parsed_body["html"], "Oczekiwanie na utworzenie okładki"
+    before_cover = response.parsed_body["version"]
+    perform_enqueued_jobs
+    get generation_path(generation, locale: :pl, format: :json), headers: @local
     assert_equal false, response.parsed_body["busy"]
+    assert_not_equal before_cover, response.parsed_body["version"]
+    assert_includes response.parsed_body["html"], "Okładka zapisana"
     assert_includes response.parsed_body["html"], "Zapisano 3 z 3 lekcji"
     assert_no_match(/token_digest|COURSE_GENERATION_TOKEN/, response.body)
     assert_equal "private, no-store", response.headers["Cache-Control"]
@@ -72,6 +79,35 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
     assert generation.reload.queued?
     perform_enqueued_jobs
     assert generation.reload.completed?
+  end
+
+  test "a failed cover can be retried separately exactly once through local endpoints" do
+    submit
+    generation = CourseGeneration.last
+    perform_enqueued_jobs
+    @ai.cover_generator.error = "usage_limit"
+    perform_enqueued_jobs
+    cover = generation.course.cover_generation
+    assert cover.failed?
+    assert generation.reload.completed?
+    get generation_path(generation, locale: :en, format: :json), headers: @local
+    assert_equal false, response.parsed_body["busy"]
+    assert_includes response.parsed_body["html"], "Retry cover"
+    assert_no_enqueued_jobs do
+      post retry_cover_generation_path(generation, locale: :en), params: { attempt: 1 }, headers: { "REMOTE_ADDR" => "203.0.113.1" }
+    end
+    assert_response :not_found
+    @ai.enabled = false
+    assert_no_enqueued_jobs { post retry_cover_generation_path(generation, locale: :en), params: { attempt: 1 }, headers: @local }
+    assert_response :not_found
+    @ai.enabled = true
+    assert_enqueued_jobs 1 do
+      2.times { post retry_cover_generation_path(generation, locale: :pl), params: { attempt: 1 }, headers: @local }
+    end
+    @ai.cover_generator.error = nil
+    perform_enqueued_jobs
+    assert cover.reload.completed?
+    assert_equal 1, @ai.generator.calls.size
   end
 
   test "disabled, remote and production requests cannot enqueue or inspect generation" do

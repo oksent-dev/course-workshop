@@ -20,6 +20,7 @@ class FakeCodexProtocol
     when "account/read" then { "requiresOpenaiAuth" => true, "account" => { "type" => "chatgpt" } }
     when "model/list" then { "data" => [ { "model" => LocalAi::MODEL } ] }
     when "config/read" then { "config" => { "mcp_servers" => { "example" => {} }, "plugins" => { "example@local" => {} } } }
+    when "modelProvider/capabilities/read" then { "imageGeneration" => true }
     when "thread/start", "thread/resume" then { "model" => LocalAi::MODEL, "thread" => { "id" => "thread-1" } }
     when "turn/start" then { "turn" => { "id" => "turn-1" } }
     end

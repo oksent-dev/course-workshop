@@ -1,6 +1,6 @@
 # Local course authoring through MCP
 
-Course Workshop exposes eight MCP tools over stdio. A local client can read courses, create a draft, replace its metadata, append or revise lessons, and reorder them. A draft stays outside the library until a person reviews and approves it in the application. The lesson tutor remains separate and cannot call these tools.
+Course Workshop exposes nine MCP tools over stdio. A local client can read categories and courses, create a draft, replace its metadata, append or revise lessons, and reorder them. A draft stays outside the library until a person reviews and approves it in the application. The lesson tutor remains separate and cannot call these tools.
 
 ## Start and connect
 
@@ -45,15 +45,18 @@ All input schemas reject unknown properties. Success responses contain both JSON
 | Tool | Required input | Result |
 | --- | --- | --- |
 | `get_authoring_guide` | None | Supported Markdown, block formats, limits, and retry rules |
+| `list_categories` | None | Existing category IDs and names, excluding the reserved `Drafts` placeholder |
 | `list_courses` | None; optional `status`, `after_id`, `limit` | Course summaries and `next_after_id`; default 20, maximum 50 |
 | `read_course` | `course_id` | Course metadata, revision, and ordered lesson summaries |
 | `read_lesson` | `course_id`, `lesson_id` | Course metadata, lesson body, and attachment keys/descriptions |
-| `create_course_draft` | `request_key`, `slug`, `title`, `description`, `language`, `category` | Newly created draft at revision 0 |
-| `update_course_draft` | `request_key`, `course_id`, `expected_revision`, `title`, `description`, `language`, `category` | Updated metadata and revision |
+| `create_course_draft` | `request_key`, `slug`, `title`, `description`, `language`, and exactly one of `category_id` or `category` | Newly created draft at revision 0 |
+| `update_course_draft` | `request_key`, `course_id`, `expected_revision`, `title`, `description`, `language`, and exactly one of `category_id` or `category` | Updated metadata and revision |
 | `save_draft_lesson` | `request_key`, `course_id`, `expected_revision`, `title`, `body`; optional `lesson_id` | Appended or updated lesson and new course revision |
 | `reorder_draft_lessons` | `request_key`, `course_id`, `expected_revision`, `lesson_ids` | New order and course revision |
 
 `status` accepts `all`, `draft`, or `published`. Metadata updates replace the supplied fields; lesson updates replace the entire title and body. Omit `lesson_id` only when appending. Reordering requires every existing lesson ID exactly once. It preserves IDs, temporarily moves positions out of the target range, and applies the new contiguous order in one transaction.
+
+Read `list_categories` before selecting a subject. Reuse a suitable `category_id`, even when its label is in another language or describes a broader subject. Supply `category` as a new broad name only when none fits. Whitespace and case variants reuse the existing category; a database index protects concurrent creation. Course responses include both `category_id` and the unchanged display name. Semantic synonym matching remains the author's/model's responsibility. MCP authoring does not automatically generate images; automatic covers belong to the [form workflow](course-generation.md).
 
 ## Example calls
 
@@ -71,7 +74,7 @@ After reading the returned `course.id` and `course.revision`, append a lesson (t
 
 To revise that lesson, include its returned `lesson.id` and the latest course revision. Then use `read_course` and `read_lesson` to verify the result. A suitable client prompt is:
 
-> Read the authoring guide. Create a draft with two short lessons about probability, then revise the first lesson with a fair-coin example. Keep the lesson IDs stable, verify the result, and leave the course as a draft.
+> Read the authoring guide and category catalog. Reuse a suitable category, creating a new one only if none fits. Create a draft with two short lessons about probability, then revise the first lesson with a fair-coin example. Keep the lesson IDs stable, verify the result, and leave the course as a draft.
 
 ## Retries and concurrent edits
 
@@ -81,7 +84,7 @@ Failed mutations roll back their receipt and all record changes, including newly
 
 Edits lock the course row and compare `expected_revision`. Every successful edit or approval increments the course revision once. A stale revision returns `revision_conflict`; read current content, reconcile the intended edit, and use a new key. Replayed responses are historical receipts, so call `read_course` for current state. Receipts remain in the database without automatic expiry.
 
-Tool-level domain errors set `isError: true` and return `code` and `message`: `disabled`, `not_found`, `not_draft`, `generation_incomplete`, `invalid_content`, `invalid_order`, `revision_conflict`, `request_conflict`, or `conflict`. SDK schema-validation errors also use `isError: true` with a text explanation. Unexpected internal errors do not include raw application exceptions in tool responses.
+Tool-level domain errors set `isError: true` and return `code` and `message`: `disabled`, `not_found`, `not_draft`, `generation_incomplete`, `invalid_content`, `invalid_category`, `invalid_order`, `revision_conflict`, `request_conflict`, or `conflict`. SDK schema-validation errors also use `isError: true` with a text explanation. Unexpected internal errors do not include raw application exceptions in tool responses.
 
 Drafts owned by an unfinished [course generation](course-generation.md) reject ordinary edits and approval with `generation_incomplete`. Resume them from the generation screen. The generator has its own narrower server, bound to one draft and one attempt; its process configuration is not a replacement for the general-purpose launcher above.
 

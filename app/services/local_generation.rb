@@ -10,4 +10,8 @@ module LocalGeneration
   def self.adapter
     Rails.configuration.x.local_ai.generator || Codex::CourseGenerator.new
   end
+
+  def self.cover_adapter
+    Rails.configuration.x.local_ai.cover_generator || Codex::CoverGenerator.new
+  end
 end

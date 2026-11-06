@@ -28,6 +28,9 @@ class CourseGenerationSystemTest < ApplicationSystemTestCase
     assert_text "Gotowy do przeglądu"
     assert_selector "#generation-status-heading:focus"
     assert_text "Zapisano 3 z 3 lekcji"
+    perform_enqueued_jobs
+    assert_text "Okładka zapisana"
+    assert_selector "#cover-heading + p", text: "Okładka zapisana"
     click_link "English"
     assert_text "Ready for review"
     click_link "Preview draft"
@@ -72,5 +75,33 @@ class CourseGenerationSystemTest < ApplicationSystemTestCase
     assert_empty @ai.generator.calls
     click_link "Preview draft"
     assert_button "Approve and add to library", disabled: true
+  end
+
+  test "a failed cover can be retried by keyboard while lessons remain ready" do
+    page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 320, height: 780, deviceScaleFactor: 1, mobile: false)
+    page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [ { name: "prefers-reduced-motion", value: "reduce" } ])
+    visit new_generation_path(locale: :en)
+    fill_in "What would you like to learn?", with: "Associations"
+    click_button "Generate course"
+    assert_text "Waiting to start"
+    perform_enqueued_jobs
+    @ai.cover_generator.error = "usage_limit"
+    perform_enqueued_jobs
+    assert_text "Ready for review"
+    assert_text "Cover could not be created"
+    assert_text "The Codex image allowance has been reached"
+    assert page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")
+    lesson_ids = CourseGeneration.last.course.lessons.pluck(:id)
+    @ai.cover_generator.error = nil
+    find_button("Retry cover").send_keys(:enter)
+    assert_text "Waiting to create the cover"
+    perform_enqueued_jobs
+    assert_text "Cover saved"
+    assert_equal lesson_ids, CourseGeneration.last.course.lessons.pluck(:id)
+    assert_equal 1, @ai.generator.calls.size
+    assert page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")
+  ensure
+    page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+    page.driver.browser.execute_cdp("Emulation.setEmulatedMedia", features: [])
   end
 end
