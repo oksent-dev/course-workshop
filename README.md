@@ -10,6 +10,8 @@ Mark lessons complete, undo completion, and resume from the library. Development
 
 Local MCP tools can create and revise course drafts. Review them in the local draft preview and explicitly approve a course before it appears in the library. See [course authoring](docs/course-authoring.md) for the tool contract, Codex configuration, and retry rules.
 
+In local mode, **Create a course** generates three to six lessons from a topic with GPT-6.1 Sol. Follow saved progress, cancel, or resume a partial result without creating another course. The generated draft requires review and explicit approval. See [course generation](docs/course-generation.md) for setup, scoped MCP access, and restart recovery.
+
 Lessons render Markdown with headings, lists, code, links, and tables. Local images use Active Storage, with descriptions and optional captions. The example course includes a prepared chart. See [lesson content and image import](docs/lesson-content.md) for authoring instructions.
 
 The statistics lesson also includes a KaTeX formula, a Mermaid flow diagram, and a practice exercise with a revealable answer. See [learning blocks](docs/learning-blocks.md) for the supported formats.

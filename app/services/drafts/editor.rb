@@ -60,6 +60,9 @@ module Drafts
       course = Course.find(course_id)
       course.with_lock do
         raise Error.new("not_draft", "Only draft courses can be changed.") unless course.draft?
+        if course.course_generation && !course.course_generation.completed?
+          raise Error.new("generation_incomplete", "Finish course generation before editing or approving this draft.")
+        end
         unless course.revision == expected_revision
           raise Error.new("revision_conflict", "The course changed. Read its latest revision before retrying with a new request_key.")
         end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_130000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_06_150000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -56,6 +56,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_130000) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["lesson_id", "browser_key"], name: "index_conversations_on_lesson_id_and_browser_key", unique: true
+  end
+
+  create_table "course_generations", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.uuid "request_key", null: false
+    t.text "topic", null: false
+    t.string "language", null: false
+    t.integer "lesson_count", null: false
+    t.string "status", default: "queued", null: false
+    t.integer "attempt", default: 1, null: false
+    t.jsonb "plan", default: [], null: false
+    t.string "token_digest"
+    t.string "error_code"
+    t.datetime "expires_at", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id"], name: "index_course_generations_on_course_id", unique: true
+    t.index ["request_key"], name: "index_course_generations_on_request_key", unique: true
+    t.check_constraint "language::text = ANY (ARRAY['pl'::character varying, 'en'::character varying]::text[])", name: "generations_valid_language"
+    t.check_constraint "lesson_count >= 3 AND lesson_count <= 6 AND attempt > 0", name: "generations_valid_limits"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "generations_valid_status"
   end
 
   create_table "courses", force: :cascade do |t|
@@ -143,6 +164,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_130000) do
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
   add_foreign_key "conversations", "lessons"
+  add_foreign_key "course_generations", "courses"
   add_foreign_key "courses", "categories"
   add_foreign_key "exchanges", "conversations"
   add_foreign_key "lesson_images", "lessons"

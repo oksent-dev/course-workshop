@@ -1,6 +1,7 @@
 class Course < ApplicationRecord
   belongs_to :category
   has_many :lessons, -> { order(:position) }, inverse_of: :course, dependent: :destroy
+  has_one :course_generation, dependent: :destroy
 
   enum :status, { draft: "draft", published: "published" }, validate: true
   validates :revision, numericality: { only_integer: true, greater_than_or_equal_to: 0 }

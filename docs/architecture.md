@@ -40,9 +40,9 @@ The [seed script](../db/seeds.rb) loads the prepared course in a transaction. It
 
 ## Planned course features
 
-Upcoming features include in-app course generation and additional interactive components.
+Additional interactive components remain possible extensions.
 
-Generated content will be treated as input: HTML output must be sanitized, and interactive blocks must use validated data rather than arbitrary generated JavaScript.
+Generated content is treated as input: HTML output is sanitized, and interactive blocks use validated data rather than arbitrary generated JavaScript.
 
 ## Draft authoring
 
@@ -53,6 +53,14 @@ Courses start as drafts. The migration preserves existing courses as published, 
 `DraftOperation` atomically stores each successful mutation's request-key fingerprint and result. Its unique index coordinates concurrent retries across server processes. Reusing a key with different input fails; a matching retry replays the saved result. Failed operations leave no receipt or partial changes. No model call happens inside these transactions.
 
 Publication is a human action in the local preview, outside the MCP tool set. See [course authoring](course-authoring.md) for the contracts, authority boundary, and examples.
+
+## Course generation
+
+`GenerationsController` reserves a draft and `CourseGeneration` in one transaction, then enqueues `CourseGenerationJob`. The form supplies a topic, content language and lesson count; a submission UUID makes repeated requests idempotent. A Stimulus controller polls persisted progress without restarting the model.
+
+`Codex::CourseGenerator` uses the shared `Codex::Runtime` capability restrictions, then enables live web search and a dedicated `CourseMcp::GenerationServer`. This server is bound to one generation and a revocable attempt token. It saves an immutable plan and complete lessons by position, using the same content validation and operation receipts as ordinary authoring. No course identifier supplied by the model can change the scope.
+
+Cancellation revokes the token immediately. Resume starts a new attempt and thread while retaining the draft, plan and existing lesson IDs. Completeness is checked in the application before the draft becomes eligible for human approval. The development queue remains Async; expired records require an explicit resume. See [course generation](course-generation.md) for lifecycle, limits and recovery.
 
 ## Lesson conversations and the agent boundary
 

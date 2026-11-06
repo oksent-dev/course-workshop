@@ -4,6 +4,10 @@ Rails.application.routes.draw do
   scope "/:locale", locale: /pl|en/ do
     root "pages#home", as: :localized_root
     resources :drafts, only: [ :index, :show, :update ]
+    resources :generations, only: [ :new, :create, :show ] do
+      post :cancel, on: :member
+      post :retry, on: :member, action: :retry_generation
+    end
     resources :courses, only: :show, param: :slug do
       resources :lessons, only: :show do
         resource :completion, only: [ :create, :destroy ]

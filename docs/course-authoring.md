@@ -81,7 +81,9 @@ Failed mutations roll back their receipt and all record changes, including newly
 
 Edits lock the course row and compare `expected_revision`. Every successful edit or approval increments the course revision once. A stale revision returns `revision_conflict`; read current content, reconcile the intended edit, and use a new key. Replayed responses are historical receipts, so call `read_course` for current state. Receipts remain in the database without automatic expiry.
 
-Tool-level domain errors set `isError: true` and return `code` and `message`: `disabled`, `not_found`, `not_draft`, `invalid_content`, `invalid_order`, `revision_conflict`, `request_conflict`, or `conflict`. SDK schema-validation errors also use `isError: true` with a text explanation. Unexpected internal errors do not include raw application exceptions in tool responses.
+Tool-level domain errors set `isError: true` and return `code` and `message`: `disabled`, `not_found`, `not_draft`, `generation_incomplete`, `invalid_content`, `invalid_order`, `revision_conflict`, `request_conflict`, or `conflict`. SDK schema-validation errors also use `isError: true` with a text explanation. Unexpected internal errors do not include raw application exceptions in tool responses.
+
+Drafts owned by an unfinished [course generation](course-generation.md) reject ordinary edits and approval with `generation_incomplete`. Resume them from the generation screen. The generator has its own narrower server, bound to one draft and one attempt; its process configuration is not a replacement for the general-purpose launcher above.
 
 ## Content and access boundaries
 

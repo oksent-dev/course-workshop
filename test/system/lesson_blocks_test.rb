@@ -18,7 +18,9 @@ class LessonBlocksSystemTest < ApplicationSystemTestCase
 
     page.execute_script("window.lessonNavigationCheck = true")
     click_link "Następna lekcja"
+    assert_selector "h1", text: course.lessons.third.title
     click_link "Poprzednia lekcja"
+    assert_selector "h1", text: course.lessons.second.title
     assert page.evaluate_script("window.lessonNavigationCheck")
     assert_selector ".lesson-block-output .katex", count: 1, wait: 15
     assert_selector ".lesson-block-output svg", count: 1, wait: 15

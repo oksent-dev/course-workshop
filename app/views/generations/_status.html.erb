@@ -1,0 +1,30 @@
+<section class="rounded-box bg-base-200 p-6 sm:p-8" aria-labelledby="generation-status-heading">
+  <h2 id="generation-status-heading" class="font-serif text-2xl font-semibold" role="status" tabindex="-1"><%= t("generation.statuses.#{@generation.status}") %></h2>
+  <p class="mt-3"><%= t("generation.progress", saved: @saved_positions.size, total: @generation.lesson_count) %></p>
+  <progress class="progress progress-primary mt-3 w-full" value="<%= @saved_positions.size %>" max="<%= @generation.lesson_count %>"
+    aria-label="<%= t("generation.progress", saved: @saved_positions.size, total: @generation.lesson_count) %>"></progress>
+  <% if @generation.plan.any? %>
+    <ol class="mt-5 space-y-3">
+      <% @generation.plan.each_with_index do |title, index| %>
+        <li class="wrap-anywhere"><span lang="<%= @generation.language %>"><%= index + 1 %>. <%= title %></span>
+          <% if @saved_positions.include?(index + 1) %><span class="ml-2 text-sm text-primary">✓ <%= t("generation.saved") %></span><% end %>
+        </li>
+      <% end %>
+    </ol>
+  <% end %>
+  <% if @generation.pending? %>
+    <p class="mt-5 text-sm leading-relaxed text-muted-ink"><%= t("generation.wait_hint") %></p>
+    <%= button_to t("generation.cancel"), cancel_generation_path(@generation), params: { attempt: @generation.attempt }, id: "generation-cancel", class: "btn btn-outline mt-5 min-h-11" %>
+  <% elsif @generation.completed? %>
+    <p class="mt-5"><%= t("generation.review_hint") %></p>
+  <% else %>
+    <% if @generation.failed? %><p role="alert" class="mt-5"><%= t("generation.errors.#{@generation.error_code}", default: t("generation.errors.unavailable")) %></p><% end %>
+    <p class="mt-3 text-sm leading-relaxed text-muted-ink"><%= t("generation.retry_hint") %></p>
+    <%= button_to t("generation.retry"), retry_generation_path(@generation), params: { attempt: @generation.attempt }, id: "generation-retry", class: "btn btn-primary mt-5 min-h-11" %>
+  <% end %>
+  <% if @generation.course.published? %>
+    <%= link_to t("generation.open_course"), course_path(@generation.course), class: "btn btn-primary mt-5 min-h-11" %>
+  <% else %>
+    <%= link_to t("generation.preview"), draft_path(@generation.course_id), class: "btn btn-ghost mt-5 min-h-11" %>
+  <% end %>
+</section>

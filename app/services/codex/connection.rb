@@ -10,9 +10,9 @@ module Codex
       connection&.close
     end
 
-    def initialize(cancelled:, command: nil)
+    def initialize(cancelled:, command: nil, timeout: LocalAi::TIMEOUT)
       @cancelled = cancelled
-      @deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + LocalAi::TIMEOUT
+      @deadline = Process.clock_gettime(Process::CLOCK_MONOTONIC) + timeout
       @sequence = 0
       @notifications = []
       @messages = Queue.new

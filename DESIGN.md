@@ -54,6 +54,8 @@ Progress uses a native daisyUI progress bar paired with an explicit count. Cours
 
 Draft previews reuse the reader's typography, material renderer, and nearby outline. Label the page as a draft and place a clear approval panel above its lessons. Keep the regular library for approved courses. Previewing material does not display completion controls or count toward learning progress. A stale approval presents an inline text error and the current draft for another review.
 
+Course creation uses a labeled topic field, content language and lesson count in one quiet panel. Explain the model's use of the topic and draft before submission. The progress screen shows saved lessons against the requested count, with the ordered plan and a clear cancel or resume action. Describe partial results honestly; do not present a timed percentage estimate. Keep keyboard focus stable during polling and provide a manual refresh after a connection failure. A ready result links to draft review rather than approving itself.
+
 ## Review a screen
 
 - Check the primary action and heading at a narrow phone width (320 px) and a desktop width. At 200% zoom, text and controls must remain reachable. Confine overflow from a wide code sample or table to that element.

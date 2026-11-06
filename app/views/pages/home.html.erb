@@ -1,6 +1,9 @@
 <h1 class="font-serif text-[clamp(2rem,5vw,3rem)] leading-[1.15] font-medium tracking-tight">
   <%= t("home.library_title") %>
 </h1>
+<% if LocalGeneration.available?(request) %>
+  <%= link_to t("generation.title"), new_generation_path, class: "btn btn-primary mt-4 min-h-11" %>
+<% end %>
 <% if LocalAuthoring.available?(request) %>
   <%= link_to t("drafts.title"), drafts_path, class: "btn btn-ghost mt-4 min-h-11" %>
 <% end %>

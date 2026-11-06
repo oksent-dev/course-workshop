@@ -1,0 +1,13 @@
+#!/usr/bin/env ruby
+protocol_output = $stdout
+$stdout = $stderr
+require_relative "../config/environment"
+abort "Local generation is disabled." unless LocalGeneration.enabled?
+generation_id = Integer(ENV.fetch("COURSE_GENERATION_ID"), 10)
+token = ENV.fetch("COURSE_GENERATION_TOKEN")
+CourseGeneration.find(generation_id).authorize!(token)
+Rails.logger = ActiveSupport::Logger.new($stderr, level: Logger::WARN)
+server = CourseMcp::GenerationServer.new(generation_id: generation_id, token: token).build
+$stdout = protocol_output
+$stdout.sync = true
+MCP::Server::Transports::StdioTransport.new(server, max_line_bytes: 512 * 1024).open
