@@ -10,6 +10,7 @@ export default class extends Controller {
     this.ready = false;
     this.opened = false;
     this.selectedText = "";
+    this.updateControls();
   }
 
   disconnect() {
@@ -47,14 +48,19 @@ export default class extends Controller {
     this.quotePreviewTarget.hidden = true;
   }
 
-  async refresh() {
-    if (this.loading) return;
-    await this.load(this.urlValue);
+  refresh() {
+    if (this.loading || this.submitting) return;
+    this.refreshRequest = this.load(this.urlValue);
+    return this.refreshRequest;
+  }
+
+  updateControls() {
+    this.submitTarget.disabled = !this.ready || this.busy || this.submitting || !this.questionTarget.value.trim();
   }
 
   async send(event) {
     event.preventDefault();
-    if (!this.ready || this.loading || this.busy || !this.formTarget.reportValidity()) return;
+    if (!this.ready || this.busy || this.submitting || !this.formTarget.reportValidity()) return;
     const submission = JSON.stringify({ question: this.questionTarget.value, selected_text: this.selectedText });
     if (this.lastSubmission !== submission) {
       this.requestKey = crypto.randomUUID();
@@ -63,20 +69,27 @@ export default class extends Controller {
     this.submitting = true;
     this.questionTarget.readOnly = true;
     this.removeQuoteTarget.disabled = true;
-    this.statusTarget.textContent = this.sendingValue;
-    const accepted = await this.load(this.formTarget.action, {
-      method: "POST",
-      body: JSON.stringify({ ...JSON.parse(submission), request_key: this.requestKey }),
-    });
-    this.submitting = false;
-    this.questionTarget.readOnly = false;
-    this.removeQuoteTarget.disabled = false;
-    if (accepted) {
-      this.questionTarget.value = "";
-      this.clearQuote();
-      this.requestKey = crypto.randomUUID();
-      this.lastSubmission = null;
-      if (this.opened) this.questionTarget.focus({ preventScroll: true });
+    this.updateControls();
+    try {
+      await this.refreshRequest;
+      if (this.busy || !this.element.isConnected) return;
+      this.statusTarget.textContent = this.sendingValue;
+      const accepted = await this.load(this.formTarget.action, {
+        method: "POST",
+        body: JSON.stringify({ ...JSON.parse(submission), request_key: this.requestKey }),
+      });
+      if (accepted) {
+        this.questionTarget.value = "";
+        this.clearQuote();
+        this.requestKey = crypto.randomUUID();
+        this.lastSubmission = null;
+        if (this.opened) this.questionTarget.focus({ preventScroll: true });
+      }
+    } finally {
+      this.submitting = false;
+      this.questionTarget.readOnly = false;
+      this.removeQuoteTarget.disabled = false;
+      this.updateControls();
     }
   }
 
@@ -87,7 +100,7 @@ export default class extends Controller {
   async load(url, options = {}) {
     clearTimeout(this.timer);
     this.loading = true;
-    this.submitTarget.disabled = true;
+    this.updateControls();
     this.cancelTarget.disabled = true;
     this.abortController = new AbortController();
     try {
@@ -127,7 +140,7 @@ export default class extends Controller {
       return false;
     } finally {
       this.loading = false;
-      this.submitTarget.disabled = !this.ready || this.busy;
+      this.updateControls();
     }
   }
 }

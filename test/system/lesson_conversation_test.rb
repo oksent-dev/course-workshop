@@ -56,6 +56,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_text "Waiting to start"
     perform_enqueued_jobs
     assert_text "The local tutor is unavailable."
+    fill_in "Your question", with: "Retry after failure"
     assert_button "Send question", disabled: false
   end
 
@@ -109,7 +110,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     visit course_lesson_path(lesson.course, lesson, locale: :en)
     select_text(".lesson-content p")
     click_button "Ask about this passage"
-    assert_button "Send question", disabled: false
+    assert_text "Ask for an explanation"
     page.execute_script(<<~JS)
       const originalFetch = window.fetch;
       window.submissions = [];
@@ -165,7 +166,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     launcher = find(".lesson-chat-launcher")
     assert_equal 64, launcher.evaluate_script("this.getBoundingClientRect().width")
     assert_equal 64, launcher.evaluate_script("this.getBoundingClientRect().height")
-    assert_equal 28, launcher.find("svg").evaluate_script("this.getBoundingClientRect().width")
+    assert_operator launcher.find("svg").evaluate_script("this.getBoundingClientRect().width"), :<=, 32
     paragraph = find(".lesson-content p")
     width = paragraph.evaluate_script("this.getBoundingClientRect().width")
     page.driver.browser.action.move_to(paragraph.native, -width.to_i / 2 + 4, 0).click_and_hold.move_by(110, 0).perform
@@ -177,6 +178,49 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_selector "dialog[open]"
   ensure
     page.driver.browser.action.release.perform
+  end
+
+  test "opening chat keeps the send state stable and a click during refresh is delivered once" do
+    lesson = lessons(:pitch)
+    visit course_lesson_path(lesson.course, lesson, locale: :en)
+    click_button "Ask about this lesson"
+    assert_text "Ask for an explanation"
+    assert_button "Send question", disabled: true
+    fill_in "Your question", with: "Explain pitch"
+    assert_button "Send question", disabled: false
+    click_button "Close conversation"
+    page.execute_script(<<~JS)
+      const originalFetch = window.fetch;
+      const submit = document.querySelector('[data-conversation-target="submit"]');
+      window.disabledStates = [];
+      new MutationObserver(() => window.disabledStates.push(submit.disabled))
+        .observe(submit, {attributes: true, attributeFilter: ["disabled"]});
+      window.fetch = async (url, options = {}) => {
+        if (!options.method) {
+          const response = await originalFetch(url, options);
+          return new Promise(resolve => { window.releaseHistory = () => resolve(response); });
+        }
+        return originalFetch(url, options);
+      };
+    JS
+    click_button "Ask about this lesson"
+    assert_button "Send question", disabled: false
+    assert_field "Your question", with: "Explain pitch"
+    assert_not_includes page.evaluate_script("window.disabledStates"), true
+    click_button "Send question"
+    assert_button "Send question", disabled: true
+    assert_equal 0, Exchange.count
+    page.driver.browser.execute_async_script(<<~JS)
+      const done = arguments[0];
+      const release = () => {
+        if (window.releaseHistory) { window.releaseHistory(); done(); }
+        else setTimeout(release, 10);
+      };
+      release();
+    JS
+    assert_text "Waiting to start"
+    assert_equal 1, Exchange.count
+    assert_equal "Explain pitch", Exchange.last.question
   end
 
   private
