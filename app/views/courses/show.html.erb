@@ -1,14 +1,14 @@
 <% content_for :title, "#{@course.title} · #{t("app.name")}" %>
 <%= link_to t("home.library_title"), localized_root_path, class: "inline-flex min-h-11 items-center text-primary underline underline-offset-4" %>
 
-<header class="mt-6 wrap-anywhere">
+<header class="mt-6 wrap-anywhere" data-motion="enter">
   <p class="text-sm text-muted-ink"><%= @course.category.name %></p>
   <h1 lang="<%= @course.language %>" class="mt-2 font-serif text-[clamp(2rem,5vw,3rem)] leading-[1.15] font-medium tracking-tight"><%= @course.title %></h1>
   <p lang="<%= @course.language %>" class="mt-4 max-w-prose font-serif text-xl leading-relaxed"><%= @course.description %></p>
   <p class="mt-3 text-sm text-muted-ink"><%= course_language_label(@course) %></p>
 </header>
 
-<section class="mt-8 max-w-prose rounded-box bg-base-200 p-6">
+<section class="mt-8 max-w-prose rounded-box bg-base-200 p-6" data-motion="enter" data-motion-delay="1">
   <h2 class="font-serif text-2xl font-semibold"><%= t("courses.outline") %></h2>
   <% if @lessons.any? %>
     <div class="mt-4"><%= render "courses/progress", progress: @progress %></div>

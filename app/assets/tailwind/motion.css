@@ -1,0 +1,30 @@
+@layer components {
+  @keyframes reading-room-enter {
+    from { opacity: 0; transform: translateY(16px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @keyframes reading-room-reveal {
+    from { opacity: 0; transform: translateY(6px); }
+    to { opacity: 1; transform: none; }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    [data-motion="enter"] {
+      animation: reading-room-enter 520ms cubic-bezier(0.25, 0.1, 0.25, 1) backwards;
+    }
+
+    [data-motion-delay="1"] { animation-delay: 60ms; }
+    [data-motion-delay="2"] { animation-delay: 120ms; }
+    [data-motion-delay="3"] { animation-delay: 180ms; }
+    [data-motion="enter"]:focus-within { animation: none; }
+
+    .lesson-exercise-answer[open] > .lesson-exercise-solution {
+      animation: reading-room-reveal 240ms ease-out backwards;
+    }
+
+    .lesson-selection-action:not([hidden]) {
+      animation: reading-room-reveal 160ms ease-out backwards;
+    }
+  }
+}

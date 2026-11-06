@@ -44,7 +44,16 @@
       <p class="mt-2 text-sm text-muted-ink"><%= t("conversation.context") %></p>
     </header>
     <div class="lesson-chat-transcript p-4" role="log" aria-live="polite" aria-label="<%= t("conversation.history") %>"
-      tabindex="0" data-conversation-target="transcript"></div>
+      aria-busy="true" tabindex="0" data-conversation-target="transcript">
+      <div class="lesson-chat-loading space-y-3" data-conversation-target="loading">
+        <p class="text-sm text-muted-ink"><%= t("conversation.loading") %></p>
+        <div class="space-y-3" aria-hidden="true">
+          <div class="skeleton h-3 w-full"></div>
+          <div class="skeleton h-3 w-5/6"></div>
+          <div class="skeleton h-3 w-2/3"></div>
+        </div>
+      </div>
+    </div>
     <div class="shrink-0 border-t border-base-300 p-4">
       <p role="status" class="text-sm text-error-content" data-conversation-target="status"></p>
       <button type="button" class="btn btn-ghost mb-2 min-h-11 hidden" data-conversation-target="refresh" data-action="conversation#refresh"><%= t("conversation.refresh") %></button>

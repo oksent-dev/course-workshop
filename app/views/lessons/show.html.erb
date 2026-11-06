@@ -14,18 +14,18 @@
 </nav>
 
 <div class="mt-8 grid items-start gap-6 md:grid-cols-[minmax(12rem,1fr)_minmax(0,2.6fr)] md:gap-8">
-  <aside class="hidden rounded-box bg-base-200 p-4 md:block" aria-label="<%= t("courses.outline") %>">
+  <aside class="hidden rounded-box bg-base-200 p-4 md:block" aria-label="<%= t("courses.outline") %>" data-motion="enter">
     <h2 class="px-3 text-base font-semibold"><%= t("courses.outline") %></h2>
     <div class="mt-3 px-3"><%= render "courses/progress", progress: @progress %></div>
     <%= render "outline", course: @course, lessons: @lessons, current_lesson: @lesson, progress: @progress %>
   </aside>
-  <details class="rounded-box bg-base-200 p-4 md:hidden">
+  <details class="rounded-box bg-base-200 p-4 md:hidden" data-motion="enter">
     <summary class="min-h-11 cursor-pointer content-center font-semibold"><%= t("courses.outline") %></summary>
     <div class="mt-3"><%= render "courses/progress", progress: @progress %></div>
     <%= render "outline", course: @course, lessons: @lessons, current_lesson: @lesson, progress: @progress %>
   </details>
 
-  <article class="min-w-0 max-w-[65ch]">
+  <article class="min-w-0 max-w-[65ch]" data-motion="enter" data-motion-delay="1">
     <p class="text-sm font-medium text-muted-ink"><%= t("reader.position", number: @lesson_number, total: @lessons.size) %></p>
     <h1 lang="<%= @course.language %>" class="mt-2 font-serif text-[clamp(2rem,5vw,3rem)] leading-[1.15] font-medium tracking-tight wrap-anywhere"><%= @lesson.title %></h1>
     <div lang="<%= @course.language %>" class="lesson-content mt-6 font-serif text-xl leading-relaxed wrap-anywhere" data-lesson-chat-target="content">

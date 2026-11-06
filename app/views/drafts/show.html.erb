@@ -3,12 +3,12 @@
   <%= stylesheet_link_tag "lesson_math", "data-turbo-track": "dynamic" %>
 <% end %>
 <%= link_to t("drafts.title"), drafts_path, class: "inline-flex min-h-11 items-center text-primary underline underline-offset-4" %>
-<header class="mt-6 wrap-anywhere">
+<header class="mt-6 wrap-anywhere" data-motion="enter">
   <p class="font-medium text-primary"><%= t("drafts.preview") %></p>
   <h1 lang="<%= @course.language %>" class="mt-2 font-serif text-[clamp(2rem,5vw,3rem)] leading-tight font-medium"><%= @course.title %></h1>
   <p lang="<%= @course.language %>" class="mt-3 max-w-prose font-serif text-xl leading-relaxed"><%= @course.description %></p>
 </header>
-<section aria-label="<%= t("drafts.approval") %>" class="mt-6 rounded-box bg-secondary p-6">
+<section aria-label="<%= t("drafts.approval") %>" class="mt-6 rounded-box bg-secondary p-6" data-motion="enter" data-motion-delay="1">
   <% generation = @course.course_generation %>
   <% incomplete = generation && !generation.completed? %>
   <p><%= t(incomplete ? "generation.incomplete_hint" : "drafts.review_hint") %></p>
@@ -21,7 +21,7 @@
 </section>
 <% if @lessons.any? %>
   <div class="mt-8 grid items-start gap-6 md:grid-cols-[minmax(12rem,1fr)_minmax(0,2.6fr)] md:gap-8">
-    <nav aria-label="<%= t("courses.outline") %>" class="rounded-box bg-base-200 p-4">
+    <nav aria-label="<%= t("courses.outline") %>" class="rounded-box bg-base-200 p-4" data-motion="enter" data-motion-delay="1">
       <h2 class="font-semibold"><%= t("courses.outline") %></h2>
       <ol class="mt-3 space-y-1">
         <% @lessons.each_with_index do |lesson, index| %>
@@ -31,7 +31,7 @@
         <% end %>
       </ol>
     </nav>
-    <article class="min-w-0 max-w-[65ch]" lang="<%= @course.language %>">
+    <article class="min-w-0 max-w-[65ch]" lang="<%= @course.language %>" data-motion="enter" data-motion-delay="2">
       <h2 class="font-serif text-3xl font-semibold wrap-anywhere"><%= @lesson.title %></h2>
       <div class="lesson-content mt-6 font-serif text-xl leading-relaxed wrap-anywhere"><%= render_lesson_body(@lesson) %></div>
     </article>

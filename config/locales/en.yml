@@ -75,6 +75,7 @@ en:
     selection_limit: "Select a shorter passage (up to %{count} characters)."
     placeholder: "What would you like to understand?"
     history: "Lesson conversation"
+    loading: "Loading conversation…"
     empty: "Ask for an explanation, another example, or a hint. You can also select a passage in the lesson to ask about it."
     you: "You"
     tutor: "Tutor"

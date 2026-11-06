@@ -1,7 +1,8 @@
 import { Controller } from "@hotwired/stimulus";
+import { fadeUp } from "../motion.js";
 
 export default class extends Controller {
-  static targets = ["transcript", "form", "question", "submit", "cancel", "status", "refresh", "quotePreview", "quoteText", "removeQuote"];
+  static targets = ["transcript", "loading", "form", "question", "submit", "cancel", "status", "refresh", "quotePreview", "quoteText", "removeQuote"];
   static values = { url: String, networkError: String, sending: String };
 
   connect() {
@@ -34,6 +35,7 @@ export default class extends Controller {
     this.selectedText = event.detail.text;
     this.quoteTextTarget.textContent = this.selectedText;
     this.quotePreviewTarget.hidden = false;
+    fadeUp(this.quotePreviewTarget, { duration: 180, distance: 6 });
   }
 
   removeQuote() {
@@ -100,6 +102,10 @@ export default class extends Controller {
   async load(url, options = {}) {
     clearTimeout(this.timer);
     this.loading = true;
+    if (!this.ready) {
+      if (this.hasLoadingTarget) this.loadingTarget.hidden = false;
+      this.transcriptTarget.setAttribute("aria-busy", "true");
+    }
     this.updateControls();
     this.cancelTarget.disabled = true;
     this.abortController = new AbortController();
@@ -119,8 +125,22 @@ export default class extends Controller {
       }
       const transcript = this.transcriptTarget;
       const followLatest = !this.ready || options.method === "POST" || transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight < 64;
-      if (transcript.innerHTML !== data.html) {
+      if (this.transcriptHTML !== data.html) {
+        const previous = new Map(Array.from(transcript.querySelectorAll("[data-exchange-id]"),
+          item => [item.dataset.exchangeId, item.dataset.exchangeStatus]));
         transcript.innerHTML = data.html;
+        this.transcriptHTML = data.html;
+        if (!this.ready && this.opened) {
+          fadeUp(transcript.firstElementChild, { duration: 180, distance: 6 });
+        } else if (this.opened && followLatest) {
+          transcript.querySelectorAll("[data-exchange-id]").forEach(item => {
+            if (!previous.has(item.dataset.exchangeId)) {
+              fadeUp(item, { distance: 6 });
+            } else if (previous.get(item.dataset.exchangeId) !== item.dataset.exchangeStatus) {
+              fadeUp(item.querySelector("[data-tutor-reply]"), { distance: 6 });
+            }
+          });
+        }
         if (followLatest) transcript.scrollTop = transcript.scrollHeight;
       }
       this.busy = data.busy;
@@ -140,6 +160,8 @@ export default class extends Controller {
       return false;
     } finally {
       this.loading = false;
+      this.transcriptTarget.setAttribute("aria-busy", "false");
+      if (this.hasLoadingTarget) this.loadingTarget.hidden = true;
       this.updateControls();
     }
   }

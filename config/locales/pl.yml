@@ -75,6 +75,7 @@ pl:
     selection_limit: "Zaznacz krótszy fragment (do %{count} znaków)."
     placeholder: "Co chcesz lepiej zrozumieć?"
     history: "Rozmowa o lekcji"
+    loading: "Wczytywanie rozmowy…"
     empty: "Poproś o wyjaśnienie, inny przykład lub podpowiedź. Możesz też zaznaczyć fragment lekcji i zapytać o niego."
     you: "Ty"
     tutor: "Tutor"

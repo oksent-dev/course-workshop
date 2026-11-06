@@ -56,6 +56,8 @@ Progress uses a native daisyUI progress bar paired with an explicit count. Cours
 
 The chat panel uses paper for the transcript and composer, canvas for its heading, and a sage wash for the learner's messages and pending quote. Reserve its soft shadow for this floating layer. Escape and the close button return focus to the launcher; opening focuses the question without scrolling the lesson. Keep long transcripts and quotes scrollable by keyboard. New messages must not pull someone away from older conversation content they are reading.
 
+The first chat opening shows a labeled skeleton while the conversation loads, then gently reveals the empty-state guidance or saved history. Keep loaded content visible on later refreshes. A failed initial request replaces the loading indicator with the error and retry action; retrying restores it. Reduced motion stops the skeleton animation as well as the content entrance.
+
 An empty question keeps the send button disabled. Once the conversation has loaded, refreshing its history must not make a ready question flicker between enabled and disabled. Disable sending for an actual submission or pending reply, and preserve the question while a refresh finishes.
 
 Place an expand/restore icon immediately before the chat's close button. The larger mode may cover the lesson: grow the same panel to at most 64 rem wide and the available viewport height, retaining a 12 px outer margin. Keep message and composer text within 75 characters. Animate width and height over 240 ms, with no animation when reduced motion is requested. The toggle keeps keyboard focus, the current conversation, and unsent content. Remember its size while closing and reopening the current lesson's panel; a new lesson starts compact.
@@ -65,6 +67,23 @@ A selection action appears beside text selected within the lesson body after the
 Draft previews reuse the reader's typography, material renderer, and nearby outline. Label the page as a draft and place a clear approval panel above its lessons. Keep the regular library for approved courses. Previewing material does not display completion controls or count toward learning progress. A stale approval presents an inline text error and the current draft for another review.
 
 Course creation uses a labeled topic field, content language and lesson count in one quiet panel. Explain the model's use of the topic and draft before submission. The progress screen shows saved lessons against the requested count, with the ordered plan and a clear cancel or resume action. Describe partial results honestly; do not present a timed percentage estimate. Keep keyboard focus stable during polling and provide a manual refresh after a connection failure. A ready result links to draft review rather than approving itself.
+
+## Motion
+
+Use a short fade-up to introduce a new screen, not to pace the learner's reading. Page headings, course cards, outlines, lesson articles, and forms enter once when rendered, including Turbo navigation. Animate the lesson article as one surface; scrolling does not hide or reveal individual paragraphs. The site header stays steady. Never transform an ancestor of the fixed chat widget.
+
+| Interaction | Duration | Vertical movement |
+| --- | --- | --- |
+| Screen content | 520 ms | 16 px upward |
+| Adjacent cards and panels | Same entrance, with 60–180 ms stagger | 16 px upward |
+| Open chat or add a message | 220 ms | 10 px for the panel, 6 px for messages |
+| Close chat | 140 ms | 6 px downward |
+| Attach a quote / show selection action | 180 / 160 ms | 6 px upward |
+| Reveal an exercise answer | 240 ms | 6 px upward |
+
+Use `cubic-bezier(0.25, 0.1, 0.25, 1)` for entrances. CSS rules live in [motion.css](app/assets/tailwind/motion.css); transient chat effects use the browser's animation API through [motion.js](app/javascript/motion.js). Animate opacity and transforms without changing layout dimensions. Chat resizing retains its separate width/height transition.
+
+Keep controls usable throughout. Keyboard focus immediately reveals an entering region. All content is visible after the entrance, even without JavaScript. Reduced motion disables these effects. Do not replay existing chat messages or generation status panels on every poll; animate only newly added messages or changed reply states while the reader is following the latest message.
 
 ## Review a screen
 

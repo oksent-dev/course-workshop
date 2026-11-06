@@ -3,7 +3,7 @@
 <% else %>
   <ol class="space-y-6">
     <% exchanges.each do |exchange| %>
-      <li class="space-y-3">
+      <li class="space-y-3" data-exchange-id="<%= exchange.id %>" data-exchange-status="<%= exchange.status %>">
         <div class="rounded-box bg-secondary p-4">
           <p class="text-sm font-semibold"><%= t("conversation.you") %></p>
           <% if exchange.selected_text.present? %>
@@ -14,7 +14,7 @@
           <% end %>
           <p class="mt-1 whitespace-pre-wrap wrap-anywhere"><%= exchange.question %></p>
         </div>
-        <div class="px-1">
+        <div class="px-1" data-tutor-reply="true">
           <p class="text-sm font-semibold"><%= t("conversation.tutor") %></p>
           <% if exchange.completed? %>
             <p class="mt-1 whitespace-pre-wrap wrap-anywhere"><%= exchange.answer %></p>

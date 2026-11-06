@@ -1,4 +1,5 @@
 import { Controller } from "@hotwired/stimulus";
+import { fadeUp, fadeDown } from "../motion.js";
 
 export default class extends Controller {
   static targets = ["content", "panel", "launcher", "question", "selectionAction", "selectionButton", "sizeToggle"];
@@ -17,6 +18,7 @@ export default class extends Controller {
   }
 
   disconnect() {
+    this.panelMotion?.cancel();
     cancelAnimationFrame(this.selectionFrame);
     this.contentObserver.disconnect();
     window.visualViewport?.removeEventListener("resize", this.viewportChanged);
@@ -25,8 +27,13 @@ export default class extends Controller {
 
   open() {
     this.hideSelection();
+    if (this.closing) {
+      this.panelMotion?.cancel();
+      this.closing = false;
+    }
     if (!this.panelTarget.open) {
       this.panelTarget.show();
+      this.panelMotion = fadeUp(this.panelTarget);
       this.launcherTarget.setAttribute("aria-expanded", "true");
       this.dispatch("opened", { target: this.panelTarget });
     }
@@ -34,7 +41,16 @@ export default class extends Controller {
   }
 
   close() {
-    if (this.panelTarget.open) this.panelTarget.close();
+    if (!this.panelTarget.open || this.closing) return;
+    this.closing = true;
+    const previous = this.panelMotion;
+    this.panelMotion = fadeDown(this.panelTarget);
+    previous?.cancel();
+    if (this.panelMotion) {
+      this.panelMotion.finished.then(() => this.panelTarget.close()).catch(() => {});
+    } else {
+      this.panelTarget.close();
+    }
   }
 
   toggleSize() {
@@ -48,6 +64,8 @@ export default class extends Controller {
   }
 
   closed() {
+    this.panelMotion?.cancel();
+    this.closing = false;
     this.launcherTarget.setAttribute("aria-expanded", "false");
     this.dispatch("closed", { target: this.panelTarget });
     this.launcherTarget.focus({ preventScroll: true });

@@ -2,6 +2,7 @@
 @import "./fonts.css";
 @import "./code.css";
 @import "./conversation.css";
+@import "./motion.css";
 
 @plugin "daisyui" {
   themes: false;

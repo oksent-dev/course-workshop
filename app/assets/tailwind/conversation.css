@@ -45,6 +45,7 @@
 
   @media (prefers-reduced-motion: reduce) {
     .lesson-chat-panel { transition: none; }
+    .lesson-chat-loading .skeleton { animation: none; }
   }
 
   .lesson-selection-action {

@@ -235,6 +235,47 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_equal "Explain pitch", Exchange.last.question
   end
 
+  test "initial history has a loading state, recovers from failure, and stays visible on reopening" do
+    lesson = lessons(:pitch)
+    visit course_lesson_path(lesson.course, lesson, locale: :en)
+    page.execute_script(<<~JS)
+      const originalFetch = window.fetch;
+      window.fetch = async (url, options = {}) => {
+        await new Promise((resolve, reject) => {
+          window.releaseHistory = resolve;
+          window.failHistory = () => reject(new TypeError("Offline"));
+        });
+        return originalFetch(url, options);
+      };
+    JS
+    click_button "Ask about this lesson"
+    assert_selector "[role='log'][aria-busy='true']", text: "Loading conversation"
+    assert_selector ".lesson-chat-loading .skeleton", count: 3
+    assert_no_text "Ask for an explanation"
+    fill_in "Your question", with: "Explain pitch"
+    assert_button "Send question", disabled: true
+
+    page.execute_script("window.failHistory()")
+    assert_text "The conversation could not be loaded."
+    assert_selector "[role='log'][aria-busy='false']"
+    assert_no_selector ".lesson-chat-loading"
+    click_button "Refresh conversation"
+    assert_selector "[role='log'][aria-busy='true']", text: "Loading conversation"
+    page.execute_script("window.releaseHistory()")
+    assert_text "Ask for an explanation"
+    assert_selector "[role='log'][aria-busy='false']"
+    assert_no_selector ".lesson-chat-loading"
+    assert_field "Your question", with: "Explain pitch"
+    assert_button "Send question", disabled: false
+
+    click_button "Close conversation"
+    click_button "Ask about this lesson"
+    assert_text "Ask for an explanation"
+    assert_no_selector ".lesson-chat-loading"
+    assert_button "Send question", disabled: false
+    page.execute_script("window.releaseHistory()")
+  end
+
   private
 
   def select_text(selector)
