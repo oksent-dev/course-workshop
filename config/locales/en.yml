@@ -66,6 +66,8 @@ en:
     open: "Ask about this lesson"
     heading: "Your lesson tutor"
     close: "Close conversation"
+    expand: "Expand conversation"
+    restore: "Restore conversation size"
     context: "GPT-6.1 Sol receives the lesson, your question and any selected passage. History is saved for this browser."
     ask_selection: "Ask about this passage"
     selected_passage: "Selected passage"

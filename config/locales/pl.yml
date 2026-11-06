@@ -66,6 +66,8 @@ pl:
     open: "Zapytaj o tę lekcję"
     heading: "Twój tutor lekcji"
     close: "Zamknij rozmowę"
+    expand: "Powiększ rozmowę"
+    restore: "Przywróć rozmiar rozmowy"
     context: "GPT-6.1 Sol otrzyma lekcję, pytanie i wybrany fragment. Historia jest zapisywana dla tej przeglądarki."
     ask_selection: "Zapytaj o ten fragment"
     selected_passage: "Wybrany fragment"

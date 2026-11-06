@@ -23,6 +23,8 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     fill_in "Your question", with: "Explain pitch"
     click_button "Send question"
     assert_text "Waiting to start"
+    click_button "Expand conversation"
+    assert_button "Restore conversation size"
     perform_enqueued_jobs
     assert_text "A high note has a higher frequency."
 
@@ -32,10 +34,12 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     perform_enqueued_jobs
     assert_selector "p", text: "A high note has a higher frequency.", count: 2
 
+    click_button "Close conversation"
     click_link "Polski"
     click_button "Zapytaj o tę lekcję"
     assert_text "Give me another example"
     assert_field "Twoje pytanie"
+    assert_button "Powiększ rozmowę"
     assert_selector "h1", text: lesson.title
   end
 
@@ -77,6 +81,12 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_selector "textarea:focus"
     assert_selector "[data-conversation-target='quoteText']", text: code.strip
     fill_in "Your question", with: "Why these quotes?"
+    click_button "Expand conversation"
+    assert_selector "dialog[data-expanded='true']" do |panel|
+      panel.evaluate_script("this.getBoundingClientRect().width") > 650
+    end
+    assert_field "Your question", with: "Why these quotes?"
+    assert_selector "[data-conversation-target='quoteText']", text: code.strip
     position = page.evaluate_script("scrollY")
     find("textarea").send_keys(:escape)
     assert_no_selector "dialog[open]"
@@ -84,6 +94,8 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_equal position, page.evaluate_script("scrollY")
     click_button "Ask about this lesson"
     assert_field "Your question", with: "Why these quotes?"
+    find_button("Restore conversation size").send_keys(:enter)
+    assert_selector "button[aria-label='Expand conversation'][aria-pressed='false']:focus"
     click_button "Remove"
     assert_no_selector "[data-conversation-target='quotePreview']"
     click_button "Close conversation"

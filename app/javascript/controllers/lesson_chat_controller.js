@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static targets = ["content", "panel", "launcher", "question", "selectionAction", "selectionButton"];
+  static targets = ["content", "panel", "launcher", "question", "selectionAction", "selectionButton", "sizeToggle"];
   static values = { limit: Number, selectionLabel: String, selectionLimit: String };
 
   connect() {
@@ -35,6 +35,16 @@ export default class extends Controller {
 
   close() {
     if (this.panelTarget.open) this.panelTarget.close();
+  }
+
+  toggleSize() {
+    const expanded = this.panelTarget.dataset.expanded !== "true";
+    this.panelTarget.dataset.expanded = String(expanded);
+    const button = this.sizeToggleTarget;
+    const label = expanded ? button.dataset.restoreLabel : button.dataset.expandLabel;
+    button.setAttribute("aria-pressed", String(expanded));
+    button.setAttribute("aria-label", label);
+    button.title = label;
   }
 
   closed() {

@@ -26,11 +26,26 @@
     background: var(--color-base-100);
     color: var(--color-base-content);
     box-shadow: 0 8px 40px #303b3226;
+    transition: width 240ms ease-in-out, height 240ms ease-in-out;
   }
+
+  .lesson-chat-panel[data-expanded="true"] {
+    width: min(64rem, calc(100% - 1.5rem));
+    height: calc(var(--chat-viewport-height, 100dvh) - 1.5rem);
+  }
+
+  .lesson-chat-restore-icon,
+  .lesson-chat-panel[data-expanded="true"] .lesson-chat-expand-icon { display: none; }
+  .lesson-chat-panel[data-expanded="true"] .lesson-chat-restore-icon { display: block; }
 
   .lesson-chat-panel[open] { display: flex; flex-direction: column; }
   .lesson-chat-panel:not([open]) { display: none; }
   .lesson-chat-transcript { flex: 1 1 auto; min-height: 4rem; overflow-y: auto; overscroll-behavior: contain; }
+  .lesson-chat-transcript > * { max-width: 75ch; margin-inline: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .lesson-chat-panel { transition: none; }
+  }
 
   .lesson-selection-action {
     position: fixed;
