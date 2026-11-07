@@ -21,5 +21,16 @@
       <% if notice %><p role="status" class="mb-6 rounded-box bg-secondary p-4" data-motion="enter"><%= notice %></p><% end %>
       <%= yield %>
     </main>
+    <% if (context = assistant_page_context) %>
+      <div hidden data-assistant-context="<%= context.to_json %>"></div>
+      <div id="<%= context[:key].tr(':', '-') %>-<%= I18n.locale %>" data-turbo-permanent
+        data-controller="lesson-chat" data-lesson-chat-key-value="<%= context[:key] %>"
+        data-lesson-chat-limit-value="<%= Exchange::MAX_SELECTION_LENGTH %>"
+        data-lesson-chat-selection-label-value="<%= t("conversation.ask_selection") %>"
+        data-lesson-chat-selection-limit-value="<%= t("conversation.selection_limit", count: Exchange::MAX_SELECTION_LENGTH) %>"
+        data-action="turbo:load@document->lesson-chat#navigate selectionchange@document->lesson-chat#selectionChanged pointerdown@document->lesson-chat#pointerDown pointerup@document->lesson-chat#pointerUp pointercancel@document->lesson-chat#pointerUp keydown@document->lesson-chat#keyDown resize@window->lesson-chat#reposition scroll@window->lesson-chat#hideSelection">
+        <%= render "conversations/panel", course: @course, context: context %>
+      </div>
+    <% end %>
   </body>
 </html>

@@ -1,4 +1,5 @@
 class DraftsController < ApplicationController
+  include LearnerContext
   before_action :require_local_authoring
   before_action :set_draft, only: [ :show, :update ]
 

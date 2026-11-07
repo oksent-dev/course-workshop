@@ -1,4 +1,5 @@
 class GenerationsController < ApplicationController
+  include LearnerContext
   before_action :require_local_generation
   before_action :set_generation, only: [ :show, :cancel, :retry_generation, :retry_cover, :approve_plan ]
   helper_method :generation_version, :generation_busy?
@@ -22,6 +23,7 @@ class GenerationsController < ApplicationController
 
   def show
     @generation.expire_stale!
+    @course = @generation.course
     @cover_generation = @generation.course.cover_generation
     @cover_generation&.expire_stale!
     @saved_lessons = @generation.course.lessons.pluck(:position, :id).to_h

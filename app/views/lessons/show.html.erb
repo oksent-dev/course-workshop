@@ -2,11 +2,7 @@
 <% content_for :head do %>
   <%= stylesheet_link_tag "lesson_math", "data-turbo-track": "dynamic" %>
 <% end %>
-<div class="pb-16" data-controller="<%= "lesson-chat" if LocalAi.available?(request) %>"
-  data-lesson-chat-limit-value="<%= Exchange::MAX_SELECTION_LENGTH %>"
-  data-lesson-chat-selection-label-value="<%= t("conversation.ask_selection") %>"
-  data-lesson-chat-selection-limit-value="<%= t("conversation.selection_limit", count: Exchange::MAX_SELECTION_LENGTH) %>"
-  data-action="selectionchange@document->lesson-chat#selectionChanged pointerdown@document->lesson-chat#pointerDown pointerup@document->lesson-chat#pointerUp pointercancel@document->lesson-chat#pointerUp keydown@document->lesson-chat#keyDown resize@window->lesson-chat#reposition scroll@window->lesson-chat#hideSelection">
+<div class="pb-16">
 <nav aria-label="<%= t("reader.location") %>" class="flex flex-wrap items-baseline gap-x-2 text-sm">
   <%= link_to @course.title, course_path(@course), lang: @course.language, class: "inline-flex min-h-11 max-w-full items-center wrap-anywhere text-primary underline underline-offset-4" %>
 </nav>
@@ -26,7 +22,7 @@
   <article class="min-w-0 max-w-[65ch]" data-motion="enter" data-motion-delay="1">
     <p class="text-sm font-medium text-muted-ink"><%= t("reader.position", number: @lesson_number, total: @lessons.size) %></p>
     <h1 lang="<%= @course.language %>" class="mt-2 font-serif text-[clamp(2rem,5vw,3rem)] leading-[1.15] font-medium tracking-tight wrap-anywhere"><%= @lesson.title %></h1>
-    <div lang="<%= @course.language %>" class="lesson-content mt-6 font-serif text-xl leading-relaxed wrap-anywhere" data-lesson-chat-target="content">
+    <div lang="<%= @course.language %>" class="lesson-content mt-6 font-serif text-xl leading-relaxed wrap-anywhere" data-assistant-content>
       <%= render_lesson_body(@lesson) %>
     </div>
 
@@ -53,7 +49,4 @@
     </nav>
   </article>
 </div>
-<% if LocalAi.available?(request) %>
-  <%= render "conversations/panel", course: @course, lesson: @lesson %>
-<% end %>
 </div>

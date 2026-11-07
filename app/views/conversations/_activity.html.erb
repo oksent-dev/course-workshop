@@ -1,0 +1,18 @@
+<% if course.draft? %>
+  <% if (generation = course.course_generation) %>
+    <div class="rounded-field border border-base-300 bg-base-200 p-3 text-sm" data-activity-id="generation-<%= generation.id %>">
+      <p class="font-semibold"><%= t("generation.progress_title") %></p>
+      <p class="mt-1"><%= t("generation.statuses.#{generation.status}") %></p>
+      <% if generation.running? && generation.activity.present? %>
+        <p class="mt-1 text-muted-ink"><%= t("generation.activities.#{generation.activity}") %></p>
+      <% end %>
+      <p class="mt-1 text-muted-ink"><%= t("conversation.saved_lessons", count: course.lessons.count) %></p>
+    </div>
+  <% end %>
+  <% if (cover = course.cover_generation) %>
+    <div class="rounded-field border border-base-300 bg-base-200 p-3 text-sm" data-activity-id="cover-<%= cover.id %>">
+      <p class="font-semibold"><%= t("generation.cover.heading") %></p>
+      <p class="mt-1"><%= t("generation.cover.statuses.#{cover.status}") %></p>
+    </div>
+  <% end %>
+<% end %>

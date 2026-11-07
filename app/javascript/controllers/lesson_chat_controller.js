@@ -1,9 +1,10 @@
 import { Controller } from "@hotwired/stimulus";
 import { fadeUp, fadeDown } from "../motion.js";
+import { readState, saveState, pageContext } from "../assistant_state.js";
 
 export default class extends Controller {
-  static targets = ["content", "panel", "launcher", "question", "selectionAction", "selectionButton", "sizeToggle"];
-  static values = { limit: Number, selectionLabel: String, selectionLimit: String };
+  static targets = ["panel", "launcher", "question", "selectionAction", "selectionButton", "sizeToggle"];
+  static values = { key: String, limit: Number, selectionLabel: String, selectionLimit: String };
 
   connect() {
     this.launcherTarget.disabled = false;
@@ -13,16 +14,34 @@ export default class extends Controller {
     this.contentObserver = new ResizeObserver(() => {
       if (!this.selectionActionTarget.hidden) this.selectionChanged();
     });
-    this.contentObserver.observe(this.contentTarget);
+    const state = readState(this.keyValue);
+    this.resize(state.expanded === true);
+    if (state.open && !this.panelTarget.open) this.panelTarget.show();
+    this.launcherTarget.setAttribute("aria-expanded", String(this.panelTarget.open));
+    this.navigate();
     this.reposition();
   }
 
   disconnect() {
+    this.save();
     this.panelMotion?.cancel();
     cancelAnimationFrame(this.selectionFrame);
     this.contentObserver.disconnect();
     window.visualViewport?.removeEventListener("resize", this.viewportChanged);
     window.visualViewport?.removeEventListener("scroll", this.viewportChanged);
+  }
+
+  navigate() {
+    this.currentContext = pageContext(this.keyValue);
+    this.content = document.querySelector("[data-assistant-content]");
+    this.contentObserver.disconnect();
+    if (this.content) this.contentObserver.observe(this.content);
+    this.pointerSelecting = false;
+    this.hideSelection();
+  }
+
+  save() {
+    saveState(this.keyValue, { open: this.panelTarget.open && !this.closing, expanded: this.panelTarget.dataset.expanded === "true" });
   }
 
   open() {
@@ -38,11 +57,13 @@ export default class extends Controller {
       this.dispatch("opened", { target: this.panelTarget });
     }
     this.questionTarget.focus({ preventScroll: true });
+    this.save();
   }
 
   close() {
     if (!this.panelTarget.open || this.closing) return;
     this.closing = true;
+    this.save();
     const previous = this.panelMotion;
     this.panelMotion = fadeDown(this.panelTarget);
     previous?.cancel();
@@ -55,6 +76,11 @@ export default class extends Controller {
 
   toggleSize() {
     const expanded = this.panelTarget.dataset.expanded !== "true";
+    this.resize(expanded);
+    this.save();
+  }
+
+  resize(expanded) {
     this.panelTarget.dataset.expanded = String(expanded);
     const button = this.sizeToggleTarget;
     const label = expanded ? button.dataset.restoreLabel : button.dataset.expandLabel;
@@ -69,6 +95,7 @@ export default class extends Controller {
     this.launcherTarget.setAttribute("aria-expanded", "false");
     this.dispatch("closed", { target: this.panelTarget });
     this.launcherTarget.focus({ preventScroll: true });
+    this.save();
   }
 
   keyDown(event) {
@@ -95,7 +122,7 @@ export default class extends Controller {
     if (document.activeElement === this.selectionButtonTarget) return;
     const selection = window.getSelection();
     if (!selection?.rangeCount || selection.isCollapsed ||
-        !this.contentTarget.contains(selection.anchorNode) || !this.contentTarget.contains(selection.focusNode)) {
+        !this.content?.contains(selection.anchorNode) || !this.content?.contains(selection.focusNode)) {
       this.hideSelection();
       return;
     }
@@ -136,7 +163,7 @@ export default class extends Controller {
     if (!this.selectedText || this.selectionButtonTarget.disabled) return;
     const text = this.selectedText;
     this.open();
-    this.dispatch("quoted", { target: this.panelTarget, detail: { text } });
+    this.dispatch("quoted", { target: this.panelTarget, detail: { text, ...this.currentContext } });
     window.getSelection()?.removeAllRanges();
   }
 

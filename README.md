@@ -16,7 +16,7 @@ Lessons render Markdown with headings, lists, syntax-highlighted code, links, an
 
 The statistics lesson also includes a KaTeX formula, a Mermaid flow diagram, and a practice exercise with a revealable answer. See [learning blocks](docs/learning-blocks.md) for the supported formats.
 
-An optional local tutor uses GPT-6.1 Sol through Codex App Server. Open the floating chat while reading, or select a lesson passage and attach it to your question. Course history belongs to the learner profile; each question retains its original lesson context and quote. A database queue and bounded recovery checks preserve work across restarts and recover completed replies from Codex history. See [local AI setup and verification](docs/local-ai.md); AI is disabled by default and unavailable in production.
+An optional local assistant uses GPT-6.1 Sol through Codex App Server. Its shared panel follows course outlines, lessons and drafts, retaining unsent text, quotes and panel state during navigation. Each question captures its original context; draft discussion and published tutoring have separate histories. Draft panels display saved generation and cover status, with an explicit refresh when material changes. Both conversation modes are currently read-only. A database queue and bounded recovery checks preserve accepted work across restarts and recover completed replies from Codex history. See [local AI setup and verification](docs/local-ai.md); AI is disabled by default and unavailable in production.
 
 ## Requirements
 

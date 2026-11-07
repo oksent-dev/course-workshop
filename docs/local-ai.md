@@ -1,6 +1,6 @@
-# Local lesson conversations
+# Local course conversations
 
-A lesson can send its current text, course outline and a question to a local Codex App Server. The tutor uses **GPT-6.1 Sol** (`gpt-6.1-sol`) with low reasoning effort. A follow-up resumes the stored Codex thread. Saved history is shared across a course's lessons for the same learner profile and mode. The tutor is read-only; draft editing and panels outside published lessons are later features.
+The shared assistant is available on published course outlines and lessons, generation overviews, and draft lesson previews. It uses **GPT-6.1 Sol** (`gpt-6.1-sol`) with low reasoning effort through a local Codex App Server. Follow-ups resume the stored thread. Saved history belongs to the course, learner profile and mode. Both the course tutor and draft assistant are currently read-only; draft editing tools are a later feature.
 
 ## Enable the tutor
 
@@ -24,13 +24,19 @@ ruby bin/rails db:prepare
 ruby bin/dev
 ```
 
-Open the application through `http://localhost:3000` or `http://127.0.0.1:3000`. In a published lesson, use the floating **Ask about this lesson** button in the bottom-right corner. The panel opens beside the reading surface without blocking it. Enter a question and send it; the app shows a queued, running or recovering state, then the answer. **Cancel reply** requests interruption. Closing the panel or navigating does not cancel a reply; any lesson in the same course shows its result. A different course has a separate history.
+Open the application through `http://localhost:3000` or `http://127.0.0.1:3000`. Use the floating **Open course assistant** button in the bottom-right corner. Enter a question and send it; the app shows a queued, running or recovering state, then the answer. **Cancel reply** requests interruption. Closing the panel or navigating does not cancel a reply. A different course has a separate history and composer.
+
+The context label identifies the current outline or lesson. Outlines supply the title, description, language and ordered lesson titles; lessons add only their own body. Draft questions also include the saved generation topic, plan and state. Previously supplied material remains in conversation history. Draft panels require `COURSE_AUTHORING_ENABLED=true` as well as local AI. Their generation and cover activity cards reflect persisted application state, not inferred actions or model reasoning.
 
 Select text within the lesson body and choose **Ask about this passage**, or press **Alt+Enter** while the selection action is visible. The passage appears above the question field. You can remove it or select a different passage before sending. Selection alone never sends a request to the model. Each question may include one passage of up to 2,000 characters; longer selections show a prompt to choose a shorter passage. The full lesson still accompanies the question.
 
-Use **Expand conversation**, beside the close button, for a larger conversation window that can cover the lesson. The same button restores the compact panel. Resizing preserves the conversation, any pending reply, the question draft, and its quote. The size is retained when reopening the panel on the same page; another lesson starts compact. The transition respects the system's reduced-motion preference.
+Use **Expand conversation**, beside the close button, for a larger conversation window that can cover the lesson. The same button restores the compact panel. Resizing preserves the conversation, any pending reply, the question draft, and its quote. Open state and size survive navigation within the course and page reloads. The transition respects the system's reduced-motion preference.
 
-**Escape** or the close button returns focus to the launcher without moving the reading position. Closing and reopening preserves the unsent question and passage on the current page. Navigating or reloading still clears this unsent draft; saved exchanges remain in the course history. Preserving the composer across navigation belongs to the next interface stage. The selected passage is shown with its saved question and is not automatically attached to a later question. The panel fits narrow screens and follows the visible viewport when the on-screen keyboard reduces available space.
+**Escape** or the close button returns focus to the launcher without moving the reading position. A Turbo permanent element retains the panel during navigation within a course and interface language. Per-tab `sessionStorage`, keyed by learner, course and mode, preserves unsent text, quote origin, size, open state, transcript scroll and submission identity on reload or a language switch. Storage failure falls back to tab memory. These unsent drafts are not backed up in PostgreSQL and need not survive closing the browser; accepted messages are durable. Separate tabs share saved history but do not overwrite each other's composers.
+
+A retained quote always targets its original lesson or outline, even after navigation. Its source appears above the quote. Removing it makes the next question use the current page. The server resolves lesson IDs within the course, captures its own immutable snapshot, and rejects a quote whose material version changed. An accepted submission can still be replayed idempotently after such a change. The passage is shown with its saved question and is not automatically attached to later questions.
+
+While open, the panel polls every second during a reply and every three seconds otherwise. A material change offers **Course updated — refresh content**. Refresh is explicit, retaining the panel, composer and approximate page position; it never interrupts a selection automatically. Removed lessons lead to the course overview. The endpoint supplies only application-generated routes, not executable model instructions. Publishing switches to a separate tutor history and composer; an old draft tab must reload before sending. Scoped refresh tools and committed editing receipts belong to the later editor stage.
 
 Development uses Solid Queue with a separate PostgreSQL queue database and worker. `bin/dev` starts the worker automatically. Each tutor connection has a three-minute deadline. Queued requests survive downtime; interrupted requests are reconciled without automatically repeating inference.
 

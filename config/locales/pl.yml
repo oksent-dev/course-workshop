@@ -122,7 +122,18 @@ pl:
     mark_complete: "Oznacz jako ukończoną"
     undo: "Cofnij ukończenie"
   conversation:
-    open: "Zapytaj o tę lekcję"
+    open: "Otwórz asystenta kursu"
+    modes:
+      tutor: "Tutor kursu"
+      editor: "Asystent szkicu"
+    contexts:
+      tutor: "Porozmawiaj o planie lub bieżącej lekcji. Rozmowa pozostaje wspólna dla tego kursu."
+      editor: "Omów plan i poprawki. Rozmowa w trybie tylko do odczytu."
+    current_context: "Kontekst:"
+    updates: "Kurs został zmieniony — odśwież treść"
+    saved_lessons: "Zapisane lekcje: %{count}"
+    stale_selection: "Ten materiał się zmienił. Odśwież treść i zaznacz fragment ponownie albo usuń cytat. Twoje pytanie zostało zachowane."
+    mode_changed: "Status kursu się zmienił. Przeładuj stronę, aby otworzyć odpowiednią rozmowę."
     heading: "Twój tutor lekcji"
     close: "Zamknij rozmowę"
     expand: "Powiększ rozmowę"

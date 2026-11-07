@@ -10,7 +10,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     progress.local_profile = true
     lesson = lessons(:pitch)
     visit course_lesson_path(lesson.course, lesson, locale: :en)
-    click_button "Ask about this lesson"
+    click_button "Open course assistant"
     fill_in "Your question", with: "Keep my course conversation"
     click_button "Send question"
     assert_text "Waiting to start"
@@ -18,13 +18,13 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_text "A high note has a higher frequency."
 
     visit course_lesson_path(lesson.course, lessons(:rhythm), locale: :en)
-    click_button "Ask about this lesson"
+    assert_selector "dialog[open]"
     assert_text "Keep my course conversation"
     assert_selector "[data-exchange-id]", text: lesson.title
 
     Capybara.reset_sessions!
     visit course_lesson_path(lesson.course, lesson, locale: :pl)
-    click_button "Zapytaj o tę lekcję"
+    click_button "Otwórz asystenta kursu"
     assert_text "Keep my course conversation"
     assert_text "A high note has a higher frequency."
   ensure
@@ -34,7 +34,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
   test "recovery and an uncertain answer are visible without a new model request" do
     lesson = lessons(:pitch)
     visit course_lesson_path(lesson.course, lesson, locale: :en)
-    click_button "Ask about this lesson"
+    click_button "Open course assistant"
     fill_in "Your question", with: "A question interrupted by restart"
     click_button "Send question"
     assert_text "Waiting to start"
@@ -48,7 +48,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_empty @settings.adapter.calls
     click_button "Close conversation"
     visit course_lesson_path(lesson.course, lesson, locale: :pl)
-    click_button "Zapytaj o tę lekcję"
+    click_button "Otwórz asystenta kursu"
     assert_text "Nie udało się odzyskać odpowiedzi."
   end
 
@@ -66,7 +66,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
   test "ask, follow up, reopen the lesson, and switch interface language" do
     lesson = lessons(:pitch)
     visit course_lesson_path(lesson.course, lesson, locale: :en)
-    click_button "Ask about this lesson"
+    click_button "Open course assistant"
     assert_text "Ask for an explanation"
     fill_in "Your question", with: "Explain pitch"
     click_button "Send question"
@@ -84,17 +84,17 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
 
     click_button "Close conversation"
     switch_interface_language("Polski")
-    click_button "Zapytaj o tę lekcję"
+    click_button "Otwórz asystenta kursu"
     assert_text "Give me another example"
     assert_field "Twoje pytanie"
-    assert_button "Powiększ rozmowę"
+    assert_button "Przywróć rozmiar rozmowy"
     assert_selector "h1", text: lesson.title
   end
 
   test "a cancelled queued reply and an unavailable runtime are understandable" do
     lesson = lessons(:pitch)
     visit course_lesson_path(lesson.course, lesson, locale: :en)
-    click_button "Ask about this lesson"
+    click_button "Open course assistant"
     assert_text "Ask for an explanation"
     fill_in "Your question", with: "Explain pitch"
     click_button "Send question"
@@ -143,7 +143,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_no_selector "dialog[open]"
     assert_selector ".lesson-chat-launcher:focus"
     assert_equal position, page.evaluate_script("scrollY")
-    click_button "Ask about this lesson"
+    click_button "Open course assistant"
     assert_field "Your question", with: "Why these quotes?"
     find_button("Restore conversation size").send_keys(:enter)
     assert_selector "button[aria-label='Expand conversation'][aria-pressed='false']:focus"
@@ -165,7 +165,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_equal code.strip, @settings.adapter.calls.last[:context]["selected_text"]
     within("[role='log']") { assert_selector "blockquote", text: code.strip }
     page.refresh
-    click_button "Ask about this lesson"
+    assert_selector "dialog[open]"
     within("[role='log']") { assert_selector "blockquote", text: code.strip }
     assert_no_selector "[data-conversation-target='quotePreview']"
   end
@@ -200,7 +200,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_equal 2, keys.uniq.size
   end
 
-  test "the widget fits a phone, ignores outside selection, and resets on another lesson" do
+  test "the widget fits a phone, ignores outside selection, and preserves a quote from another lesson" do
     lesson = lessons(:pitch)
     lesson.update!(body: "A short passage.\n\n#{'Long text. ' * 220}")
     visit course_lesson_path(lesson.course, lesson, locale: :pl)
@@ -218,9 +218,10 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     click_button "Zamknij rozmowę"
     click_link "Następna lekcja"
     assert_selector "h1", text: lessons(:rhythm).title
-    click_button "Zapytaj o tę lekcję"
-    assert_field "Twoje pytanie", with: ""
-    assert_no_selector "[data-conversation-target='quotePreview']"
+    click_button "Otwórz asystenta kursu"
+    assert_field "Twoje pytanie", with: "A draft"
+    assert_selector "[data-conversation-target='quoteSource']", text: lesson.title
+    assert_selector "[data-conversation-target='contextLabel']", text: lessons(:rhythm).title
   ensure
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
   end
@@ -248,7 +249,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
   test "opening chat keeps the send state stable and a click during refresh is delivered once" do
     lesson = lessons(:pitch)
     visit course_lesson_path(lesson.course, lesson, locale: :en)
-    click_button "Ask about this lesson"
+    click_button "Open course assistant"
     assert_text "Ask for an explanation"
     assert_button "Send question", disabled: true
     fill_in "Your question", with: "Explain pitch"
@@ -268,7 +269,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
         return originalFetch(url, options);
       };
     JS
-    click_button "Ask about this lesson"
+    click_button "Open course assistant"
     assert_button "Send question", disabled: false
     assert_field "Your question", with: "Explain pitch"
     assert_not_includes page.evaluate_script("window.disabledStates"), true
@@ -301,7 +302,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
         return originalFetch(url, options);
       };
     JS
-    click_button "Ask about this lesson"
+    click_button "Open course assistant"
     assert_selector "[role='log'][aria-busy='true']", text: "Loading conversation"
     assert_selector ".lesson-chat-loading .skeleton", count: 3
     assert_no_text "Ask for an explanation"
@@ -322,7 +323,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_button "Send question", disabled: false
 
     click_button "Close conversation"
-    click_button "Ask about this lesson"
+    click_button "Open course assistant"
     assert_text "Ask for an explanation"
     assert_no_selector ".lesson-chat-loading"
     assert_button "Send question", disabled: false

@@ -1,12 +1,12 @@
 # Course assistant: implementation and planned design
 
-Status: the durable history and execution foundation is implemented as of 2026-11-07. The shared interface, draft editor, activity cards and undo remain planned. This document describes the target design; [local AI](local-ai.md) documents the implemented lifecycle and limits.
+Status: the durable execution foundation and shared interface are implemented as of 2026-11-07. The panel follows outlines, lessons and drafts, with context labels, preserved composers, persisted generation/cover status cards and explicit content refresh. Draft editing tools, operation receipts, refresh tools and undo remain planned. [Local AI](local-ai.md) documents the implemented lifecycle and limits.
 
 The assistant should follow a course from its outline into individual lessons. Published courses offer tutoring; drafts offer editing through bounded tools. The panel, quote interaction and navigation remain consistent, while permissions and conversation ownership remain explicit.
 
 ## Current behavior and verified capabilities
 
-- `Conversation` belongs to a course, learner profile and mode. Legacy lesson records remain intact. `Exchange` persists questions, selected passages, immutable context snapshots, answers and statuses in PostgreSQL. Browser memory still holds unsent input and panel state.
+- `Conversation` belongs to a course, learner profile and mode. Legacy lesson records remain intact. `Exchange` persists questions, selected passages, immutable context snapshots, answers and statuses in PostgreSQL. A permanent panel and per-tab session storage retain unsent input, quote origin, open/expanded state and scroll through navigation and reloads.
 - `Codex::Tutor` resumes a stored thread. Recovery can restore completed answers from mapped runtime history; a missing thread is replaced on the next explicit question with a bounded application-history handoff.
 - `Codex::CourseGenerator` still starts a fresh thread per step. New executions persist runtime identifiers in `AiRun`. Pre-existing generation identifiers were not recorded, so there is no single original generation conversation to resume.
 - Development uses Solid Queue with a separate database and threaded worker. Queued work survives restarts. Recovery reconciles completed turns and saved generation checkpoints; unresolved outcomes require explicit resubmission/resume. A local Codex process is not an independently durable service.
@@ -22,12 +22,12 @@ Use one course-level transcript per owner and mode. Locally, use the existing sh
 | --- | --- | --- |
 | Published course outline | Title, description, language and ordered lesson titles | Explain the course and suggest a learning path |
 | Published lesson | Outline plus the current lesson and optional selected passage | Explain and discuss; no writes |
-| Draft plan/status | Topic, current metadata, outline, generation state and revision | Discuss or edit this draft when its state allows it |
-| Draft lesson | Draft overview plus the current lesson and optional selected passage | Improve the lesson or perform requested changes within this draft |
+| Draft plan/status | Topic, current metadata, outline, generation state and revision | Discuss the draft and suggest improvements; editing tools are planned |
+| Draft lesson | Draft overview plus the current lesson and optional selected passage | Discuss the lesson; scoped mutations are planned |
 
 Do not attach every lesson body to every message. The draft editor may explicitly read a relevant lesson through a scoped tool when a course-level request requires it; display that read as activity. Context scope controls newly supplied material, not forgetting material already seen in the conversation.
 
-Each submitted message captures its course, mode, optional lesson ID, interface language, material revision and quote. Show a context chip in the composer and preserve that context on the saved message. A running request keeps its original context if the user navigates. A quote from an older revision is marked as such and must be checked against the latest lesson before editing.
+Each submitted message captures its course, mode, optional lesson ID, interface language, material revision and quote. The composer shows its current context and a separate source label for a retained quote. Saved messages show their original context. A running request keeps its original context if the user navigates. A changed course material version rejects a new quoted submission and preserves its composer for review; accepted request keys still replay their original result.
 
 The same panel is available on the plan/status and lesson pages. Preserve its open/expanded state, scroll position and unsent input while moving within a course. A different course has its own transcript and composer. Existing selection timing and keyboard shortcuts remain unchanged.
 
@@ -67,7 +67,9 @@ Multi-operation requests can finish partially. Show which changes were saved and
 
 ## Activity and refreshing the view
 
-Render compact activity cards inside the transcript, for example:
+The current panel reconstructs generation and cover cards from persisted records with stable IDs. Exchange states show queued, running, recovering and terminal reply outcomes. These are current status cards, not a complete audit trail of earlier transitions. An open panel polls for changes; version mismatches offer explicit content refresh while retaining the permanent panel, unsent text and quote. Each tab compares its own displayed material version. Publishing rejects further requests from the old editor mode and offers a route to the published overview.
+
+The editing stage will add compact activity cards for scoped tools and committed receipts, for example:
 
 - Reading lesson 3.
 - Updating the example — saved.
@@ -94,8 +96,8 @@ Solid Queue [does not automatically retry work abandoned by a crashed worker](ht
 
 ## Delivery slices and acceptance
 
-1. **Durable conversation foundation — implemented.** Course-level ownership, context snapshots, runtime identifiers, retained legacy history, database queue and recovery states. Covers new browser sessions, duplicate submission, lost response and worker restart. The existing panel remains on published lessons; generation conversations are recorded as separate runs, without a new editor transcript yet.
-2. **Shared assistant interface.** Outline, published lesson, draft overview and draft lesson; mode/context chips, selected passages, persisted activity cards and safe content refresh. Verify keyboard, PL/EN, 320 px, 200% zoom, two tabs, navigation during a reply and preserved unsent text.
+1. **Durable conversation foundation — implemented.** Course-level ownership, context snapshots, runtime identifiers, retained legacy history, database queue and recovery states. Covers new browser sessions, duplicate submission, lost response and worker restart. Generation conversations are recorded as separate runs.
+2. **Shared assistant interface — implemented.** Outline, published lesson, draft overview and draft lesson; mode/context labels, selected passages with origin, persisted generation/cover cards and explicit content refresh. Preserves tab-specific composers and pending reply context. Draft discussion is read-only; its history and runtime thread are separate from generation runs and the published tutor.
 3. **Draft editing and recovery.** Scoped editor tools, metadata and lesson changes, recoverable removal, image replacement, operation receipts, revision previews and undo. Verify isolation, stale quotes/revisions, edit/generation/approval conflicts, image failure, cancellation and recovery after a write whose response was lost.
 
 Finish with a real local workflow on an isolated draft: change a quoted passage, add and remove a lesson, replace the cover, leave and reopen the page, and undo a change. Automated tests use fake model/image adapters; genuine checks remain explicit and bounded. The public demo milestone remains separate.

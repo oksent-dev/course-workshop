@@ -11,6 +11,9 @@ Rails.application.routes.draw do
       post :approve_plan, on: :member
     end
     resources :courses, only: :show, param: :slug do
+      resource :conversation, only: :show do
+        resources :exchanges, only: [ :create, :destroy ], controller: :conversations
+      end
       resources :lessons, only: :show do
         resource :completion, only: [ :create, :destroy ]
         resource :conversation, only: :show do

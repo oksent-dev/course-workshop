@@ -120,7 +120,18 @@ en:
     mark_complete: "Mark complete"
     undo: "Mark as incomplete"
   conversation:
-    open: "Ask about this lesson"
+    open: "Open course assistant"
+    modes:
+      tutor: "Course tutor"
+      editor: "Draft assistant"
+    contexts:
+      tutor: "Discuss the plan or current lesson. Your conversation follows this course."
+      editor: "Discuss the plan and improvements. Read-only conversation."
+    current_context: "Context:"
+    updates: "Course updated — refresh content"
+    saved_lessons: "Saved lessons: %{count}"
+    stale_selection: "This material has changed. Refresh the content and select the passage again, or remove the quote. Your question is preserved."
+    mode_changed: "The course status has changed. Reload the page to open the appropriate conversation."
     heading: "Your lesson tutor"
     close: "Close conversation"
     expand: "Expand conversation"

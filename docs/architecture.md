@@ -46,7 +46,7 @@ The library uses `?category=ID` for filtering. Counts are computed from publishe
 
 Additional interactive components remain possible extensions.
 
-The [course assistant design](course-assistant.md) separates the implemented history/recovery foundation from the planned shared tutor/editor interface, draft tools and activity cards. Course-level history and durable execution are available. The current panel still opens from published lessons and the tutor remains read-only.
+The [course assistant design](course-assistant.md) separates the implemented history/recovery foundation and shared interface from planned editing tools and revision receipts. The same panel follows course outlines, lessons, generation overviews and draft previews. Both modes currently discuss supplied material without writing to the course.
 
 Generated content is treated as input: HTML output is sanitized, and interactive blocks use validated data rather than arbitrary generated JavaScript.
 
@@ -78,11 +78,13 @@ Generation state includes the existing category catalog. The model selects a sui
 
 Completed form generations reserve a `CourseCoverGeneration` in the completion transaction and enqueue its job after commit. `Codex::CoverGenerator` opens a separate restricted session with native image generation enabled and no MCP or web access. Validated inline image bytes become the course's local Active Storage attachment. Cover status, expiry and retries are independent of the completed lessons; old attempts cannot attach late results, and manual covers are preserved. The progress screen polls both records and offers a cover-only retry. See [course covers](course-covers.md).
 
-## Lesson conversations and the agent boundary
+## Course conversations and the agent boundary
 
-The optional floating lesson panel separates interface and transport. `LessonChatController` opens a non-modal dialog, manages focus and viewport placement, and captures text selected within the current lesson body. `ConversationController` submits questions and polls Rails for saved outcomes while open, retaining an unsent question and optional quote across panel close/reopen. Navigation creates a fresh widget for the new lesson.
+The optional floating panel separates interface and transport. The layout renders a Turbo permanent element keyed by learner, course, mode and interface language, outside animated content. A separate page descriptor supplies the current context after navigation. `LessonChatController` manages the non-modal dialog, focus, viewport and selection; `ConversationController` handles submission, polling, context changes and refresh. `assistant_state.js` preserves the composer and UI state in per-tab session storage, without storing transcripts. Language changes rebuild translated controls while restoring the same tab state.
 
-`ConversationsController` resolves the lesson through its course, then uses `LearnerContext` to find a course conversation for the current profile and tutor mode. A partial unique index protects this ownership. Legacy lesson conversations retain their IDs, messages and runtime links; only a matching old session key can associate them with a profile. `Conversation#history` includes that profile's retained legacy messages without moving records or merging runtime threads.
+`ConversationsController` resolves the course, derives tutor/editor mode from its publication state, and authorizes draft access through `LocalAuthoring`. It resolves an optional lesson only within that course, then uses `LearnerContext` to find the profile's conversation. Stale mode requests are rejected after publication. A partial unique index protects this ownership. Legacy lesson routes remain supported for published courses. Legacy conversations retain their IDs, messages and runtime links; only a matching old session key can associate them with a profile. `Conversation#history` includes that profile's retained legacy messages without moving records or merging runtime threads.
+
+`AssistantContext` supplies the server-derived mode and a digest of material metadata, lesson timestamps and cover identity. A retained quote submits its source lesson and version rather than adopting the newly visited lesson. Version conflicts preserve the composer and require review. Polling returns current material version, existing lesson IDs and an application-generated overview route; an explicit Turbo refresh preserves the permanent panel and handles removed lessons. Draft activity cards are reconstructed from generation and cover records with stable IDs. They show current persisted status, not a fabricated tool transcript.
 
 `Exchange` captures the course ID, description, outline, revision, mode, current lesson ID/body, locale and optional passage at submission. Moving between lessons does not change this snapshot. The passage is limited to 2,000 characters and is not inherited by later questions. The transcript labels saved questions with their original lesson. Course history survives deleting an individual lesson.
 

@@ -33,7 +33,7 @@
     </nav>
     <article class="min-w-0 max-w-[65ch]" lang="<%= @course.language %>" data-motion="enter" data-motion-delay="2">
       <h2 class="font-serif text-3xl font-semibold wrap-anywhere"><%= @lesson.title %></h2>
-      <div class="lesson-content mt-6 font-serif text-xl leading-relaxed wrap-anywhere"><%= render_lesson_body(@lesson) %></div>
+      <div class="lesson-content mt-6 font-serif text-xl leading-relaxed wrap-anywhere" data-assistant-content><%= render_lesson_body(@lesson) %></div>
     </article>
   </div>
 <% else %>

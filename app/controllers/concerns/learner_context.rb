@@ -5,6 +5,7 @@ module LearnerContext
 
   included do
     before_action :prevent_progress_caching
+    helper_method :current_learner_profile
   end
 
   private

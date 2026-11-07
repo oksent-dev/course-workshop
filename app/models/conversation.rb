@@ -41,6 +41,7 @@ class Conversation < ApplicationRecord
           outline: course.lessons.outline.map { |entry| { id: entry.id, position: entry.position, title: entry.title } },
           lesson_id: lesson&.id, title: lesson&.title,
           language: course.language, body: lesson&.body,
+          generation: mode == "editor" ? course.course_generation&.slice(:topic, :status, :plan, :step) : nil,
           selected_text: selected_text.to_s.strip.presence
         }
       )

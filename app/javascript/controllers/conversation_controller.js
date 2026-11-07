@@ -1,23 +1,73 @@
 import { Controller } from "@hotwired/stimulus";
 import { fadeUp } from "../motion.js";
+import { Turbo } from "@hotwired/turbo-rails";
+import { readState, saveState, pageContext } from "../assistant_state.js";
 
 export default class extends Controller {
-  static targets = ["transcript", "loading", "form", "question", "submit", "cancel", "status", "refresh", "quotePreview", "quoteText", "removeQuote"];
-  static values = { url: String, networkError: String, sending: String };
+  static targets = ["transcript", "scroll", "activity", "updates", "contextLabel", "courseTitle", "quoteSource", "loading", "form", "question", "submit", "cancel", "status", "refresh", "quotePreview", "quoteText", "removeQuote"];
+  static values = { key: String, url: String, networkError: String, sending: String };
 
   connect() {
-    this.requestKey = crypto.randomUUID();
-    this.busy = false;
-    this.ready = false;
-    this.opened = false;
-    this.selectedText = "";
+    if (!this.initialized) {
+      const state = readState(this.keyValue);
+      this.requestKey = state.requestKey || crypto.randomUUID();
+      this.lastSubmission = state.lastSubmission;
+      this.questionTarget.value = state.question || "";
+      this.quotation = state.quotation || null;
+      this.restoredScroll = state.scroll;
+      this.busy = false;
+      this.ready = false;
+      this.initialized = true;
+    }
+    this.opened = this.element.querySelector("dialog").open;
+    this.navigate();
+    this.renderQuote();
     this.updateControls();
   }
 
   disconnect() {
+    this.save();
     this.opened = false;
     clearTimeout(this.timer);
-    this.abortController?.abort();
+  }
+
+  navigate() {
+    const context = pageContext(this.keyValue);
+    if (!context) return;
+    this.currentContext = context;
+    this.urlValue = context.url;
+    this.formTarget.action = context.exchanges_url;
+    this.contextLabelTarget.textContent = context.label;
+    this.contextLabelTarget.title = context.label;
+    this.courseTitleTarget.textContent = context.title;
+    this.courseTitleTarget.lang = context.language;
+    this.updatesTarget.hidden = true;
+    if (this.opened) this.refresh();
+  }
+
+  input() {
+    this.save();
+    this.updateControls();
+  }
+
+  save() {
+    saveState(this.keyValue, {
+      question: this.questionTarget.value, quotation: this.quotation,
+      requestKey: this.requestKey, lastSubmission: this.lastSubmission,
+      scroll: this.ready ? this.scrollTarget.scrollTop : this.restoredScroll,
+    });
+  }
+
+  refreshPage() {
+    this.save();
+    const missingLesson = this.currentContext.lesson_id && !this.lessonIds?.includes(this.currentContext.lesson_id);
+    const position = window.scrollY;
+    const focused = document.activeElement === this.questionTarget;
+    document.addEventListener("turbo:load", () => {
+      if (!missingLesson) window.scrollTo(0, position);
+      if (focused && this.element.isConnected) this.questionTarget.focus({ preventScroll: true });
+    }, { once: true });
+    Turbo.visit(missingLesson || this.invalidContext ? this.overviewUrl : window.location.href, { action: "replace" });
   }
 
   open() {
@@ -32,10 +82,17 @@ export default class extends Controller {
 
   quote(event) {
     if (this.submitting) return;
-    this.selectedText = event.detail.text;
-    this.quoteTextTarget.textContent = this.selectedText;
-    this.quotePreviewTarget.hidden = false;
+    const { text, lesson_id, label, version } = event.detail;
+    this.quotation = { text, lesson_id, label, version };
+    this.renderQuote();
+    this.save();
     fadeUp(this.quotePreviewTarget, { duration: 180, distance: 6 });
+  }
+
+  renderQuote() {
+    this.quoteTextTarget.textContent = this.quotation?.text || "";
+    this.quoteSourceTarget.textContent = this.quotation?.label || "";
+    this.quotePreviewTarget.hidden = !this.quotation;
   }
 
   removeQuote() {
@@ -45,9 +102,9 @@ export default class extends Controller {
   }
 
   clearQuote() {
-    this.selectedText = "";
-    this.quoteTextTarget.textContent = "";
-    this.quotePreviewTarget.hidden = true;
+    this.quotation = null;
+    this.renderQuote();
+    this.save();
   }
 
   refresh() {
@@ -57,17 +114,24 @@ export default class extends Controller {
   }
 
   updateControls() {
-    this.submitTarget.disabled = !this.ready || this.busy || this.submitting || !this.questionTarget.value.trim();
+    this.submitTarget.disabled = !this.ready || this.busy || this.submitting || this.invalidContext || !this.questionTarget.value.trim();
   }
 
   async send(event) {
     event.preventDefault();
     if (!this.ready || this.busy || this.submitting || !this.formTarget.reportValidity()) return;
-    const submission = JSON.stringify({ question: this.questionTarget.value, selected_text: this.selectedText });
+    const submission = JSON.stringify({
+      question: this.questionTarget.value,
+      selected_text: this.quotation?.text || "",
+      context_lesson_id: this.quotation ? this.quotation.lesson_id : this.currentContext.lesson_id,
+      selection_version: this.quotation?.version,
+    });
     if (this.lastSubmission !== submission) {
       this.requestKey = crypto.randomUUID();
       this.lastSubmission = submission;
     }
+    this.save();
+    const submissionUrl = this.formTarget.action;
     this.submitting = true;
     this.questionTarget.readOnly = true;
     this.removeQuoteTarget.disabled = true;
@@ -76,7 +140,7 @@ export default class extends Controller {
       await this.refreshRequest;
       if (this.busy || !this.element.isConnected) return;
       this.statusTarget.textContent = this.sendingValue;
-      const accepted = await this.load(this.formTarget.action, {
+      const accepted = await this.load(submissionUrl, {
         method: "POST",
         body: JSON.stringify({ ...JSON.parse(submission), request_key: this.requestKey }),
       });
@@ -85,6 +149,7 @@ export default class extends Controller {
         this.clearQuote();
         this.requestKey = crypto.randomUUID();
         this.lastSubmission = null;
+        this.save();
         if (this.opened) this.questionTarget.focus({ preventScroll: true });
       }
     } finally {
@@ -104,7 +169,7 @@ export default class extends Controller {
     this.loading = true;
     if (!this.ready) {
       if (this.hasLoadingTarget) this.loadingTarget.hidden = false;
-      this.transcriptTarget.setAttribute("aria-busy", "true");
+      this.scrollTarget.setAttribute("aria-busy", "true");
     }
     this.updateControls();
     this.cancelTarget.disabled = true;
@@ -120,11 +185,24 @@ export default class extends Controller {
         },
       });
       const data = await response.json().catch(() => ({}));
+      if (data.reload) {
+        this.invalidContext = true;
+        this.overviewUrl = data.overview_url;
+        this.updatesTarget.hidden = false;
+      }
       if (!response.ok || typeof data.html !== "string") {
         throw Object.assign(new Error(data.error || this.networkErrorValue), { userFacing: true });
       }
       const transcript = this.transcriptTarget;
-      const followLatest = !this.ready || options.method === "POST" || transcript.scrollHeight - transcript.scrollTop - transcript.clientHeight < 64;
+      const scroll = this.scrollTarget;
+      const followLatest = (!this.ready && this.restoredScroll == null) || options.method === "POST" || (this.ready && scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 64);
+      if (this.activityHTML !== data.activity_html) {
+        this.activityTarget.innerHTML = data.activity_html || "";
+        this.activityHTML = data.activity_html;
+      }
+      this.lessonIds = data.lesson_ids;
+      this.overviewUrl = data.overview_url;
+      this.updatesTarget.hidden = data.version === this.currentContext?.version;
       if (this.transcriptHTML !== data.html) {
         const previous = new Map(Array.from(transcript.querySelectorAll("[data-exchange-id]"),
           item => [item.dataset.exchangeId, item.dataset.exchangeStatus]));
@@ -141,7 +219,8 @@ export default class extends Controller {
             }
           });
         }
-        if (followLatest) transcript.scrollTop = transcript.scrollHeight;
+        if (followLatest) scroll.scrollTop = scroll.scrollHeight;
+        else if (!this.ready && this.restoredScroll != null) scroll.scrollTop = this.restoredScroll;
       }
       this.busy = data.busy;
       this.ready = true;
@@ -150,7 +229,7 @@ export default class extends Controller {
       this.cancelTarget.disabled = data.cancelling;
       this.statusTarget.textContent = "";
       this.refreshTarget.classList.add("hidden");
-      if (data.busy && this.opened) this.timer = setTimeout(() => this.refresh(), 1000);
+      if (this.opened) this.timer = setTimeout(() => this.refresh(), data.busy ? 1000 : 3000);
       return true;
     } catch (error) {
       if (error.name !== "AbortError") {
@@ -160,7 +239,7 @@ export default class extends Controller {
       return false;
     } finally {
       this.loading = false;
-      this.transcriptTarget.setAttribute("aria-busy", "false");
+      this.scrollTarget.setAttribute("aria-busy", "false");
       if (this.hasLoadingTarget) this.loadingTarget.hidden = true;
       this.updateControls();
     }
