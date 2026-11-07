@@ -277,6 +277,7 @@ pl:
       unsupported_tool: "Pytanie wymagało nieobsługiwanej interakcji. Spróbuj zapytać bezpośrednio o lekcję."
   app:
     name: "Warsztat Kursów"
+    tagline: "Od pomysłu do wiedzy"
     description: "Przestrzeń dla przemyślanych kursów i praktycznej nauki."
   languages:
     pl: "Polski"

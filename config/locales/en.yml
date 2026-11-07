@@ -275,6 +275,7 @@ en:
       unsupported_tool: "This question required an unsupported interaction. Try asking about the lesson directly."
   app:
     name: "Course Workshop"
+    tagline: "From Idea to Knowledge"
     description: "A workspace for thoughtful courses and practical learning."
   languages:
     pl: "Polski"

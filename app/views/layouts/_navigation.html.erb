@@ -1,10 +1,12 @@
 <header class="border-b border-base-300" data-site-header>
   <div class="mx-auto grid max-w-5xl grid-cols-[1fr_auto] items-center gap-x-2 gap-y-3 px-4 py-4 sm:gap-x-6 sm:px-8 lg:grid-cols-[auto_1fr_auto_auto]">
-    <%= link_to localized_root_path, class: "order-1 inline-flex min-h-11 min-w-0 w-fit items-center gap-2 rounded-field font-medium" do %>
-      <svg aria-hidden="true" viewBox="0 0 32 32" class="size-8 shrink-0 rounded-field bg-secondary p-1.5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
-        <path d="M3 6c5-1 9 0 13 3 4-3 8-4 13-3v20c-5-1-9 0-13 2-4-2-8-3-13-2zM16 9v19"/>
-      </svg>
-      <span><%= t("app.name") %></span>
+    <%= link_to localized_root_path, aria: { label: t("app.name") }, data: { site_brand: true },
+      class: "order-1 inline-flex min-h-11 min-w-0 w-fit items-center gap-2.5 rounded-field font-medium" do %>
+      <%= image_tag "logo.svg", width: 36, height: 36, alt: "", class: "size-9 shrink-0" %>
+      <span class="min-w-0">
+        <span class="block leading-tight"><%= t("app.name") %></span>
+        <span class="mt-1 block text-[0.6875rem] leading-snug font-normal text-muted-ink sm:text-xs"><%= t("app.tagline") %></span>
+      </span>
     <% end %>
     <div class="order-3 col-span-2 flex items-center justify-between gap-2 lg:contents">
     <nav aria-label="<%= t("navigation.main") %>" class="flex flex-wrap items-center gap-1 lg:order-2 lg:justify-self-end" data-primary-navigation>

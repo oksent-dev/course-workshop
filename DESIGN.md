@@ -4,6 +4,14 @@ Course Workshop is a place to sit with a lesson. Give the reading column the mos
 
 The library and site navigation use `reading-room`, the default light daisyUI theme. Edit its semantic colors, control sizes, and corner radii in the [Tailwind entry point](app/assets/tailwind/application.css). That file also defines the Tailwind font families and the muted ink text utility.
 
+## Identity
+
+The Threshold mark is an open arch with three evenly rising steps. Use the canonical [logo.svg](app/assets/images/logo.svg); preserve its proportions, soft corners and the clear gaps between the arch and stairs. The primary mark is sage on paper. Browser and touch icons use the paper-colored mark on sage.
+
+Pair the mark with the localized name and tagline: **Warsztat Kursów — Od pomysłu do wiedzy** or **Course Workshop — From Idea to Knowledge**. Keep the exact wording and capitalization in the locale dictionaries. In navigation, use a 36 px mark with the name above a smaller tagline, allowing the text to wrap on narrow screens. The visible name labels the home link; the adjacent image is decorative for assistive technology. Use the symbol alone for favicons.
+
+Run `ruby bin/rails brand:icons` after editing the canonical mark to regenerate `public/icon.svg`, the 32 px PNG fallback and the 180 px Apple touch icon. Commit the generated assets. The task uses the existing libvips dependency and briefly enables its in-memory SVG loader for this trusted asset, restoring the block afterward. It makes no network or model requests and does not change upload handling.
+
 ## Color and surfaces
 
 | Role | Value | Use |
