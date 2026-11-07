@@ -17,7 +17,7 @@
     [data-motion-delay="1"] { animation-delay: 60ms; }
     [data-motion-delay="2"] { animation-delay: 120ms; }
     [data-motion-delay="3"] { animation-delay: 180ms; }
-    [data-motion="enter"]:focus-within { animation: none; }
+    [data-motion-finished] { animation: none; }
 
     .lesson-exercise-answer[open] > .lesson-exercise-solution {
       animation: reading-room-reveal 240ms ease-out backwards;

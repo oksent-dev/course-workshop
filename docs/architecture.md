@@ -58,11 +58,13 @@ Publication is a human action in the local preview, outside the MCP tool set. Se
 
 ## Course generation
 
-`GenerationsController` reserves a draft and `CourseGeneration` in one transaction, then enqueues `CourseGenerationJob`. The form supplies a topic, content language and lesson count; a submission UUID makes repeated requests idempotent. A Stimulus controller polls persisted progress without restarting the model.
+`GenerationsController` reserves a draft and `CourseGeneration` in one transaction, then enqueues `CourseGenerationJob`. The form supplies a topic and language; the model chooses the lesson count when saving its plan. A submission UUID makes repeated requests idempotent. The plan must be approved before writing begins. A Stimulus controller polls stages, current lesson, bounded activity labels and saved results without restarting model work.
 
-`Codex::CourseGenerator` uses the shared `Codex::Runtime` capability restrictions, then enables live web search and a dedicated `CourseMcp::GenerationServer`. This server is bound to one generation and a revocable attempt token. It saves an immutable plan and complete lessons by position, using the same content validation and operation receipts as ordinary authoring. No course identifier supplied by the model can change the scope.
+`Codex::CourseGenerator` uses the shared `Codex::Runtime` restrictions, then enables live web search and a dedicated `CourseMcp::GenerationServer`. This server is bound to one generation and a revocable step token. Planning and each lesson run as separate jobs and fresh threads. Only the current approved position is writable, with the same validation and receipts as ordinary authoring. A database step number guards duplicate/late delivery. No course identifier supplied by the model can change the scope.
 
 Cancellation revokes the token immediately. Resume starts a new attempt and thread while retaining the draft, plan and existing lesson IDs. Completeness is checked in the application before the draft becomes eligible for human approval. The development queue remains Async; expired records require an explicit resume. See [course generation](course-generation.md) for lifecycle, limits and recovery.
+
+Each generated lesson needs a table, math block, diagram or attached image in its main material. A paired illustration brief/alternative text can reserve a separate image step after saving the lesson text. `Codex::LessonIllustrator` reuses the restricted image transport with an educational brief. The result becomes a local `LessonImage`; its reference is appended only after validated attachment. Image failures retain the text and retry the image step. Checking every lesson and its visual precedes final completion.
 
 Generation state includes the existing category catalog. The model selects a suitable category ID before considering a new name; both scoped and ordinary MCP authoring share the same category resolver. PostgreSQL prevents duplicate names regardless of case.
 

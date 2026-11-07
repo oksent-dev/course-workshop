@@ -3,7 +3,7 @@ require_relative "../../support/fake_codex_protocol"
 
 class CodexCourseGeneratorTest < ActiveSupport::TestCase
   test "the generator grants only its scoped MCP tools and uses a fresh thread on retry" do
-    generation = CourseGeneration.submit!(topic: "Active Record", language: "pl", lesson_count: 4, request_key: SecureRandom.uuid)
+    generation = CourseGeneration.submit!(topic: "Active Record", language: "pl", request_key: SecureRandom.uuid)
     2.times do
       connection = FakeCodexProtocol.new
       Codex::CourseGenerator.new(connection: connection).generate(generation, token: "attempt-token", cancelled: -> { false })
@@ -22,13 +22,13 @@ class CodexCourseGeneratorTest < ActiveSupport::TestCase
       assert_equal "attempt-token", env["COURSE_GENERATION_TOKEN"]
       turn = connection.calls.assoc("turn/start").last
       payload = JSON.parse(turn[:input].first[:text])
-      assert_equal({ "topic" => "Active Record", "language" => "pl", "lesson_count" => 4 }, payload)
+      assert_equal({ "topic" => "Active Record", "language" => "pl", "stage" => "planning", "current_position" => nil }, payload)
       assert_nil connection.calls.assoc("thread/resume")
     end
   end
 
   test "cancellation interrupts the active turn before the connection closes" do
-    generation = CourseGeneration.submit!(topic: "Active Record", language: "en", lesson_count: 3, request_key: SecureRandom.uuid)
+    generation = CourseGeneration.submit!(topic: "Active Record", language: "en", request_key: SecureRandom.uuid)
     connection = FakeCodexProtocol.new
     connection.define_singleton_method(:notification) { raise LocalAi::Cancelled }
     assert_raises(LocalAi::Cancelled) do

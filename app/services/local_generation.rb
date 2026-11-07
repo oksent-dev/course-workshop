@@ -14,4 +14,8 @@ module LocalGeneration
   def self.cover_adapter
     Rails.configuration.x.local_ai.cover_generator || Codex::CoverGenerator.new
   end
+
+  def self.illustrator
+    Rails.configuration.x.local_ai.illustrator || Codex::LessonIllustrator.new
+  end
 end

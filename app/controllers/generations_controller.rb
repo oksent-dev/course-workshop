@@ -1,17 +1,17 @@
 class GenerationsController < ApplicationController
   before_action :require_local_generation
-  before_action :set_generation, only: [ :show, :cancel, :retry_generation, :retry_cover ]
+  before_action :set_generation, only: [ :show, :cancel, :retry_generation, :retry_cover, :approve_plan ]
   helper_method :generation_version, :generation_busy?
 
   def new
-    @generation = CourseGeneration.new(language: I18n.locale, lesson_count: 4, request_key: SecureRandom.uuid)
+    @generation = CourseGeneration.new(language: I18n.locale, request_key: SecureRandom.uuid)
     @recent = CourseGeneration.includes(:course).order(id: :desc).limit(10)
   end
 
   def create
-    input = params.require(:course_generation).permit(:topic, :language, :lesson_count, :request_key)
+    input = params.require(:course_generation).permit(:topic, :language, :request_key)
     @generation = CourseGeneration.submit!(**input.to_h.symbolize_keys)
-    enqueue if @generation.previously_new_record?
+    CourseGenerationJob.enqueue(@generation) if @generation.previously_new_record?
     redirect_to generation_path(@generation), status: :see_other
   rescue ActiveRecord::RecordInvalid => error
     @generation = error.record.is_a?(CourseGeneration) ? error.record : CourseGeneration.new(input)
@@ -24,7 +24,8 @@ class GenerationsController < ApplicationController
     @generation.expire_stale!
     @cover_generation = @generation.course.cover_generation
     @cover_generation&.expire_stale!
-    @saved_positions = @generation.course.lessons.pluck(:position)
+    @saved_lessons = @generation.course.lessons.pluck(:position, :id).to_h
+    @saved_positions = @saved_lessons.keys
     respond_to do |format|
       format.html
       format.json { render json: { html: render_to_string(partial: "status", formats: [ :html ]), busy: generation_busy?, version: generation_version } }
@@ -38,7 +39,14 @@ class GenerationsController < ApplicationController
 
   def retry_generation
     @generation.expire_stale!
-    enqueue if @generation.retry!(params[:attempt].to_i)
+    CourseGenerationJob.enqueue(@generation) if @generation.retry!(params[:attempt].to_i)
+    redirect_to generation_path(@generation), status: :see_other
+  end
+
+  def approve_plan
+    if @generation.approve_plan!(params[:attempt].to_i, params[:revision].to_i)
+      CourseGenerationJob.enqueue(@generation)
+    end
     redirect_to generation_path(@generation), status: :see_other
   end
 
@@ -66,14 +74,5 @@ class GenerationsController < ApplicationController
 
   def generation_busy?
     @generation.pending? || @cover_generation&.pending? || false
-  end
-
-  def enqueue
-    attempt = @generation.attempt
-    unless CourseGenerationJob.perform_later(@generation, attempt)
-      @generation.finish!(attempt, status: :failed, error_code: "unavailable")
-    end
-  rescue ActiveJob::EnqueueError
-    @generation.finish!(attempt, status: :failed, error_code: "unavailable")
   end
 end

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_06_170000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_07_091000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -77,7 +77,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_170000) do
     t.uuid "request_key", null: false
     t.text "topic", null: false
     t.string "language", null: false
-    t.integer "lesson_count", null: false
+    t.integer "lesson_count"
     t.string "status", default: "queued", null: false
     t.integer "attempt", default: 1, null: false
     t.jsonb "plan", default: [], null: false
@@ -86,11 +86,20 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_06_170000) do
     t.datetime "expires_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "stage", default: "planning", null: false
+    t.integer "step", default: 0, null: false
+    t.integer "current_position"
+    t.datetime "plan_approved_at"
+    t.string "activity"
+    t.datetime "activity_at"
+    t.text "illustration_prompt"
+    t.string "illustration_alt"
     t.index ["course_id"], name: "index_course_generations_on_course_id", unique: true
     t.index ["request_key"], name: "index_course_generations_on_request_key", unique: true
+    t.check_constraint "(lesson_count IS NULL OR lesson_count >= 1 AND lesson_count <= 60) AND attempt > 0", name: "generations_valid_limits"
+    t.check_constraint "(stage::text = ANY (ARRAY['planning'::character varying, 'writing'::character varying, 'illustrating'::character varying, 'checking'::character varying]::text[])) AND step >= 0 AND (current_position IS NULL OR current_position >= 1 AND current_position <= 60)", name: "generations_valid_step"
     t.check_constraint "language::text = ANY (ARRAY['pl'::character varying, 'en'::character varying]::text[])", name: "generations_valid_language"
-    t.check_constraint "lesson_count >= 3 AND lesson_count <= 6 AND attempt > 0", name: "generations_valid_limits"
-    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "generations_valid_status"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'awaiting_approval'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "generations_valid_status"
   end
 
   create_table "courses", force: :cascade do |t|

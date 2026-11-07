@@ -11,7 +11,7 @@ class CourseGenerationTest < ActiveSupport::TestCase
         ActiveRecord::Base.connection_pool.with_connection do
           ready << true
           start.pop
-          CourseGeneration.submit!(topic: "Concurrent submission", language: "en", lesson_count: 3, request_key: key).id
+          CourseGeneration.submit!(topic: "Concurrent submission", language: "en", request_key: key).id
         end
       end
     end

@@ -1,5 +1,13 @@
 const easing = "cubic-bezier(0.25, 0.1, 0.25, 1)";
 
+export function finishEntranceOnFocus(event) {
+  let element = event.target.closest('[data-motion="enter"]');
+  while (element) {
+    element.dataset.motionFinished = "";
+    element = element.parentElement?.closest('[data-motion="enter"]');
+  }
+}
+
 export function fadeUp(element, { duration = 220, distance = 10 } = {}) {
   if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return null;
   return element.animate([

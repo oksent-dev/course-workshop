@@ -1,0 +1,12 @@
+<ol class="mt-5 grid gap-2 text-sm sm:grid-cols-2" aria-label="<%= t('generation.stage_list') %>">
+  <% stages = [ ["planning", @generation.plan.any?, @generation.stage == "planning" && !@generation.awaiting_approval?],
+                ["writing", @generation.plan_approved_at && @saved_positions.size == @generation.lesson_count && @generation.illustration_prompt.blank?, %w[writing illustrating].include?(@generation.stage)],
+                ["checking", @generation.completed?, @generation.stage == "checking" && !@generation.completed?],
+                ["cover", @cover_generation&.completed?, @cover_generation&.pending?] ] %>
+  <% stages.each_with_index do |(name, done, active), index| %>
+    <li class="rounded-field px-3 py-2 <%= done || active ? 'bg-secondary text-primary' : 'text-muted-ink' %>">
+      <span aria-hidden="true"><%= done ? '✓' : "#{index + 1}." %></span> <%= t("generation.stages.#{name}") %>
+      <% if done %><span class="sr-only"><%= t('generation.saved') %></span><% end %>
+    </li>
+  <% end %>
+</ol>

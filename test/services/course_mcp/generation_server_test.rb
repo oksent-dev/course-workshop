@@ -5,7 +5,7 @@ class CourseMcpGenerationServerTest < ActiveSupport::TestCase
   setup do
     @old = [ Rails.configuration.x.local_ai.enabled, Rails.configuration.x.local_authoring.enabled ]
     Rails.configuration.x.local_ai.enabled = Rails.configuration.x.local_authoring.enabled = true
-    @generation = CourseGeneration.submit!(topic: "Active Record", language: "en", lesson_count: 3, request_key: SecureRandom.uuid)
+    @generation = CourseGeneration.submit!(topic: "Active Record", language: "en", request_key: SecureRandom.uuid)
     @token = @generation.claim!(1)
     @server = CourseMcp::GenerationServer.new(generation_id: @generation.id, token: @token).build
   end
@@ -51,23 +51,27 @@ class CourseMcpGenerationServerTest < ActiveSupport::TestCase
     first = call("plan_course", **args)
     assert_equal first["structuredContent"], call("plan_course", **args)["structuredContent"]
     assert_equal "plan_exists", call("plan_course", **plan_arguments).dig("structuredContent", "code")
-    write = { position: 2, body: FakeCourseGenerator::BODY, request_key: SecureRandom.uuid }
+    assert call("save_generated_lesson", position: 1, body: FakeCourseGenerator::BODY, request_key: SecureRandom.uuid)["isError"]
+    start_writing
+    write = { position: 1, body: FakeCourseGenerator::BODY, request_key: SecureRandom.uuid }
     saved = call("save_generated_lesson", **write)
     assert_equal saved["structuredContent"], call("save_generated_lesson", **write)["structuredContent"]
     changed = call("save_generated_lesson", **write.merge(body: "#{FakeCourseGenerator::BODY}\nA correction.", request_key: SecureRandom.uuid))
     assert_equal saved.dig("structuredContent", "lesson", "id"), changed.dig("structuredContent", "lesson", "id")
     assert_equal 1, @generation.course.lessons.count
     assert_equal 3, @generation.course.reload.revision
-    assert_equal "request_conflict", call("save_generated_lesson", **write.merge(position: 1)).dig("structuredContent", "code")
+    assert_equal "request_conflict", call("save_generated_lesson", **write.merge(position: 2)).dig("structuredContent", "code")
   end
 
   test "invalid content and wrong plan sizes roll back all state and receipts" do
     assert_no_difference [ "DraftOperation.count", "Category.count" ] do
-      assert call("plan_course", **plan_arguments.merge(lesson_titles: [ "Only one" ]))["isError"]
+      assert call("plan_course", **plan_arguments.merge(lesson_titles: []))["isError"]
+      assert call("plan_course", **plan_arguments.merge(lesson_titles: (1..61).map(&:to_s)))["isError"]
       assert call("plan_course", **plan_arguments.merge(title: " ", category: "Rollback category"))["isError"]
     end
     assert_empty @generation.reload.plan
     call("plan_course", **plan_arguments)
+    start_writing
     assert_no_difference [ "Lesson.count", "DraftOperation.count" ] do
       assert call("save_generated_lesson", position: 4, body: FakeCourseGenerator::BODY, request_key: SecureRandom.uuid)["isError"]
       assert call("save_generated_lesson", position: 1, body: "#{FakeCourseGenerator::BODY}\n![image](https://example.com/image.png)", request_key: SecureRandom.uuid)["isError"]
@@ -83,7 +87,26 @@ class CourseMcpGenerationServerTest < ActiveSupport::TestCase
     assert_equal "generation_incomplete", error.code
   end
 
+  test "a lesson needs a visual or a complete request for an illustration" do
+    call("plan_course", **plan_arguments)
+    start_writing
+    body = "A useful conceptual explanation. " * 12
+    args = { position: 1, body: body, request_key: SecureRandom.uuid }
+    assert_equal "missing_visual", call("save_generated_lesson", **args).dig("structuredContent", "code")
+    assert call("save_generated_lesson", **args.merge(illustration_prompt: "A concept"))["isError"]
+    result = call("save_generated_lesson", **args.merge(illustration_prompt: "Show the relationship clearly", illustration_alt: "A comparison"))
+    assert_not result["isError"]
+    assert_equal "Show the relationship clearly", @generation.reload.illustration_prompt
+  end
+
   private
+
+  def start_writing
+    @generation.reload.advance!(1, 0)
+    @generation.approve_plan!(1, @generation.course.reload.revision)
+    @token = @generation.claim!(1)
+    @server = CourseMcp::GenerationServer.new(generation_id: @generation.id, token: @token).build
+  end
 
   def plan_arguments
     { request_key: SecureRandom.uuid, title: "Associations", description: "A practical course.", category: "Programming", lesson_titles: %w[Parents Children Validation] }

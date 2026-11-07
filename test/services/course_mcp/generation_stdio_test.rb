@@ -5,7 +5,7 @@ class CourseMcpGenerationStdioTest < ActiveSupport::TestCase
   self.use_transactional_tests = false
 
   test "the scoped launcher authenticates its attempt and only exposes generation tools" do
-    generation = CourseGeneration.submit!(topic: "Stdio test", language: "en", lesson_count: 3, request_key: SecureRandom.uuid)
+    generation = CourseGeneration.submit!(topic: "Stdio test", language: "en", request_key: SecureRandom.uuid)
     token = generation.claim!(1)
     requests = [
       { jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-11-25", capabilities: {}, clientInfo: { name: "test", version: "1" } } },

@@ -2,7 +2,7 @@ module Drafts
   class LessonContent
     MAX_LENGTH = 40_000
 
-    def self.validate!(body, lesson: nil, learning_blocks: true)
+    def self.validate!(body, lesson: nil, learning_blocks: true, require_visual: false)
       if body.blank? || body.length > MAX_LENGTH || body.include?("\0")
         raise Error.new("invalid_content", "Lesson body must contain 1–40,000 characters without null bytes.")
       end
@@ -22,6 +22,10 @@ module Drafts
         unless node["src"]&.start_with?("image:") && keys.include?(key)
           raise Error.new("invalid_content", "Images must reference an existing image:key attachment on this lesson.")
         end
+      end
+      visual_block = blocks.any? { |node| %w[math mermaid].include?(node["lang"]) }
+      if require_visual && !visual_block && fragment.css("table, img").empty?
+        raise Error.new("missing_visual", "Every generated lesson needs a useful table, math block, Mermaid diagram, or attached image in its main material.")
       end
     end
   end

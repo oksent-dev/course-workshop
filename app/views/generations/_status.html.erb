@@ -1,18 +1,44 @@
 <section class="rounded-box bg-base-200 p-6 sm:p-8" aria-labelledby="generation-status-heading">
   <h2 id="generation-status-heading" class="font-serif text-2xl font-semibold" role="status" tabindex="-1"><%= t("generation.statuses.#{@generation.status}") %></h2>
-  <p class="mt-3"><%= t("generation.progress", saved: @saved_positions.size, total: @generation.lesson_count) %></p>
-  <progress class="progress progress-primary mt-3 w-full" value="<%= @saved_positions.size %>" max="<%= @generation.lesson_count %>"
-    aria-label="<%= t("generation.progress", saved: @saved_positions.size, total: @generation.lesson_count) %>"></progress>
+  <%= render "stages" %>
+  <% if @generation.plan_approved_at %>
+    <p class="mt-5"><%= t("generation.progress", saved: @saved_positions.size, total: @generation.lesson_count) %></p>
+    <progress class="progress progress-primary mt-3 w-full" value="<%= @saved_positions.size %>" max="<%= @generation.lesson_count %>"
+      aria-label="<%= t("generation.progress", saved: @saved_positions.size, total: @generation.lesson_count) %>"></progress>
+  <% elsif @generation.plan.empty? %>
+    <p class="mt-5 leading-relaxed"><%= t("generation.planning_hint") %></p>
+  <% end %>
+  <% if @generation.running? %>
+    <p class="mt-4 font-medium text-primary" role="status">
+      <%= t("generation.activities.#{@generation.activity}", default: t("generation.stages.#{@generation.stage}")) %>
+      <% if @generation.current_position %><span class="block mt-1 text-sm"><%= t("generation.current_lesson", number: @generation.current_position, total: @generation.lesson_count) %>: <%= @generation.plan[@generation.current_position - 1] %></span><% end %>
+    </p>
+  <% end %>
+  <% if @generation.activity_at %>
+    <p class="mt-3 text-sm text-muted-ink"><%= t("generation.last_activity") %> <time datetime="<%= @generation.activity_at.iso8601 %>"><%= l(@generation.activity_at, format: "%Y-%m-%d %H:%M:%S %Z") %></time></p>
+  <% end %>
   <% if @generation.plan.any? %>
+    <div class="mt-5">
+      <h3 lang="<%= @generation.language %>" class="font-serif text-2xl font-semibold wrap-anywhere"><%= @generation.course.title %></h3>
+      <p class="mt-2 text-sm text-muted-ink"><%= @generation.course.category.name %> · <%= t("generation.planned_count", count: @generation.lesson_count) %></p>
+      <% if @generation.awaiting_approval? %><p lang="<%= @generation.language %>" class="mt-3 leading-relaxed"><%= @generation.course.description %></p><% end %>
+    </div>
     <ol class="mt-5 space-y-3">
       <% @generation.plan.each_with_index do |title, index| %>
-        <li class="wrap-anywhere"><span lang="<%= @generation.language %>"><%= index + 1 %>. <%= title %></span>
+        <li class="wrap-anywhere rounded-field <%= 'bg-secondary p-3' if @generation.pending? && @generation.current_position == index + 1 %>" <%= 'aria-current=step' if @generation.pending? && @generation.current_position == index + 1 %>>
+          <% if @saved_lessons[index + 1] %>
+            <%= link_to "#{index + 1}. #{title}", draft_path(@generation.course_id, lesson_id: @saved_lessons[index + 1]), lang: @generation.language, class: "text-primary underline underline-offset-4" %>
+          <% else %><span lang="<%= @generation.language %>"><%= index + 1 %>. <%= title %></span><% end %>
           <% if @saved_positions.include?(index + 1) %><span class="ml-2 text-sm text-primary">✓ <%= t("generation.saved") %></span><% end %>
         </li>
       <% end %>
     </ol>
   <% end %>
-  <% if @generation.pending? %>
+  <% if @generation.awaiting_approval? %>
+    <p class="mt-6 leading-relaxed"><%= t("generation.approval_hint") %></p>
+    <%= button_to t("generation.approve_plan"), approve_plan_generation_path(@generation), params: { attempt: @generation.attempt, revision: @generation.course.revision }, id: "generation-approve-plan", class: "btn btn-primary mt-5 min-h-11 h-auto py-3" %>
+    <%= button_to t("generation.cancel"), cancel_generation_path(@generation), params: { attempt: @generation.attempt }, class: "btn btn-ghost mt-3 min-h-11" %>
+  <% elsif @generation.pending? %>
     <p class="mt-5 text-sm leading-relaxed text-muted-ink"><%= t("generation.wait_hint") %></p>
     <%= button_to t("generation.cancel"), cancel_generation_path(@generation), params: { attempt: @generation.attempt }, id: "generation-cancel", class: "btn btn-outline mt-5 min-h-11" %>
   <% elsif @generation.completed? %>

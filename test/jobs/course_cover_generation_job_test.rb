@@ -2,7 +2,7 @@ require "test_helper"
 require_relative "../support/fake_course_generator"
 
 class CourseCoverGenerationJobTest < ActiveSupport::TestCase
-  include ActiveJob::TestHelper
+  include GenerationTestHelpers
   setup do
     @ai = Rails.configuration.x.local_ai
     @authoring = Rails.configuration.x.local_authoring
@@ -10,8 +10,9 @@ class CourseCoverGenerationJobTest < ActiveSupport::TestCase
     @ai.enabled = @authoring.enabled = true
     @ai.generator = FakeCourseGenerator.new
     @adapter = @ai.cover_generator
-    @generation = CourseGeneration.submit!(topic: "Statistics", language: "en", lesson_count: 3, request_key: SecureRandom.uuid)
+    @generation = CourseGeneration.submit!(topic: "Statistics", language: "en", request_key: SecureRandom.uuid)
     CourseGenerationJob.perform_now(@generation, 1)
+    approve_and_finish(@generation)
     @cover = @generation.course.reload.cover_generation
   end
 
@@ -42,7 +43,7 @@ class CourseCoverGenerationJobTest < ActiveSupport::TestCase
     CourseCoverGenerationJob.perform_now(@cover, 2)
     assert @cover.reload.completed?
     assert_equal lesson_ids, @generation.course.lessons.pluck(:id)
-    assert_equal 1, @ai.generator.calls.size
+    assert_equal 4, @ai.generator.calls.size
     assert_equal 2, @adapter.calls.size
   end
 

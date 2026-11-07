@@ -12,4 +12,8 @@ class FakeCoverGenerator
     before_finish&.call
     ImageUpload.new(Rails.root.join("db/seeds/images/commute-times.png"))
   end
+
+  def illustrate(generation, cancelled:)
+    generate(generation.course, cancelled: cancelled)
+  end
 end

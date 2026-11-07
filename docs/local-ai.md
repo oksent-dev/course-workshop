@@ -15,6 +15,8 @@ CODEX_EXECUTABLE=codex
 
 `CODEX_EXECUTABLE` is one executable path, not a shell command or a list of arguments. On Windows, an absolute path to `codex.exe` is recommended, especially if a package-manager shim points to an older CLI. Use the executable available on your machine; do not commit a personal installation path.
 
+A desktop update can replace a versioned runtime directory. If generation reports an unavailable runtime, confirm that the configured executable still exists, update the private path if needed, and restart Rails before resuming the saved generation.
+
 Then run:
 
 ```sh

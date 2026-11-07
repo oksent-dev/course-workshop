@@ -66,7 +66,11 @@ A selection action appears beside text selected within the lesson body after the
 
 Draft previews reuse the reader's typography, material renderer, and nearby outline. Label the page as a draft and place a clear approval panel above its lessons. Keep the regular library for approved courses. Previewing material does not display completion controls or count toward learning progress. A stale approval presents an inline text error and the current draft for another review.
 
-Course creation uses a labeled topic field, content language and lesson count in one quiet panel. Explain the model's use of the topic and draft before submission. The progress screen shows saved lessons against the requested count, with the ordered plan and a clear cancel or resume action. Describe partial results honestly; do not present a timed percentage estimate. Keep keyboard focus stable during polling and provide a manual refresh after a connection failure. A ready result links to draft review rather than approving itself.
+Course creation uses a labeled topic field and content language in one quiet panel. The model chooses the lesson count. Show the proposed course title, category, description and ordered plan for explicit approval before writing lessons. Explain the model's use of the topic and draft, including image allowance usage, before submission.
+
+The progress screen distinguishes planning, writing, completeness checks and the cover. Show the current lesson, last recorded activity and links to saved lessons. A lesson illustration is a visible substep of writing. Display saved lessons against the approved count only once a plan is approved; do not invent a percentage or ETA for planning, research or images. Keep keyboard focus stable during polling, offer cancel/resume, and provide manual refresh after a connection failure. Explain that users can return later while the local app and computer stay running. A completed course still requires draft review and approval.
+
+Every newly generated lesson needs a visual that explains its subject: a table, a displayed formula, a diagram or an attached image. Place it in the main learning material and explain its meaning. Avoid decorative filler and invented data. A generated illustration includes meaningful alternative text and must never be presented as documentary evidence. Image failure retains the written material and offers resume of the image step.
 
 Show cover creation as a separate section beneath the saved lesson plan. Keep completed lessons available while the image is pending. Use a concise waiting message, then a 16:9 preview; a failed image offers a clearly labeled cover-only retry. Explain image allowance usage on the creation form. Cover failure must not make a completed course appear to have lost its lessons.
 
@@ -89,7 +93,7 @@ Use a short fade-up to introduce a new screen, not to pace the learner's reading
 
 Use `cubic-bezier(0.25, 0.1, 0.25, 1)` for entrances. CSS rules live in [motion.css](app/assets/tailwind/motion.css); transient chat effects use the browser's animation API through [motion.js](app/javascript/motion.js). Animate opacity and transforms without changing layout dimensions. Chat resizing retains its separate width/height transition.
 
-Keep controls usable throughout. Keyboard focus immediately reveals an entering region. All content is visible after the entrance, even without JavaScript. Reduced motion disables these effects. Do not replay existing chat messages or generation status panels on every poll; animate only newly added messages or changed reply states while the reader is following the latest message.
+Keep controls usable throughout. Keyboard focus permanently finishes an entering region for its current DOM lifetime; moving focus between fields or opening native selects must never restart it. All content is visible after the entrance, even without JavaScript. Reduced motion disables these effects. Do not replay existing chat messages or generation status panels on every poll; animate only newly added messages or changed reply states while the reader is following the latest message.
 
 ## Review a screen
 

@@ -2,7 +2,7 @@ require "test_helper"
 require_relative "../support/fake_course_generator"
 
 class CourseGenerationsTest < ActionDispatch::IntegrationTest
-  include ActiveJob::TestHelper
+  include GenerationTestHelpers
 
   setup do
     host! "localhost"
@@ -12,7 +12,7 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
     @old = [ @ai.enabled, @ai.generator, @authoring.enabled ]
     @ai.enabled = @authoring.enabled = true
     @ai.generator = FakeCourseGenerator.new
-    @input = { topic: "Active Record", language: "en", lesson_count: 3, request_key: SecureRandom.uuid }
+    @input = { topic: "Active Record", language: "en", request_key: SecureRandom.uuid }
   end
 
   teardown { @ai.enabled, @ai.generator, @authoring.enabled = @old }
@@ -33,7 +33,7 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
   end
 
   test "invalid forms roll back the draft and category" do
-    [ { topic: " " }, { topic: "x" * 2001 }, { language: "fr" }, { lesson_count: 10 }, { request_key: "invalid" } ].each do |change|
+    [ { topic: " " }, { topic: "x" * 2001 }, { language: "fr" }, { request_key: "invalid" } ].each do |change|
       assert_no_difference [ "Course.count", "Category.count", "CourseGeneration.count" ] do
         assert_no_enqueued_jobs { submit(**change) }
       end
@@ -50,6 +50,17 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_content
     assert generation.course.reload.draft?
     perform_enqueued_jobs
+    assert generation.reload.awaiting_approval?
+    assert_empty generation.course.lessons
+    get generation_path(generation, locale: :pl, format: :json), headers: @local
+    assert_equal false, response.parsed_body["busy"]
+    assert_includes response.parsed_body["html"], "Przejrzyj plan kursu"
+    assert_enqueued_jobs 1 do
+      2.times do
+        post approve_plan_generation_path(generation, locale: :pl), params: { attempt: 1, revision: generation.course.reload.revision }, headers: @local
+      end
+    end
+    perform_course_steps
     get generation_path(generation, locale: :pl, format: :json), headers: @local
     assert_equal true, response.parsed_body["busy"]
     assert_includes response.parsed_body["html"], "Oczekiwanie na utworzenie okładki"
@@ -78,13 +89,14 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
     post cancel_generation_path(generation, locale: :en), params: { attempt: 1 }, headers: @local
     assert generation.reload.queued?
     perform_enqueued_jobs
-    assert generation.reload.completed?
+    assert generation.reload.awaiting_approval?
   end
 
   test "a failed cover can be retried separately exactly once through local endpoints" do
     submit
     generation = CourseGeneration.last
     perform_enqueued_jobs
+    approve_and_finish(generation)
     @ai.cover_generator.error = "usage_limit"
     perform_enqueued_jobs
     cover = generation.course.cover_generation
@@ -107,7 +119,7 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
     @ai.cover_generator.error = nil
     perform_enqueued_jobs
     assert cover.reload.completed?
-    assert_equal 1, @ai.generator.calls.size
+    assert_equal 4, @ai.generator.calls.size
   end
 
   test "disabled, remote and production requests cannot enqueue or inspect generation" do
@@ -143,6 +155,22 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
     assert_equal "timeout", generation.error_code
     assert_includes response.parsed_body["html"], "Resume generation"
     assert generation.course.draft?
+  end
+
+  test "plan approval rejects remote requests and stale revisions" do
+    submit
+    perform_enqueued_jobs
+    generation = CourseGeneration.last
+    args = { attempt: generation.attempt, revision: generation.course.revision }
+    assert_no_enqueued_jobs do
+      post approve_plan_generation_path(generation, locale: :en), params: args, headers: { "REMOTE_ADDR" => "203.0.113.1" }
+    end
+    assert_response :not_found
+    assert_no_enqueued_jobs do
+      post approve_plan_generation_path(generation, locale: :en), params: args.merge(revision: -1), headers: @local
+    end
+    assert generation.reload.awaiting_approval?
+    assert_empty generation.course.lessons
   end
 
   private

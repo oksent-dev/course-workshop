@@ -8,6 +8,7 @@ Rails.application.routes.draw do
       post :cancel, on: :member
       post :retry, on: :member, action: :retry_generation
       post :retry_cover, on: :member
+      post :approve_plan, on: :member
     end
     resources :courses, only: :show, param: :slug do
       resources :lessons, only: :show do

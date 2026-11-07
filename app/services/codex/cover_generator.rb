@@ -13,11 +13,12 @@ module Codex
       Generate the actual image, not just a description. Do not use MCP, web search, shell or files.
     TEXT
 
-    def initialize(connection: Connection)
+    def initialize(connection: Connection, instructions: INSTRUCTIONS)
       @connection = connection
+      @instructions = instructions
     end
 
-    def generate(course, cancelled:)
+    def generate(course, cancelled:, brief: nil)
       @connection.open(cancelled: cancelled, timeout: CourseCoverGeneration::TIMEOUT) do |connection|
         Runtime.verify(connection)
         capabilities = connection.rpc("modelProvider/capabilities/read")
@@ -25,11 +26,11 @@ module Codex
         config = Runtime.restricted_config(connection).merge("features.image_generation" => true)
         thread = connection.rpc("thread/start", model: LocalAi::MODEL, approvalPolicy: "never", sandbox: "read-only",
           cwd: Rails.root.join("tmp/codex-workspace").to_s, config: config,
-          baseInstructions: INSTRUCTIONS, developerInstructions: "")
+          baseInstructions: @instructions, developerInstructions: "")
         raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == LocalAi::MODEL
         thread_id = thread.fetch("thread").fetch("id")
         turn = connection.rpc("turn/start", threadId: thread_id, model: LocalAi::MODEL, effort: "low",
-          input: [ { type: "text", text: JSON.generate(title: course.title, description: course.description, category: course.category.name) } ])
+          input: [ { type: "text", text: JSON.generate(brief || { title: course.title, description: course.description, category: course.category.name }) } ])
         turn_id = turn.fetch("turn").fetch("id")
         await_image(connection, thread_id, turn_id)
       rescue LocalAi::Cancelled, LocalAi::Error, ImageUpload::InvalidImage

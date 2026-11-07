@@ -2,6 +2,8 @@
 
 Lessons store Markdown source in PostgreSQL. The reader renders it with Commonmarker, resolves image references against the current lesson, and sanitizes the resulting HTML. Existing plain paragraphs remain valid Markdown.
 
+New AI-generated lessons must include a table, display formula, supported diagram or local image in their main material. A requested AI illustration is generated in a separate resumable step, attached with meaningful alternative text and inserted as `image:generated-illustration`. It uses the same byte, format and pixel checks as imported images. Existing lessons and manual imports are not rewritten by this rule. See [course generation](course-generation.md) for the visual requirement and recovery flow.
+
 ## Supported content
 
 Use `##` for a section and `###` for a subsection. A source `#` heading is rendered as `h2` so the lesson title remains the page's only `h1`.

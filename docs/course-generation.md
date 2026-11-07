@@ -1,10 +1,12 @@
-# Generate a course from a topic
+# Plan and generate a course
 
-Open **Create a course** from the local library. Describe the topic, your current knowledge, and the outcome you want, select Polish or English, and request three to six lessons. **Generate course** starts a background job with GPT-6.1 Sol through the local Codex account. The result remains a draft for review and explicit approval.
+Open **Create a course**, describe your topic and learning goal, and choose Polish or English. GPT-6.1 Sol proposes a title, category, description and lesson outline. It chooses the number of lessons; the form does not ask the learner to estimate it. The application supports 1–60 lessons per course, matching the authoring limit.
+
+**Approve plan and generate lessons** starts writing. Planning never grants permission to write lessons: the server enforces the approval boundary. Completed courses still remain drafts until separately reviewed and added to the library.
 
 ## Local setup
 
-Prepare the database with `ruby bin/rails db:prepare`. Configure the existing [local Codex runtime](local-ai.md) and enable both flags in the private `.env`:
+Run `ruby bin/rails db:prepare`, configure the [local Codex runtime](local-ai.md), and enable both flags in the private `.env`:
 
 ```dotenv
 LOCAL_AI_ENABLED=true
@@ -12,66 +14,75 @@ COURSE_AUTHORING_ENABLED=true
 CODEX_EXECUTABLE=codex
 ```
 
-On Windows, use an absolute path to the installed Codex executable when needed. Restart `ruby bin/dev` after changing configuration. Both PostgreSQL and the local application must remain running. The generator launches its own scoped MCP child process; it does not require registering a global MCP server.
+Use an absolute executable path on Windows if needed. Restart `ruby bin/dev` after configuration changes. PostgreSQL and the local application must stay running. The generator launches its own scoped MCP child process; no global MCP registration is required. Native image generation must be available for covers and requested lesson illustrations. It uses the Codex account allowance, without a separate Image API key.
 
-The form explains that the topic and draft are sent to the model, that it can research online and save this draft, and that a cover uses the account's image allowance. Submitting it authorizes these operations for that generation. Course content language is independent of the interface language.
+## What the learner sees
 
-## State and recovery
+The progress page polls saved state every 1.5 seconds while work is pending. It shows:
 
-`CourseGeneration` owns one reserved draft, a UUID submission key, topic, content language, requested lesson count, saved plan, status, attempt number, deadline, error code, and a temporary token digest. It does not store raw reasoning or model transcripts. Recent generations are listed on the creation screen, including after a browser reload.
+- The proposed plan and its model-selected lesson count, followed by an explicit approval action.
+- Planning, writing, completeness checks and cover stages.
+- The current lesson and activity, including source research, saving and illustration generation.
+- The time of the last recorded activity, saved-lesson count and links to available lesson previews.
+- Cancel, resume, network refresh and the cover-only retry action where applicable.
 
-| State | Meaning | Available action |
+Progress counts saved lesson text; a requested illustration may still be pending. It is not an ETA or a claim of factual correctness. Research labels come from actual `webSearch` items, and saving labels from write-tool starts. No raw model reasoning, transcripts or tool arguments are sent to the browser. Item events follow the [App Server event contract](https://learn.chatgpt.com/docs/app-server#events).
+
+Leaving the page does not cancel work. Return through **Create a course → Recent generations**, or reopen its URL. Keep the computer and app running. Development uses a two-thread Async executor; queued work does not survive a Rails restart. PostgreSQL retains plans, approvals, completed lessons, image requests and statuses. After a lost step expires, resume explicitly from the progress page. Waiting for plan approval does not expire.
+
+## Stages and recovery
+
+`CourseGeneration` owns one reserved draft, submission UUID, topic, language, nullable lesson count, plan, approval time, status, stage, attempt, step number, current lesson position, activity timestamp, deadline and token digest. Before planning, the lesson count is unknown. Legacy completed generations retain their content and approval eligibility.
+
+| Status | Meaning | Action |
 | --- | --- | --- |
-| `queued` | Persisted and waiting for an Active Job worker | Cancel or inspect the draft |
-| `running` | The current attempt owns scoped write access | Inspect progress or cancel |
-| `completed` | The application checked the plan, lesson count, positions, titles and content format | Review and approve the draft |
-| `failed` | Runtime failure, timeout or incomplete result | Resume the same draft |
-| `cancelled` | Write access was revoked by cancellation | Resume the same draft |
+| `queued` | A persisted step is waiting for a worker | Cancel or inspect |
+| `running` | One planning, writing, illustration or checking step is active | Inspect or cancel |
+| `awaiting_approval` | The plan is saved; no lesson writing is authorized | Review and approve, or cancel |
+| `completed` | All planned lesson material and required visuals passed completeness checks | Review the draft; cover may still be pending |
+| `failed` | A step failed or expired | Resume remaining work |
+| `cancelled` | Scoped write access was revoked | Resume; an unapproved plan still requires approval |
 
-The progress count means **lessons saved**, not a prediction of remaining time or an assessment of teaching quality. The page polls saved state and preserves keyboard focus when progress changes. A network error offers a manual refresh; leaving the page does not cancel generation.
+Each model step gets a five-minute runtime deadline and a seven-minute persisted expiry. A long course is a sequence of separately queued steps, not one turn with a whole-course timeout. Every job claims its exact `(attempt, step)` under a row lock. Duplicate delivery and stale jobs cannot claim or complete newer work. Each text step uses a fresh Codex thread and token; previous MCP processes lose access when that step finishes.
 
-Development uses the existing two-thread Async job executor. The queue is not durable across a Rails restart. Each model attempt has a ten-minute deadline; queued or running records older than their twelve-minute expiry become retryable failures when their status page is read. Restarting the application does not automatically restart model work. Resume explicitly after the old attempt expires.
+Planning sets metadata and a fixed ordered outline, then stops. Approval checks the current attempt and course revision before queuing the first missing lesson. Writing grants access only to `current_position`; the agent reads the outline and saved lessons for continuity, writes that lesson, verifies it, and stops. A local checking step validates every title, position, body and visual before completion. There are no model calls inside database transactions.
 
-Cancellation immediately marks the attempt cancelled and clears its token digest. Tool calls check this state within the generation's row lock, so writes serialized after cancellation are rejected. The runtime receives an interruption request when its cancellation check observes the change. An in-flight model request may take a short time to stop; already committed lessons remain saved.
+Resume keeps saved lessons and their IDs. A lesson saved before an interrupted turn is not written again. If it requested an illustration, that image step is resumed first. A failed plan attempt that already saved a plan returns to approval rather than bypassing it. Cancellation clears the current token immediately; late activity and writes are rejected. Approval of the finished course remains a separate user action.
 
-Resume increments the attempt number and starts a fresh Codex thread with a new token. It reads the existing plan and lessons. Lessons are saved by their planned position, preserving their IDs even if a new request key is used. Old jobs cannot complete or cancel a newer attempt, and old MCP processes cannot write with an expired token. Resume does not start a second course.
+## Categories and visuals
 
-## Persistence and completeness
+`read_generation` supplies existing category IDs and names, excluding the reserved `Drafts` placeholder. Prefer a suitable existing ID, including broader subjects and names in another language. `plan_course` requires exactly one of `category_id` or a new `category` name. The model should create a new broad category only when none fits. Names are whitespace-normalized and case-insensitively unique in PostgreSQL. Semantic matching remains a model decision; existing labels are preserved.
 
-Submission atomically creates the generation and its draft. Repeated delivery of the same UUID and inputs returns that generation; different inputs with the same key are rejected. A database unique index also protects concurrent submissions. Duplicate job delivery is guarded by the queued state and attempt number.
+Every newly generated lesson must contain at least one supported visual in the main material: a Markdown table, a display math fence, a valid Mermaid diagram or an attached image. Text, raw HTML and code fences pretending to contain a table do not qualify. Visuals should explain the subject and be discussed in the prose; semantic quality and numerical accuracy still require review. Exercises are additional learning material, not a substitute for the main visual.
 
-The model sets metadata and an ordered plan once. That plan must contain exactly the requested number of nonempty, distinct titles. The model then saves complete lesson bodies into those positions. Each mutation uses the existing `DraftOperation` receipt mechanism, inside a short transaction with the generation and course locks. There are no model or network calls inside database transactions.
+When an image best explains a concept, `save_generated_lesson` can supply both `illustration_prompt` (up to 2,000 characters) and `illustration_alt` (up to 500, in the course language). The text is saved first. A separate illustration step calls native Codex image generation, validates the returned bytes, stores a `LessonImage` in local Active Storage and appends its stable `image:generated-illustration` reference. The agent must not insert an unattached image URL itself. Image failure keeps the text and request for retry. Repeated/late results cannot append duplicate illustrations. Body input is capped at 38,000 characters to leave room for the attachment markup within the 40,000-character content limit.
 
-`read_generation` includes all available category IDs and names, excluding the temporary `Drafts` placeholder. The instructions prefer an existing suitable subject, including broader categories and names in another language. `plan_course` accepts exactly one of `category_id` (reuse) or `category` (a new broad name when none fits). Names are whitespace-normalized and matched case-insensitively; a database unique index prevents concurrent case variants. Semantic matching is a model decision, not a deterministic synonym dictionary. Existing labels are preserved when the content language changes.
+Remote image URLs are still rejected; automatic downloading/importing of web images is not implemented. Existing local attachments can be reused. Generated images are conceptual illustrations, not documentary evidence. The [content format](lesson-content.md) and [learning blocks](learning-blocks.md) describe renderer limits.
 
-Completion requires every planned position exactly once, titles matching the plan, at least 200 characters per body, and the existing Markdown, image and learning-block validation. Educational accuracy, sufficient depth, and full browser math rendering still require review. The prompt requests examples, practice exercises and relevant primary-source links. The model can use live web search to check current or uncertain facts. Inline lesson images must already be attached; the lesson generator does not import them.
+Successful course completion atomically reserves an independent `CourseCoverGeneration` unless a cover already exists. Its job starts after commit. Cover errors do not invalidate complete lessons; **Retry cover** affects only the cover. See [course covers](course-covers.md).
 
-Successful completion atomically reserves an independent `CourseCoverGeneration` unless the course already has a cover. After commit, a separate job asks Codex to generate one illustration and stores its validated bytes in Active Storage. Progress keeps polling until both jobs settle. An image failure leaves the completed lessons ready for review and offers **Retry cover**. Approval does not wait for the image. Existing completed courses are not backfilled automatically; use the [cover importer](course-covers.md) for those.
+## Scoped MCP and access
 
-Incomplete drafts remain hidden from the regular library. Ordinary authoring tools and approval cannot modify a generated draft until generation completes. Partial content can be inspected in the preview. Approval remains a separate action; neither the job nor its MCP tools can publish.
-
-## Scoped MCP and runtime access
-
-`bin/generation-mcp` differs from the general-purpose [authoring launcher](course-authoring.md). Its five tools have no caller-supplied course IDs:
+`bin/generation-mcp` exposes five tools without caller-supplied course IDs:
 
 | Tool | Purpose |
 | --- | --- |
-| `get_authoring_guide` | Content formats, limits and generation workflow |
-| `read_generation` | This topic, saved plan, draft metadata, lesson outline and category catalog |
-| `plan_course` | Set metadata, one category selection and ordered lesson titles once |
-| `read_generated_lesson` | Read one saved lesson by planned position |
-| `save_generated_lesson` | Insert or replace one lesson at its planned position |
+| `get_authoring_guide` | Formats, stage boundaries and retry rules |
+| `read_generation` | Topic, stage, current position, approval, plan, category catalog and saved lessons |
+| `plan_course` | Set metadata and 1–60 distinct lesson titles once, during planning only |
+| `read_generated_lesson` | Read a saved lesson by planned position |
+| `save_generated_lesson` | Write only the current approved lesson, with a visual or an illustration request |
 
-The job passes a random per-attempt token and generation ID through the child process environment. PostgreSQL stores only the token digest. Every tool call checks local enablement, running state, expiry and the token before accessing content, including before replaying a receipt. The token is cleared on completion, failure or cancellation and never sent to the browser.
+Every distinct mutation requires a UUID `request_key`. The existing `DraftOperation` receipt protects identical retries; conflicting reuse is rejected. The token and generation ID travel only through the scoped child environment; PostgreSQL stores a digest. Every tool checks running state, expiry, token and local enablement, including receipt replay. A token cannot authorize plan approval or publication.
 
-`Codex::Runtime` disables unrelated configured servers, apps, plugins, shell, file/image tools, memories and hooks. `Codex::CourseGenerator` enables only its scoped MCP allow list and live web search, pins `gpt-6.1-sol` with low reasoning effort, and requests a read-only sandbox. Its session-only MCP approval setting permits the writes authorized by the form; global Codex configuration is unchanged. The application does not grant unexpected interactive requests. The lesson tutor continues to disable all MCP tools and web search.
+Text sessions enable only their MCP allow list and live web search. Image sessions enable only native image generation and receive a bounded visual brief. Both pin `gpt-6.1-sol`, disable unrelated MCP servers, shell, apps, plugins, project instructions and hooks, and use a read-only sandbox. Session-only MCP approval authorizes writes within the submitted workflow; global Codex configuration is unchanged. Unexpected interactive requests are rejected.
 
-HTTP generation endpoints require both local feature flags, development/test, and loopback client and host addresses. Production rejects them regardless of flags. Local generations share the same workspace; this is not an account or multi-tenant permission system. Topics are filtered from HTTP logs. Development SQL logs and Codex runtime history can contain course material and local process configuration; keep them outside Git. Finished attempts no longer accept their tokens.
+HTTP actions require both feature flags, development/test and loopback host/client addresses. Production rejects them regardless of flags. This is one local workspace, not a multi-tenant permission system. Topics are filtered from HTTP logs; local SQL logs and Codex history may contain course material and should stay outside Git.
 
 ## Verification
 
-Run `ruby bin/rails test:all`. Tests cover submission concurrency and duplicate delivery, the scoped stdio handshake, token revocation, disallowed tool arguments, invalid content and rollback, partial failure and resume without duplicated lessons, cancellation and late results, stale jobs, HTTP boundaries, PL/EN navigation, focus preservation and phone-width layouts. A fake generator uses the real MCP handlers; automated tests do not call a model.
+Run `ruby bin/rails test:all`. Model and image adapters are faked in automated tests. Coverage includes 18-lesson plans, approval boundaries, duplicate submissions/jobs, token revocation, per-step expiry, partial resume, image retry without rewriting lessons, visual validation, category reuse, stdio, local HTTP boundaries, polling, keyboard controls and focus changes without replaying entrance animations.
 
-For a real smoke check, submit a small course through the form, observe the saved plan and lesson count, reload the page, and review every lesson in the draft preview. Check its examples, exercise disclosures and source links. Approve when satisfied, then open the first lesson through the library. Generation was verified on Windows with Codex App Server `0.166.0-alpha.6` and `gpt-6.1-sol`, using a four-lesson Active Record course. The generated draft was left for review; automated browser tests cover approval and opening the first published lesson.
+For a real smoke check, submit a short topic, wait for its plan, confirm no lessons were written, approve it, observe separate writing/image stages, then review the draft and its visuals after reload. Leave library approval to the learner.
 
-Protocol references: [Codex App Server](https://learn.chatgpt.com/docs/app-server) and [MCP configuration](https://learn.chatgpt.com/docs/extend/mcp).
+The reviewed workflow was checked on Windows on 2026-11-07 with Codex App Server `0.167.0-alpha.3.2` and `gpt-6.1-sol`. The model proposed one lesson for a deliberately narrow composition topic, waited for approval, wrote the material and requested an illustration. Both the lesson image and cover were stored locally and displayed after reload. The draft remained unpublished.
