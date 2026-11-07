@@ -37,7 +37,7 @@ class CourseGenerationSystemTest < ApplicationSystemTestCase
     perform_enqueued_jobs
     assert_text "Okładka zapisana"
     assert_selector "#cover-heading + p", text: "Okładka zapisana"
-    click_link "English"
+    switch_interface_language("English")
     assert_text "Ready for review"
     click_link "Preview draft"
     find_button("Approve and add to library").send_keys(:enter)

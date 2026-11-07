@@ -10,7 +10,9 @@ PostgreSQL is the application database. Active Storage stores file metadata in P
 
 The UI supports `pl` and `en`. URLs contain the selected locale, and an `around_action` applies it only for the current request. Locale dictionaries contain interface strings. Development and tests raise on missing translations.
 
-The language switcher generates the current route with the chosen locale, preserving the library's category filter. Category names, course titles and descriptions, and lesson text come from the catalog. The `courses.language` column identifies the content language, including for assistive technology in the reader.
+The header's PL/EN disclosure generates the current route with the chosen locale, preserving category filters in the library and drafts, and `lesson_id` in draft previews. Category names, course titles and descriptions, and lesson text come from the catalog. The `courses.language` column identifies the content language, including for assistive technology in the reader.
+
+`layouts/navigation` owns global navigation and the creation action. `navigation_section` maps published reading routes to Library, draft and generation-status routes to Drafts, and the creation form to Create a course. Existing local-access guards control the visibility of authoring links. The `language-menu` Stimulus controller adds Escape, outside-click and focus dismissal to a native disclosure; its links remain usable without JavaScript.
 
 ## Library and reader
 
@@ -49,6 +51,8 @@ Generated content is treated as input: HTML output is sanitized, and interactive
 ## Draft authoring
 
 Courses start as drafts. The migration preserves existing courses as published, and the demo seed explicitly publishes its prepared content. Public controllers only resolve published courses; local draft preview and approval use a separate controller guarded by `LocalAuthoring`.
+
+The draft index shares `courses/course`, `courses/cover` and `courses/category_filters` with the library. Its category counts include drafts only, and `?category=ID` filters the collection. Cards show generation status and saved-lesson counts instead of learning progress. Covers, categories and generation records are preloaded; one grouped query counts lessons without loading their bodies. The most recently updated drafts appear first. Previewing a card does not record learning progress or publish the course.
 
 `bin/mcp` starts the Ruby MCP SDK over stdio. `CourseMcp::Server` defines strict tool schemas and maps errors to tool results. `Drafts::Catalog` returns bounded course metadata, outlines, and individual lessons. `Drafts::Editor` serializes edits and approval with a course row lock and revision check. `Drafts::LessonContent` applies authoring limits and reuses the learning-block validators.
 

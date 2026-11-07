@@ -1,5 +1,6 @@
+<% draft = local_assigns.fetch(:draft, false) %>
 <article class="card min-w-0 border border-base-300 bg-base-100" data-motion="enter" data-motion-delay="<%= local_assigns.fetch(:course_counter, 0) % 3 + 1 %>" data-course-card>
-  <%= link_to course_path(course), class: "group block rounded-t-box focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary", aria: { label: course.title } do %>
+  <%= link_to draft ? draft_path(course.id) : course_path(course), class: "group block rounded-t-box focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-primary", aria: { label: course.title } do %>
     <%= render "courses/cover", course: course, eager: local_assigns.fetch(:course_counter, 0) < 3 %>
     <div class="px-5 pt-5">
       <span class="badge h-auto max-w-full border-0 bg-secondary px-3 py-1 text-xs text-secondary-content whitespace-normal wrap-anywhere"><%= course.category.name %></span>
@@ -10,15 +11,19 @@
     <p lang="<%= course.language %>" class="line-clamp-3 text-base leading-relaxed text-muted-ink"><%= course.description %></p>
     <div class="mt-auto space-y-4 pt-2">
       <p class="text-xs text-muted-ink"><%= course_language_label(course) %></p>
-      <% progress = @progress_by_course.fetch(course.id) %>
-      <%= render "courses/progress", progress: progress %>
-      <div class="card-actions">
-        <% if progress.resume_lesson %>
-          <%= link_to course_progress_action(progress), course_lesson_path(course, progress.resume_lesson), class: "btn btn-primary min-h-11 h-auto w-full py-3 whitespace-normal" %>
-        <% else %>
-          <%= link_to t("courses.outline"), course_path(course), class: "btn btn-ghost min-h-11 h-auto w-full border-base-300 py-3 whitespace-normal" %>
-        <% end %>
-      </div>
+      <% if draft %>
+        <%= render "drafts/card_actions", course: course %>
+      <% else %>
+        <% progress = @progress_by_course.fetch(course.id) %>
+        <%= render "courses/progress", progress: progress %>
+        <div class="card-actions">
+          <% if progress.resume_lesson %>
+            <%= link_to course_progress_action(progress), course_lesson_path(course, progress.resume_lesson), class: "btn btn-primary min-h-11 h-auto w-full py-3 whitespace-normal" %>
+          <% else %>
+            <%= link_to t("courses.outline"), course_path(course), class: "btn btn-ghost min-h-11 h-auto w-full border-base-300 py-3 whitespace-normal" %>
+          <% end %>
+        </div>
+      <% end %>
     </div>
   </div>
 </article>

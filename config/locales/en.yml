@@ -89,6 +89,15 @@ en:
     title: "Course drafts"
     introduction: "Review your latest drafts before adding them to the library."
     empty: "There are no course drafts yet."
+    empty_hint: "Create a course to prepare its plan, then review the material here before adding it to your library."
+    review: "Review draft"
+    review_plan: "Review course plan"
+    view_generation: "View generation"
+    manual: "Draft in progress"
+    lesson_count: "Saved lessons: %{count}"
+    results:
+      one: "%{count} draft"
+      other: "%{count} drafts"
     preview: "Draft preview"
     approval: "Course approval"
     review_hint: "Read each lesson and check the material. Approval adds this course to the library and ends draft editing."
@@ -155,7 +164,11 @@ en:
     pl: "Polski"
     en: "English"
   navigation:
+    main: "Main navigation"
+    library: "Library"
+    drafts: "Drafts"
     language: "Language"
+    change_language: "Change language. Current language: %{language}"
     skip_to_content: "Skip to content"
   home:
     introduction: "Find something to explore, or pick up where you left off."

@@ -3,7 +3,16 @@ class DraftsController < ApplicationController
   before_action :set_draft, only: [ :show, :update ]
 
   def index
-    @drafts = Course.draft.includes(:category).order(updated_at: :desc).limit(50)
+    @category_counts = Course.draft.group(:category_id).count
+    @categories = Category.where(id: @category_counts.keys).order(:name).to_a
+    if params[:category].present?
+      @selected_category = @categories.find { |category| category.id.to_s == params[:category] }
+      raise ActiveRecord::RecordNotFound unless @selected_category
+    end
+    @drafts = Course.draft.includes(:category, :course_generation).with_attached_cover.order(updated_at: :desc, id: :desc)
+    @drafts = @drafts.where(category: @selected_category) if @selected_category
+    @drafts = @drafts.to_a
+    @lesson_counts = Lesson.where(course_id: @drafts.map(&:id)).group(:course_id).count
   end
 
   def show

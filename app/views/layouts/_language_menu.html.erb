@@ -1,0 +1,21 @@
+<details class="relative z-20 order-2 justify-self-end lg:order-4" data-controller="language-menu"
+  data-action="keydown.esc->language-menu#dismiss pointerdown@window->language-menu#closeOutside focusout->language-menu#closeOnBlur turbo:before-cache@document->language-menu#close">
+  <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-field px-2 text-sm font-medium hover:bg-secondary [&::-webkit-details-marker]:hidden"
+    aria-label="<%= t("navigation.change_language", language: t("languages.#{I18n.locale}")) %>" data-language-menu-target="trigger">
+    <%= render "layouts/language_flag", locale: I18n.locale %>
+    <span><%= I18n.locale.to_s.upcase %></span>
+    <svg aria-hidden="true" class="size-3" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="m3 6 5 5 5-5"/></svg>
+  </summary>
+  <nav aria-label="<%= t("navigation.language") %>" class="absolute end-0 top-full mt-2 w-44 rounded-box border border-base-300 bg-base-100 p-2 shadow-lg">
+    <% I18n.available_locales.each do |locale| %>
+      <% current = locale == I18n.locale %>
+      <%= link_to language_switch_path(locale), lang: locale, hreflang: locale,
+        aria: { label: t("languages.#{locale}"), current: ("page" if current) },
+        class: class_names("flex min-h-11 items-center gap-3 rounded-field px-3 text-sm hover:bg-secondary", "bg-secondary font-medium text-primary" => current) do %>
+        <%= render "layouts/language_flag", locale: locale %>
+        <span><%= t("languages.#{locale}") %></span>
+        <% if current %><span class="ml-auto" aria-hidden="true">✓</span><% end %>
+      <% end %>
+    <% end %>
+  </nav>
+</details>

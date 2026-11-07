@@ -13,6 +13,27 @@ class DraftsTest < ActionDispatch::IntegrationTest
 
   teardown { @settings.enabled = @previous_enabled }
 
+  test "draft cards filter their own catalog and retain category and lesson when changing language" do
+    other = Course.create!(category: Category.create!(name: "Science"), slug: "science-draft", title: "Science draft", description: "Explore science.", language: "en")
+    CourseCovers::Import.call(course: @course, path: Rails.root.join("db/seeds/images/commute-times.png"))
+    get drafts_path(locale: :en), headers: @local
+    assert_select "[data-course-card]", count: 2
+    assert_select "[data-course-card] img", count: 1
+    assert_select "[data-course-card] progress", count: 0
+    assert_select "[data-course-card]", text: /Saved lessons: 1/
+    assert_select "[data-primary-navigation] a[aria-current=page]", "Drafts"
+    get drafts_path(locale: :en, category: @course.category_id), headers: @local
+    assert_select "[data-course-card]", count: 1
+    assert_select "[data-course-card] a[href=?]", draft_path(@course.id, locale: :en), minimum: 1
+    assert_select "a[hreflang=pl][href=?]", drafts_path(locale: :pl, category: @course.category_id)
+    assert_select "[data-course-card]", text: /#{other.title}/, count: 0
+    get drafts_path(locale: :en, category: 0), headers: @local
+    assert_response :not_found
+    get draft_path(@course.id, locale: :en, lesson_id: @lesson.id), headers: @local
+    assert_select "a[hreflang=pl][href=?]", draft_path(@course.id, locale: :pl, lesson_id: @lesson.id)
+    assert_equal 0, LessonProgress.count
+  end
+
   test "drafts stay out of the library and all public reader endpoints" do
     get localized_root_path(locale: :en), headers: @local
     assert_select "a", text: @course.title, count: 0

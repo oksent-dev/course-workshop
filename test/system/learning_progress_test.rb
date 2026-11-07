@@ -9,13 +9,13 @@ class LearningProgressSystemTest < ApplicationSystemTestCase
     find_button("Oznacz jako ukończoną").send_keys(:enter)
     assert_text "Ta lekcja jest oznaczona jako ukończona."
     assert_text "Ukończone lekcje: 1 z 2"
-    click_link "Twoja biblioteka kursów"
+    click_link "Biblioteka", exact: true
     click_link "Wznów kurs"
     assert_selector "h1", text: "Rhythm"
-    click_link "English"
+    switch_interface_language("English")
     click_button "Mark complete"
     assert_text "Course completed"
-    click_link "Your course library"
+    click_link "Library", exact: true
     assert_text "2 of 2 lessons completed"
     click_link "Review course"
     assert_selector "h1", text: "Pitch"
@@ -40,7 +40,7 @@ class LearningProgressSystemTest < ApplicationSystemTestCase
     find("summary", text: "Plan kursu").click
     assert_text "Ukończone lekcje: 1 z 2"
     assert_selector "details a[aria-current=page]", text: "Ukończona"
-    click_link "Twoja biblioteka kursów"
+    click_link "Biblioteka", exact: true
     assert_link "Wznów kurs"
     assert page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")
   ensure

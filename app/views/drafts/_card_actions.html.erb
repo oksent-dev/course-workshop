@@ -1,0 +1,12 @@
+<% generation = course.course_generation %>
+<div class="space-y-2 text-sm">
+  <p class="font-medium text-primary"><%= generation ? t("generation.statuses.#{generation.status}") : t("drafts.manual") %></p>
+  <p class="text-muted-ink"><%= t("drafts.lesson_count", count: @lesson_counts.fetch(course.id, 0)) %></p>
+</div>
+<div class="card-actions">
+  <% if generation && !generation.completed? && LocalGeneration.available?(request) %>
+    <%= link_to t(generation.awaiting_approval? ? "drafts.review_plan" : "drafts.view_generation"), generation_path(generation), class: "btn btn-primary min-h-11 h-auto w-full py-3 whitespace-normal" %>
+  <% else %>
+    <%= link_to t("drafts.review"), draft_path(course.id), class: "btn btn-primary min-h-11 h-auto w-full py-3 whitespace-normal" %>
+  <% end %>
+</div>

@@ -25,7 +25,7 @@ class LessonBlocksSystemTest < ApplicationSystemTestCase
     assert_selector ".lesson-block-output .katex", count: 1, wait: 15
     assert_selector ".lesson-block-output svg", count: 1, wait: 15
 
-    click_link "English"
+    switch_interface_language("English")
     assert_selector ".lesson-exercise summary", text: "Compare your answer"
     assert_selector ".lesson-block-output svg", count: 1, wait: 15
     assert_selector ".lesson-block-output .katex", count: 1

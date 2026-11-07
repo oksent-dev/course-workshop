@@ -35,7 +35,7 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_selector "p", text: "A high note has a higher frequency.", count: 2
 
     click_button "Close conversation"
-    click_link "Polski"
+    switch_interface_language("Polski")
     click_button "Zapytaj o tę lekcję"
     assert_text "Give me another example"
     assert_field "Twoje pytanie"

@@ -20,7 +20,7 @@ class CodeHighlightingTest < ApplicationSystemTestCase
     assert_selector "h1", text: first.title
     assert_selector ".lesson-code .k", text: "class"
     assert page.evaluate_script("window.highlightNavigationCheck")
-    click_link "Polski"
+    switch_interface_language("Polski")
     assert_selector ".lesson-scroll[aria-label='Przykład kodu'] .lesson-code .k", text: "class"
     page.driver.browser.execute_cdp("Emulation.setDeviceMetricsOverride", width: 320, height: 740, deviceScaleFactor: 1, mobile: false)
     assert page.evaluate_script("document.documentElement.scrollWidth <= innerWidth")

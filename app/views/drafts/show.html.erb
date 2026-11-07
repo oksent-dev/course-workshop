@@ -2,8 +2,7 @@
 <% content_for :head do %>
   <%= stylesheet_link_tag "lesson_math", "data-turbo-track": "dynamic" %>
 <% end %>
-<%= link_to t("drafts.title"), drafts_path, class: "inline-flex min-h-11 items-center text-primary underline underline-offset-4" %>
-<header class="mt-6 wrap-anywhere" data-motion="enter">
+<header class="wrap-anywhere" data-motion="enter">
   <p class="font-medium text-primary"><%= t("drafts.preview") %></p>
   <h1 lang="<%= @course.language %>" class="mt-2 font-serif text-[clamp(2rem,5vw,3rem)] leading-tight font-medium"><%= @course.title %></h1>
   <p lang="<%= @course.language %>" class="mt-3 max-w-prose font-serif text-xl leading-relaxed"><%= @course.description %></p>

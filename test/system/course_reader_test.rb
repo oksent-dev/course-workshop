@@ -13,7 +13,7 @@ class CourseReaderTest < ApplicationSystemTestCase
       image.evaluate_script("this.complete && this.naturalWidth > 0")
     end
     assert_no_selector "[data-course-cover-target=fallback]"
-    click_link "Polski"
+    switch_interface_language("Polski")
     assert_current_path localized_root_path(locale: :pl, category: category.id)
     assert_selector "[data-course-card]", count: 1
     page.execute_script("document.querySelector('[data-course-card] img').src = '/missing-course-cover.webp'")
@@ -34,7 +34,7 @@ class CourseReaderTest < ApplicationSystemTestCase
     click_link "Następna lekcja"
     assert_selector "h1", text: "Średnia i mediana"
 
-    click_link "English"
+    switch_interface_language("English")
     assert_selector "html[lang=en]"
     assert_selector "h1[lang=pl]", text: "Średnia i mediana"
     assert_text "Lesson 2 of 3"
@@ -49,7 +49,7 @@ class CourseReaderTest < ApplicationSystemTestCase
     click_link "Next lesson"
     click_link "Back to course outline"
     assert_selector "h1", text: "Statystyka na co dzień"
-    click_link "Your course library"
+    click_link "Library", exact: true
     assert_selector "h1", text: "Your course library"
   end
 end

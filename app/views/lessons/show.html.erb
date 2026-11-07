@@ -8,8 +8,6 @@
   data-lesson-chat-selection-limit-value="<%= t("conversation.selection_limit", count: Exchange::MAX_SELECTION_LENGTH) %>"
   data-action="selectionchange@document->lesson-chat#selectionChanged pointerdown@document->lesson-chat#pointerDown pointerup@document->lesson-chat#pointerUp pointercancel@document->lesson-chat#pointerUp keydown@document->lesson-chat#keyDown resize@window->lesson-chat#reposition scroll@window->lesson-chat#hideSelection">
 <nav aria-label="<%= t("reader.location") %>" class="flex flex-wrap items-baseline gap-x-2 text-sm">
-  <%= link_to t("home.library_title"), localized_root_path, class: "inline-flex min-h-11 items-center text-primary underline underline-offset-4" %>
-  <span aria-hidden="true">/</span>
   <%= link_to @course.title, course_path(@course), lang: @course.language, class: "inline-flex min-h-11 max-w-full items-center wrap-anywhere text-primary underline underline-offset-4" %>
 </nav>
 

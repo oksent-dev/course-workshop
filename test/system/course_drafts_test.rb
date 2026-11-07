@@ -14,12 +14,14 @@ class CourseDraftsTest < ApplicationSystemTestCase
   test "review both lessons, switch language and explicitly approve the draft" do
     visit localized_root_path(locale: :pl)
     assert_no_link "Review draft"
-    click_link "Szkice kursów"
+    click_link "Szkice", exact: true
     click_link "Review draft"
     assert_text "Podgląd szkicu"
     click_link "2. Second lesson"
     assert_selector "article h2", text: "Second lesson"
-    click_link "English"
+    switch_interface_language("English")
+    assert_selector "article h2", text: "Second lesson"
+    assert_current_path draft_path(@course.id, locale: :en, lesson_id: @course.lessons.last.id)
     find_button("Approve and add to library").send_keys(:enter)
     assert_text "The course has been added to your library."
     click_link "Start the first lesson"

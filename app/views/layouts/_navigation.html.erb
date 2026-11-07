@@ -1,0 +1,28 @@
+<header class="border-b border-base-300" data-site-header>
+  <div class="mx-auto grid max-w-5xl grid-cols-[1fr_auto] items-center gap-x-2 gap-y-3 px-4 py-4 sm:gap-x-6 sm:px-8 lg:grid-cols-[auto_1fr_auto_auto]">
+    <%= link_to localized_root_path, class: "order-1 inline-flex min-h-11 w-fit items-center gap-2 rounded-field font-medium" do %>
+      <svg aria-hidden="true" viewBox="0 0 32 32" class="size-8 shrink-0 rounded-field bg-secondary p-1.5 text-primary" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+        <path d="M3 6c5-1 9 0 13 3 4-3 8-4 13-3v20c-5-1-9 0-13 2-4-2-8-3-13-2zM16 9v19"/>
+      </svg>
+      <span><%= t("app.name") %></span>
+    <% end %>
+    <div class="order-3 col-span-2 flex items-center justify-between gap-2 lg:contents">
+    <nav aria-label="<%= t("navigation.main") %>" class="flex flex-wrap items-center gap-1 lg:order-2" data-primary-navigation>
+      <% active = navigation_section == :library %>
+      <%= link_to t("navigation.library"), localized_root_path, aria: { current: ("page" if active) },
+        class: class_names("inline-flex min-h-11 items-center rounded-field px-2 text-sm font-medium hover:bg-secondary sm:px-3", active ? "bg-secondary text-primary underline decoration-2 underline-offset-8" : "text-muted-ink") %>
+      <% if LocalAuthoring.available?(request) %>
+        <% active = navigation_section == :drafts %>
+        <%= link_to t("navigation.drafts"), drafts_path, aria: { current: ("page" if active) },
+          class: class_names("inline-flex min-h-11 items-center rounded-field px-2 text-sm font-medium hover:bg-secondary sm:px-3", active ? "bg-secondary text-primary underline decoration-2 underline-offset-8" : "text-muted-ink") %>
+      <% end %>
+    </nav>
+    <% if LocalGeneration.available?(request) %>
+      <%= link_to t("generation.title"), new_generation_path,
+        aria: { current: ("page" if navigation_section == :create) },
+        class: class_names("btn btn-primary min-h-11 h-auto px-3 py-3 text-sm lg:order-3", "underline decoration-2 underline-offset-4" => navigation_section == :create) %>
+    <% end %>
+    </div>
+    <%= render "layouts/language_menu" %>
+  </div>
+</header>
