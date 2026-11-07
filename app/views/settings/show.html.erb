@@ -3,7 +3,8 @@
   <h1 class="font-serif text-[clamp(2rem,5vw,3rem)] leading-tight font-medium"><%= t("settings.title") %></h1>
   <p class="mt-3 max-w-prose font-serif text-xl leading-relaxed"><%= t("settings.introduction") %></p>
 </header>
-<%= form_with model: @settings, url: settings_path, method: :patch, class: "mt-8 max-w-2xl space-y-7 rounded-box bg-base-200 p-6 sm:p-8", data: { motion: "enter", motion_delay: "1" } do |form| %>
+<%= form_with model: @settings, url: settings_path, method: :patch, class: "mt-8 max-w-2xl space-y-7 rounded-box bg-base-200 p-6 sm:p-8",
+  data: { motion: "enter", motion_delay: "1", controller: "ai-settings", ai_settings_models_value: reasoning_model_options(@models), ai_settings_not_configurable_value: t("settings.reasoning_not_configurable") } do |form| %>
   <%= form.hidden_field :lock_version %>
   <% if @error %><p role="alert" class="font-medium"><%= @error %></p><% end %>
   <div>
@@ -17,10 +18,18 @@
     <% unless choices.any? { |_, id| id == @settings.model } %>
       <% choices.unshift([t("settings.unavailable_option", name: @settings.model_changed? ? @settings.model : @settings.model_label), @settings.model]) %>
     <% end %>
-    <%= form.select :model, choices, {}, aria: { describedby: "model-hint" }, class: "select mt-2 w-full border-base-content/50 bg-base-100 text-base" %>
+    <%= form.select :model, choices, {}, aria: { describedby: "model-hint" }, data: { ai_settings_target: "model", action: "change->ai-settings#updateEfforts" }, class: "select mt-2 w-full border-base-content/50 bg-base-100 text-base" %>
     <p id="model-hint" class="mt-2 text-sm text-muted-ink"><%= t("settings.model_hint") %></p>
     <% if @catalog_unavailable %><p role="status" class="mt-3 text-sm"><%= t("settings.catalog_unavailable") %></p><% end %>
-    <%= link_to t("settings.reload_models"), settings_path, class: "mt-2 inline-flex min-h-11 items-center text-sm text-primary underline underline-offset-4" %>
+  </div>
+  <div>
+    <% selected_model = @models.find { |model| model["id"] == @settings.model } %>
+    <%= form.label :reasoning_effort, t("settings.reasoning"), class: "block font-semibold" %>
+    <%= form.select :reasoning_effort, reasoning_select_options(selected_model, @settings),
+      { selected: reasoning_selection(selected_model, @settings) },
+      disabled: selected_model.nil? || selected_model.fetch("reasoning_efforts").empty?,
+      aria: { describedby: "reasoning-hint" }, data: { ai_settings_target: "effort" }, class: "select mt-2 w-full border-base-content/50 bg-base-100 text-base" %>
+    <p id="reasoning-hint" class="mt-2 text-sm text-muted-ink"><%= t("settings.reasoning_hint") %></p>
   </div>
   <div>
     <%= form.label :style_instructions, t("settings.style"), class: "block font-semibold" %>

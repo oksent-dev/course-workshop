@@ -19,12 +19,18 @@ class SettingsSystemTest < ApplicationSystemTestCase
     assert_selector "[data-site-header] a[aria-current=page][aria-label=Ustawienia]"
     assert_field "Źródło AI", with: "Codex", readonly: true
     select "Test model", from: "Model AI"
+    assert_select "Poziom rozumowania", options: [ "Średni", "Wysoki" ], selected: "Średni"
+    select "Wysoki", from: "Poziom rozumowania"
+    select "GPT-6.1 Sol (domyślny)", from: "Model AI"
+    assert_select "Poziom rozumowania", options: [ "Niski", "Średni", "Wysoki" ], selected: "Wysoki"
     fill_in "Instrukcja tonu i stylu", with: "Use short explanations and concrete examples."
     click_button "Zapisz ustawienia"
     assert_text "Ustawienia zapisane"
     switch_interface_language("English")
     assert_selector "h1", text: "Settings"
-    assert_select "AI model", selected: "Test model"
+    assert_select "AI model", selected: "GPT-6.1 Sol (default)"
+    assert_select "Reasoning level", selected: "High"
+    assert_no_link "Reload model list"
     assert_field "Tone and style instruction", with: "Use short explanations and concrete examples."
     assert_no_selector "[data-primary-navigation] a[aria-current]"
   end
@@ -39,10 +45,21 @@ class SettingsSystemTest < ApplicationSystemTestCase
     click_button "Save settings"
     assert_text "Settings saved"
     @ai.model_catalog.unavailable = false
-    click_link "Reload model list"
+    visit settings_path(locale: :en)
     assert_select "AI model", with_options: [ "Test model" ]
     assert_field "Tone and style instruction", with: "Be concise"
   ensure
     page.driver.browser.execute_cdp("Emulation.clearDeviceMetricsOverride")
+  end
+
+  test "a model with fixed reasoning clears the selection and permits saving" do
+    visit settings_path(locale: :en)
+    select "Fixed reasoning model", from: "AI model"
+    assert_select "Reasoning level", options: [ "Not configurable for this model" ], disabled: true
+    click_button "Save settings"
+    assert_text "Settings saved"
+    assert_nil AiSetting.current.reasoning_effort
+    select "Test model", from: "AI model"
+    assert_select "Reasoning level", options: [ "Medium", "High" ], selected: "Medium", disabled: false
   end
 end

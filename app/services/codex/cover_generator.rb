@@ -23,6 +23,7 @@ module Codex
         configuration = run&.ai_configuration.presence || course.course_generation&.ai_configuration.presence || AiSetting.current.snapshot
         model = configuration.fetch("model")
         metadata = Runtime.verify(connection, model: model)
+        effort = Runtime.reasoning_effort(metadata, configuration)
         capabilities = connection.rpc("modelProvider/capabilities/read")
         raise LocalAi::Error, "image_unavailable" unless capabilities["imageGeneration"]
         config = Runtime.restricted_config(connection).merge("features.image_generation" => true)
@@ -35,7 +36,7 @@ module Codex
         run&.submitted!
         input = (brief || { title: course.title, description: course.description, category: course.category.name })
           .merge(app_request_id: run&.id&.to_s, response_style: configuration.fetch("style_instructions", ""))
-        turn = connection.rpc("turn/start", threadId: thread_id, model: model, effort: Runtime.reasoning_effort(metadata),
+        turn = connection.rpc("turn/start", threadId: thread_id, model: model, effort: effort,
           input: [ { type: "text", text: JSON.generate(input) } ])
         turn_id = turn.fetch("turn").fetch("id")
         run&.record!(turn_id: turn_id)

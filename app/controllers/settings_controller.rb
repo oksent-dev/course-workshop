@@ -9,13 +9,18 @@ class SettingsController < ApplicationController
 
   def update
     @settings = AiSetting.current
-    input = params.require(:ai_setting).permit(:model, :style_instructions, :lock_version)
-    previous_model = @settings.model
+    input = params.require(:ai_setting).permit(:model, :reasoning_effort, :style_instructions, :lock_version)
+    previous = @settings.attributes.slice("model", "reasoning_effort")
     @settings.assign_attributes(input)
     load_models
     selected = @models.find { |model| model["id"] == @settings.model }
-    if @settings.model != previous_model && !selected
+    if selected && !input.key?(:reasoning_effort) && (@settings.model != previous["model"] || @settings.reasoning_effort.nil? || selected.fetch("reasoning_efforts").empty?)
+      @settings.reasoning_effort = selected["default_reasoning_effort"]
+    end
+    if !selected && @settings.attributes.slice("model", "reasoning_effort") != previous
       @error = t("settings.model_unavailable")
+    elsif selected && !supported_reasoning?(selected)
+      @error = t("settings.reasoning_unavailable")
     elsif input[:lock_version].blank?
       @error = t("settings.conflict")
     else
@@ -31,6 +36,11 @@ class SettingsController < ApplicationController
   end
 
   private
+
+  def supported_reasoning?(model)
+    choices = model.fetch("reasoning_efforts")
+    choices.empty? ? @settings.reasoning_effort.nil? : choices.include?(@settings.reasoning_effort)
+  end
 
   def require_local_ai
     head :not_found unless LocalAi.available?(request)

@@ -20,10 +20,27 @@ module Codex
       raise LocalAi::Error, "unavailable"
     end
 
-    def self.reasoning_effort(model)
-      choices = model.fetch("supportedReasoningEfforts", []).map { |entry| entry["reasoningEffort"] }
+    def self.reasoning_choices(model)
+      model.fetch("supportedReasoningEfforts", []).filter_map do |entry|
+        value = entry["reasoningEffort"]
+        value if value.is_a?(String) && value.match?(/\A[a-z0-9_-]{1,40}\z/)
+      end.uniq
+    end
+
+    def self.default_reasoning_effort(model)
+      choices = reasoning_choices(model)
+      choices.include?(model["defaultReasoningEffort"]) ? model["defaultReasoningEffort"] : choices.first
+    end
+
+    def self.reasoning_effort(model, configuration = {})
+      choices = reasoning_choices(model)
+      requested = configuration["reasoning_effort"]
+      if requested.present?
+        raise LocalAi::Error, "reasoning_unavailable" unless choices.include?(requested)
+        return requested
+      end
       return "low" if choices.include?("low")
-      model["defaultReasoningEffort"].presence || choices.first
+      default_reasoning_effort(model)
     end
 
     def self.style_policy

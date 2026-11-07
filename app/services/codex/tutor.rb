@@ -25,6 +25,7 @@ module Codex
       @connection.open(cancelled: cancelled, timeout: timeout) do |connection|
         model = exchange.ai_model
         metadata = Runtime.verify(connection, model: model)
+        effort = Runtime.reasoning_effort(metadata, exchange.ai_configuration)
         config = configuration(connection)
         conversation = exchange.conversation.reload
         params = {
@@ -53,7 +54,7 @@ module Codex
         on_thread.call(thread_id)
         run&.submitted!
         turn = connection.rpc(
-          "turn/start", threadId: thread_id, model: model, effort: Runtime.reasoning_effort(metadata),
+          "turn/start", threadId: thread_id, model: model, effort: effort,
           input: [ { type: "text", text: prompt(exchange, run: run, restored: restored) } ]
         )
         turn_id = turn.fetch("turn").fetch("id")

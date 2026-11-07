@@ -3,10 +3,11 @@ require "test_helper"
 class AiConfigurationTest < ActiveSupport::TestCase
   test "a course and all its image stages retain the submission settings across retries" do
     settings = AiSetting.current
-    settings.update!(model: "test-model", model_label: "Test model", style_instructions: "Use short sentences")
+    settings.update!(model: "test-model", model_label: "Test model", reasoning_effort: "high", style_instructions: "Use short sentences")
     generation = CourseGeneration.submit!(topic: "Patterns", language: "en", request_key: SecureRandom.uuid)
     original = generation.ai_configuration.deep_dup
-    settings.update!(model: LocalAi::DEFAULT_MODEL, style_instructions: "A different style")
+    settings.update!(model: LocalAi::DEFAULT_MODEL, reasoning_effort: "low", style_instructions: "A different style")
+    assert_equal "high", original.fetch("reasoning_effort")
     generation.update!(status: :failed)
     generation.retry!(generation.attempt)
     assert_equal original, generation.reload.ai_configuration
@@ -22,12 +23,13 @@ class AiConfigurationTest < ActiveSupport::TestCase
     conversation = lessons(:pitch).conversations.create!(browser_key: SecureRandom.hex(32))
     first = conversation.ask!(question: "Explain", locale: "en", request_key: SecureRandom.uuid)
     settings = AiSetting.current
-    settings.update!(model: "test-model", model_label: "Test model", style_instructions: "Be concise")
+    settings.update!(model: "test-model", model_label: "Test model", reasoning_effort: "high", style_instructions: "Be concise")
     assert_equal LocalAi::DEFAULT_MODEL, first.reload.ai_model
     assert_equal first.id, conversation.ask!(question: "Explain", locale: "en", request_key: first.request_key).id
     first.finish!(:completed, answer: "First answer")
     second = conversation.ask!(question: "Continue", locale: "en", request_key: SecureRandom.uuid)
     assert_equal "test-model", second.ai_model
+    assert_equal "high", second.ai_configuration["reasoning_effort"]
     assert_equal "Be concise", second.ai_configuration["style_instructions"]
     assert_equal second.ai_configuration, AiRun.start!(second, "reply", SecureRandom.uuid).ai_configuration
   end

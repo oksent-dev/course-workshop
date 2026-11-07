@@ -65,6 +65,33 @@ class SettingsTest < ActionDispatch::IntegrationTest
     assert_select "textarea", "Stale choice"
   end
 
+  test "reasoning levels are validated against the selected model and retained offline" do
+    save_settings(model: "test-model", reasoning_effort: "high")
+    assert_response :see_other
+    assert_equal "high", AiSetting.current.reasoning_effort
+    save_settings(model: "test-model", reasoning_effort: "low")
+    assert_response :unprocessable_content
+    assert_equal "high", AiSetting.current.reasoning_effort
+    save_settings(reasoning_effort: "invented")
+    assert_response :unprocessable_content
+    save_settings(reasoning_effort: "")
+    assert_response :unprocessable_content
+    @catalog.unavailable = true
+    save_settings(reasoning_effort: "medium")
+    assert_response :unprocessable_content
+    save_settings(style_instructions: "Style-only change", reasoning_effort: "high")
+    assert_response :see_other
+    assert_equal "high", AiSetting.current.reasoning_effort
+  end
+
+  test "a model without configurable reasoning stores no effort" do
+    save_settings(model: "fixed-model", reasoning_effort: "high")
+    assert_response :unprocessable_content
+    save_settings(model: "fixed-model", reasoning_effort: "")
+    assert_response :see_other
+    assert_nil AiSetting.current.reasoning_effort
+  end
+
   test "settings are inaccessible to remote disabled and production requests" do
     get settings_path(locale: :en), headers: { "REMOTE_ADDR" => "203.0.113.2" }
     assert_response :not_found

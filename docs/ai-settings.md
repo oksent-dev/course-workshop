@@ -4,7 +4,11 @@ Open the gear to the right of the language selector. Settings are shared by the 
 
 Codex is the fixed provider. **GPT-6.1 Sol** (`gpt-6.1-sol`) remains the application default. The model picker reads the authenticated runtime's paginated `model/list`, using its IDs and display names instead of a hard-coded catalog. It includes visible text-capable models and the application default when advertised. Availability, image support and account limits can differ between models. See the official [Codex App Server documentation](https://learn.chatgpt.com/docs/app-server).
 
-Loading the catalog does not start inference. If Codex is unavailable, the form retains the saved selection and permits a style-only update. A changed model must appear in the current catalog. Each execution verifies availability again and fails explicitly if the selected model is missing; it never silently substitutes the default. Reasoning effort uses `low` when supported, otherwise the model's advertised default or first supported effort.
+Loading the catalog does not start inference. If Codex is unavailable, the form retains the saved selection and permits a style-only update. A changed model must appear in the current catalog. Each execution verifies availability again and fails explicitly if the selected model is missing; it never silently substitutes the default.
+
+The reasoning selector uses that model's `supportedReasoningEfforts`. Changing models immediately updates the choices, keeping the current effort when supported or selecting the advertised default otherwise. A model without configurable reasoning shows a disabled explanatory option and stores no effort. The server validates the model/effort combination again on save. There is no separate catalog-refresh control; opening the page loads the current catalog.
+
+New requests capture the chosen effort with their model and style. A saved effort that becomes unavailable fails explicitly before inference rather than silently changing the execution budget. Existing task snapshots and unsaved legacy preferences without an effort preserve the previous automatic policy: `low` where supported, otherwise the advertised default or first supported effort. Saving the form makes the displayed choice explicit.
 
 ## When changes apply
 
@@ -39,3 +43,5 @@ After updating, run `ruby bin/rails db:prepare` and restart `ruby bin/dev` so th
 Automated checks cover access restrictions, catalog failure and recovery, stale forms, invalid selections, style limits/reset, immutable task snapshots, retries, model availability, generation provenance, and Polish/English navigation at narrow widths. Protocol checks exercise model and style propagation through tutor, editor inheritance, course and image execution.
 
 A bounded native check on 2026-11-07 changed from Sol to another advertised model in the same tutor thread, changed its response style, then cleared the preference. Each answer reflected the accepted request. The temporary course was isolated from existing learning material. Desktop, 320 px and 200% browser zoom were also checked.
+
+A subsequent native check submitted `medium` reasoning effort and verified that the completed execution retained it. Browser checks confirmed that switching between actual catalog models removes unsupported effort options and preserves compatible selections. Automated tests also cover fixed-effort models, invalid combinations, unavailable catalogs, and unchanged snapshots across retries.

@@ -44,6 +44,7 @@ module Codex
       @connection.open(cancelled: cancelled, timeout: CourseGeneration::TIMEOUT) do |connection|
         model = generation.ai_model
         metadata = Runtime.verify(connection, model: model)
+        effort = Runtime.reasoning_effort(metadata, generation.ai_configuration)
         config = Runtime.restricted_config(connection).merge(
           "web_search" => "live",
           "mcp_servers.course_generation.command" => RbConfig.ruby,
@@ -66,7 +67,7 @@ module Codex
         thread_id = thread.fetch("thread").fetch("id")
         run&.record!(thread_id: thread_id)
         run&.submitted!
-        turn = connection.rpc("turn/start", threadId: thread_id, model: model, effort: Runtime.reasoning_effort(metadata),
+        turn = connection.rpc("turn/start", threadId: thread_id, model: model, effort: effort,
           input: [ { type: "text", text: JSON.generate(app_request_id: run&.id&.to_s, topic: generation.topic, language: generation.language,
             response_style: generation.ai_configuration.fetch("style_instructions", ""), stage: generation.stage, current_position: generation.current_position) } ])
         turn_id = turn.fetch("turn").fetch("id")

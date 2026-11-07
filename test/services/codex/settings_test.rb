@@ -5,14 +5,14 @@ class CodexSettingsTest < ActiveSupport::TestCase
   setup do
     @connection = FakeCodexProtocol.new
     @connection.models << { "model" => "test-model", "displayName" => "Test model",
-      "supportedReasoningEfforts" => [ { "reasoningEffort" => "medium" } ], "defaultReasoningEffort" => "medium" }
-    AiSetting.current.update!(model: "test-model", model_label: "Test model", style_instructions: "Use familiar examples")
+      "supportedReasoningEfforts" => [ { "reasoningEffort" => "medium" }, { "reasoningEffort" => "high" } ], "defaultReasoningEffort" => "medium" }
+    AiSetting.current.update!(model: "test-model", model_label: "Test model", reasoning_effort: "high", style_instructions: "Use familiar examples")
   end
 
   test "a resumed tutor changes model and style with the accepted message" do
     conversation = lessons(:pitch).conversations.create!(browser_key: SecureRandom.hex(32), runtime_thread_id: "existing-thread")
     exchange = conversation.ask!(question: "Continue", locale: "en", request_key: SecureRandom.uuid)
-    AiSetting.current.update!(style_instructions: "A later preference")
+    AiSetting.current.update!(reasoning_effort: "medium", style_instructions: "A later preference")
     Codex::Tutor.new(connection: @connection).reply(exchange, on_thread: ->(_) { }, cancelled: -> { false })
     params = @connection.calls.assoc("thread/resume").last
     assert_equal "test-model", params[:model]
@@ -20,7 +20,7 @@ class CodexSettingsTest < ActiveSupport::TestCase
     assert_includes params[:developerInstructions], "replaces all style"
     input = JSON.parse(@connection.calls.assoc("turn/start").last[:input].first[:text])
     assert_equal "Use familiar examples", input.fetch("response_style")
-    assert_equal "medium", @connection.calls.assoc("turn/start").last[:effort]
+    assert_equal "high", @connection.calls.assoc("turn/start").last[:effort]
     assert_equal false, params[:config]["features.shell_tool"]
   end
 
@@ -30,6 +30,7 @@ class CodexSettingsTest < ActiveSupport::TestCase
     params = @connection.calls.assoc("thread/start").last
     assert_equal "test-model", params[:model]
     assert_equal "Use familiar examples", JSON.parse(@connection.calls.assoc("turn/start").last[:input].first[:text]).fetch("response_style")
+    assert_equal "high", @connection.calls.assoc("turn/start").last[:effort]
     image = FakeCodexProtocol.new
     image.models = @connection.models
     bytes = Base64.strict_encode64(File.binread(Rails.root.join("db/seeds/images/commute-times.png")))
@@ -38,11 +39,12 @@ class CodexSettingsTest < ActiveSupport::TestCase
       { "method" => "turn/completed", "params" => { "threadId" => "thread-1", "turn" => { "id" => "turn-1", "status" => "completed" } } }
     ]
     image.define_singleton_method(:notification) { events.shift }
-    AiSetting.current.update!(model: LocalAi::DEFAULT_MODEL, model_label: "Default", style_instructions: "New style")
+    AiSetting.current.update!(model: LocalAi::DEFAULT_MODEL, model_label: "Default", reasoning_effort: "low", style_instructions: "New style")
     Codex::CoverGenerator.new(connection: image).generate(generation.course, cancelled: -> { false })
     params = image.calls.assoc("thread/start").last
     assert_equal "test-model", params[:model]
     assert_equal "Use familiar examples", JSON.parse(image.calls.assoc("turn/start").last[:input].first[:text]).fetch("response_style")
+    assert_equal "high", image.calls.assoc("turn/start").last[:effort]
   end
 
   test "clearing style sends an explicit reset on an existing conversation" do
@@ -73,6 +75,22 @@ class CodexSettingsTest < ActiveSupport::TestCase
     end
     result = Codex::ModelCatalog.new(connection: @connection).models
     assert_equal [ LocalAi::DEFAULT_MODEL, "test-model", "next-page" ].sort, result.map { |model| model["id"] }.sort
+    assert_equal %w[medium high], result.find { |model| model["id"] == "test-model" }.fetch("reasoning_efforts")
+    assert_equal "medium", result.find { |model| model["id"] == "test-model" }.fetch("default_reasoning_effort")
     assert_nil @connection.calls.assoc("thread/start")
+  end
+
+  test "an obsolete saved effort fails before starting a turn instead of silently changing effort" do
+    exchange = lessons(:pitch).conversations.create!(browser_key: SecureRandom.hex(32)).ask!(question: "Explain", locale: "en", request_key: SecureRandom.uuid)
+    @connection.models.last["supportedReasoningEfforts"] = [ { "reasoningEffort" => "medium" } ]
+    error = assert_raises(LocalAi::Error) { Codex::Tutor.new(connection: @connection).reply(exchange, on_thread: ->(_) { }, cancelled: -> { false }) }
+    assert_equal "reasoning_unavailable", error.code
+    assert_nil @connection.calls.assoc("thread/start")
+  end
+
+  test "legacy snapshots retain their previous automatic effort policy" do
+    assert_equal "low", Codex::Runtime.reasoning_effort(@connection.models.first, {})
+    assert_equal "medium", Codex::Runtime.reasoning_effort(@connection.models.last, { "reasoning_effort" => nil })
+    assert_nil Codex::Runtime.reasoning_effort({ "supportedReasoningEfforts" => [] }, {})
   end
 end

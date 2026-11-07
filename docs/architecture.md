@@ -96,7 +96,7 @@ The integration is opt-in and restricted to local development. Production reject
 
 ## AI preferences and provenance
 
-`AiSetting` stores the shared local model choice, display label and bounded style instruction with optimistic locking. `SettingsController` validates changed selections against `Codex::ModelCatalog`, which reads the authenticated runtime catalog without starting inference. Codex is the fixed provider and Sol remains the default. The same local access guard protects the page and updates.
+`AiSetting` stores the shared local model choice, display label, reasoning effort and bounded style instruction with optimistic locking. `SettingsController` validates model/effort combinations against `Codex::ModelCatalog`, which reads the authenticated runtime catalog without starting inference. A Stimulus controller updates supported effort options when the model changes. Codex is the fixed provider and Sol remains the default. The same local access guard protects the page and updates.
 
 `AiConfigured` snapshots preferences when a course request or conversation message is accepted. Generation stages and original images inherit that course request; replacement covers inherit their editor message. Retries and `AiRun` keep the accepted configuration. Each turn carries the style preference, including an explicit reset, under a stable developer policy. Course provenance records the original generation model independently of subsequent editing. See [AI settings](ai-settings.md) for the lifecycle and failure behavior.
 
