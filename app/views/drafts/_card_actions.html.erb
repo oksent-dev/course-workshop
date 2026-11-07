@@ -4,9 +4,6 @@
   <p class="text-muted-ink"><%= t("drafts.lesson_count", count: @lesson_counts.fetch(course.id, 0)) %></p>
 </div>
 <div class="card-actions">
-  <% if generation && !generation.completed? && LocalGeneration.available?(request) %>
-    <%= link_to t(generation.awaiting_approval? ? "drafts.review_plan" : "drafts.view_generation"), generation_path(generation), class: "btn btn-primary min-h-11 h-auto w-full py-3 whitespace-normal" %>
-  <% else %>
-    <%= link_to t("drafts.review"), draft_path(course.id), class: "btn btn-primary min-h-11 h-auto w-full py-3 whitespace-normal" %>
-  <% end %>
+  <% label = generation && LocalGeneration.available?(request) ? t("generation.progress_title") : t("drafts.review") %>
+  <%= link_to label, draft_entry_path(course), class: "btn btn-primary min-h-11 h-auto w-full py-3 whitespace-normal" %>
 </div>

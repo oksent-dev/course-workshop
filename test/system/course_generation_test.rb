@@ -39,7 +39,15 @@ class CourseGenerationSystemTest < ApplicationSystemTestCase
     assert_selector "#cover-heading + p", text: "Okładka zapisana"
     switch_interface_language("English")
     assert_text "Ready for review"
+    generation = CourseGeneration.last
+    click_link "Drafts", exact: true
+    click_link generation.course.title
+    assert_current_path generation_path(generation, locale: :en)
+    assert_selector "h1", text: "Course plan and status"
+    assert_button "Approve and add to library"
     click_link "Preview draft"
+    within("[data-draft-actions]") { click_link "Course plan and status" }
+    assert_current_path generation_path(generation, locale: :en)
     find_button("Approve and add to library").send_keys(:enter)
     click_link "Start the first lesson"
     assert_selector "h1", text: "Lesson 1"

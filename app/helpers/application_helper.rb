@@ -24,6 +24,15 @@ module ApplicationHelper
     end
   end
 
+  def draft_entry_path(course)
+    generation = course.course_generation
+    if generation && LocalGeneration.available?(request)
+      generation_path(generation)
+    else
+      draft_path(course.id)
+    end
+  end
+
   def course_language_label(course)
     language_name = t("courses.languages.#{course.language}", default: course.language)
     t("courses.content_language", language: language_name)

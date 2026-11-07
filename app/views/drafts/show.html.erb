@@ -11,12 +11,13 @@
   <% generation = @course.course_generation %>
   <% incomplete = generation && !generation.completed? %>
   <p><%= t(incomplete ? "generation.incomplete_hint" : "drafts.review_hint") %></p>
-  <% if generation && LocalGeneration.available?(request) %>
-    <%= link_to t("generation.progress_title"), generation_path(generation), class: "inline-flex min-h-11 items-center text-primary underline underline-offset-4" %>
-  <% end %>
   <% if @error %><p role="alert" class="mt-3 font-medium text-error-content"><%= @error %></p><% end %>
-  <%= button_to t("drafts.approve"), draft_path(@course.id), method: :patch, params: { revision: @course.revision },
-    disabled: @lessons.empty? || incomplete, class: "btn btn-primary mt-4 min-h-11 h-auto max-w-full py-3" %>
+  <div class="mt-5 flex flex-wrap items-center gap-3" data-draft-actions>
+    <% if generation && LocalGeneration.available?(request) %>
+      <%= link_to t("generation.progress_title"), generation_path(generation), class: "btn btn-outline min-h-11 h-auto max-w-full py-3 whitespace-normal" %>
+    <% end %>
+    <%= render "drafts/approve_button", course: @course, disabled: @lessons.empty? || incomplete %>
+  </div>
 </section>
 <% if @lessons.any? %>
   <div class="mt-8 grid items-start gap-6 md:grid-cols-[minmax(12rem,1fr)_minmax(0,2.6fr)] md:gap-8">

@@ -27,7 +27,8 @@
       <% @generation.plan.each_with_index do |title, index| %>
         <li class="wrap-anywhere rounded-field <%= 'bg-secondary p-3' if @generation.pending? && @generation.current_position == index + 1 %>" <%= 'aria-current=step' if @generation.pending? && @generation.current_position == index + 1 %>>
           <% if @saved_lessons[index + 1] %>
-            <%= link_to "#{index + 1}. #{title}", draft_path(@generation.course_id, lesson_id: @saved_lessons[index + 1]), lang: @generation.language, class: "text-primary underline underline-offset-4" %>
+            <% lesson_path = @generation.course.published? ? course_lesson_path(@generation.course, @saved_lessons[index + 1]) : draft_path(@generation.course_id, lesson_id: @saved_lessons[index + 1]) %>
+            <%= link_to "#{index + 1}. #{title}", lesson_path, lang: @generation.language, class: "text-primary underline underline-offset-4" %>
           <% else %><span lang="<%= @generation.language %>"><%= index + 1 %>. <%= title %></span><% end %>
           <% if @saved_positions.include?(index + 1) %><span class="ml-2 text-sm text-primary">✓ <%= t("generation.saved") %></span><% end %>
         </li>
@@ -52,6 +53,11 @@
   <% if @generation.course.published? %>
     <%= link_to t("generation.open_course"), course_path(@generation.course), class: "btn btn-primary mt-5 min-h-11" %>
   <% else %>
-    <%= link_to t("generation.preview"), draft_path(@generation.course_id), class: "btn btn-ghost mt-5 min-h-11" %>
+    <div class="mt-5 flex flex-wrap items-center gap-3" data-draft-actions>
+      <%= link_to t("generation.preview"), draft_path(@generation.course_id), id: "generation-preview", class: "btn btn-outline min-h-11 h-auto max-w-full py-3 whitespace-normal" %>
+      <% if @generation.completed? %>
+        <%= render "drafts/approve_button", course: @generation.course, disabled: @saved_positions.empty? %>
+      <% end %>
+    </div>
   <% end %>
 </section>

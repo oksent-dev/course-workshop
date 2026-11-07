@@ -7,7 +7,7 @@
       <span><%= t("app.name") %></span>
     <% end %>
     <div class="order-3 col-span-2 flex items-center justify-between gap-2 lg:contents">
-    <nav aria-label="<%= t("navigation.main") %>" class="flex flex-wrap items-center gap-1 lg:order-2" data-primary-navigation>
+    <nav aria-label="<%= t("navigation.main") %>" class="flex flex-wrap items-center gap-1 lg:order-2 lg:justify-self-end" data-primary-navigation>
       <% active = navigation_section == :library %>
       <%= link_to t("navigation.library"), localized_root_path, aria: { current: ("page" if active) },
         class: class_names("inline-flex min-h-11 items-center rounded-field px-2 text-sm font-medium hover:bg-secondary sm:px-3", active ? "bg-secondary text-primary underline decoration-2 underline-offset-8" : "text-muted-ink") %>

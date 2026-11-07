@@ -4,6 +4,8 @@ Open **Create a course**, describe your topic and learning goal, and choose Poli
 
 **Approve plan and generate lessons** starts writing. Planning never grants permission to write lessons: the server enforces the approval boundary. Completed courses still remain drafts until separately reviewed and added to the library.
 
+Open a generated draft card to return to **Course plan and status**. Use **Preview draft** to read the lessons, then **Approve and add to library** from either the overview or lesson preview. These are separate actions from approving the initial plan. Final approval remains unavailable until generation completes and submits the displayed course revision for validation.
+
 ## Local setup
 
 Run `ruby bin/rails db:prepare`, configure the [local Codex runtime](local-ai.md), and enable both flags in the private `.env`:

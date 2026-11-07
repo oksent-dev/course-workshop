@@ -173,6 +173,46 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
     assert_empty generation.course.lessons
   end
 
+  test "generated cards open the overview and its approval keeps the existing revision boundary" do
+    submit
+    generation = CourseGeneration.last
+    course = generation.course
+    get generation_path(generation, locale: :en), headers: @local
+    assert_select "#course-approve", count: 0
+    perform_enqueued_jobs
+    approve_and_finish(generation)
+
+    get drafts_path(locale: :en), headers: @local
+    assert_select "[data-course-card] a[href=?]", generation_path(generation, locale: :en), count: 2
+    assert_select "[data-course-card] a[href=?]", draft_path(course.id, locale: :en), count: 0
+    @ai.enabled = false
+    get drafts_path(locale: :en), headers: @local
+    assert_select "[data-course-card] a[href=?]", draft_path(course.id, locale: :en), count: 2
+    @ai.enabled = true
+    get generation_path(generation, locale: :en), headers: @local
+    assert_select "[data-draft-actions] a.btn-outline[href=?]", draft_path(course.id, locale: :en)
+    assert_select "[data-draft-actions] form[action=?] #course-approve:not([disabled])", draft_path(course.id, locale: :en)
+    revision = course.reload.revision
+    assert_select "input[name=revision][value=?]", revision.to_s
+
+    Drafts::Editor.update_course(course_id: course.id, expected_revision: revision, title: course.title,
+      description: "Updated course scope.", language: course.language, category_id: course.category_id)
+    patch draft_path(course.id, locale: :en), params: { revision: revision }, headers: @local
+    assert_response :unprocessable_content
+    assert_select "[role=alert]", /draft changed/
+    assert course.reload.draft?
+    get generation_path(generation, locale: :en), headers: @local
+    assert_select "input[name=revision][value=?]", course.revision.to_s
+    patch draft_path(course.id, locale: :en), params: { revision: course.revision }, headers: @local
+    assert_redirected_to course_path(course, locale: :en)
+    get generation_path(generation, locale: :en), headers: @local
+    assert_select "#course-approve", count: 0
+    assert_select "a[href=?]", course_path(course, locale: :en), text: "Open course"
+    course.lessons.each do |lesson|
+      assert_select "a[href=?]", course_lesson_path(course, lesson, locale: :en)
+    end
+  end
+
   private
 
   def submit(**changes)
