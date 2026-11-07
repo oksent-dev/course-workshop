@@ -7,13 +7,13 @@ class CourseAssistantSystemTest < ApplicationSystemTestCase
   setup do
     @ai = Rails.configuration.x.local_ai
     @authoring = Rails.configuration.x.local_authoring
-    @previous = [ @ai.enabled, @ai.adapter, @authoring.enabled ]
+    @previous = [ @ai.enabled, @ai.adapter, @authoring.enabled, @ai.editor ]
     @ai.enabled = @authoring.enabled = true
-    @ai.adapter = FakeTutor.new
+    @ai.adapter = @ai.editor = FakeTutor.new
     @course = courses(:listening)
   end
 
-  teardown { @ai.enabled, @ai.adapter, @authoring.enabled = @previous }
+  teardown { @ai.enabled, @ai.adapter, @authoring.enabled, @ai.editor = @previous }
 
   test "one panel follows Turbo navigation and a running reply keeps its original lesson" do
     visit course_path(@course, locale: :en)

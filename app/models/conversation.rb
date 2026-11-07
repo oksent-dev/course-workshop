@@ -26,7 +26,19 @@ class Conversation < ApplicationRecord
     Exchange.where(conversation_id: related.select(:id)).order(:id)
   end
 
-  def ask!(question:, request_key:, locale:, selected_text: nil, lesson: self.lesson)
+  def ask!(question:, request_key:, locale:, selected_text: nil, lesson: self.lesson, selection_version: nil)
+    Drafts::Access.synchronize(course) do
+      unless exchanges.exists?(request_key: request_key)
+        Drafts::Access.ensure_available!(course, allow_plan: true) if mode == "editor"
+        if selected_text.present? && selection_version.present? && selection_version != AssistantContext.version(course)
+          raise Drafts::Error.new("stale_selection", "The selected material changed. Review it before sending.")
+        end
+      end
+      record_question!(question: question, request_key: request_key, locale: locale, selected_text: selected_text, lesson: lesson)
+    end
+  end
+
+  def record_question!(question:, request_key:, locale:, selected_text:, lesson:)
     with_lock do
       existing = exchanges.find_by(request_key: request_key)
       return existing if existing
@@ -53,6 +65,8 @@ class Conversation < ApplicationRecord
   end
 
   private
+
+  private :record_question!
 
   def set_legacy_course
     self.course ||= lesson&.course

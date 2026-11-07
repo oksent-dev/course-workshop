@@ -1,0 +1,12 @@
+#!/usr/bin/env ruby
+protocol_output = $stdout
+$stdout = $stderr
+require_relative "../config/environment"
+exchange = Exchange.find(Integer(ENV.fetch("COURSE_EDITOR_EXCHANGE_ID"), 10))
+token = ENV.fetch("COURSE_EDITOR_TOKEN")
+Drafts::Access.authorize!(exchange, token)
+Rails.logger = ActiveSupport::Logger.new($stderr, level: Logger::WARN)
+server = CourseMcp::EditorServer.new(exchange_id: exchange.id, token: token).build
+$stdout = protocol_output
+$stdout.sync = true
+MCP::Server::Transports::StdioTransport.new(server, max_line_bytes: 512 * 1024).open

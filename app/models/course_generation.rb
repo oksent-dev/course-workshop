@@ -69,11 +69,14 @@ class CourseGeneration < ApplicationRecord
   def retry!(expected_attempt)
     with_lock do
       return false unless (failed? || cancelled?) && attempt == expected_attempt && course.draft?
-      next_state = plan.any? && !plan_approved_at ? :awaiting_approval : :queued
-      update!(status: next_state, attempt: attempt + 1, error_code: nil, token_digest: nil,
-        enqueued_job_id: nil, enqueued_at: nil, expires_at: EXPIRY.from_now)
-      queue_next_step! if plan_approved_at
-      true
+      course.with_lock do
+        Drafts::Access.ensure_no_editor!(course)
+        next_state = plan.any? && !plan_approved_at ? :awaiting_approval : :queued
+        update!(status: next_state, attempt: attempt + 1, error_code: nil, token_digest: nil,
+          enqueued_job_id: nil, enqueued_at: nil, expires_at: EXPIRY.from_now)
+        queue_next_step! if plan_approved_at
+        true
+      end
     end
   end
 
@@ -98,8 +101,9 @@ class CourseGeneration < ApplicationRecord
     with_lock do
       return false unless awaiting_approval? && attempt == expected_attempt
       course.with_lock do
+        Drafts::Access.ensure_no_editor!(course)
         return false unless course.draft? && course.revision == expected_revision && plan.any?
-        update!(plan_approved_at: Time.current, error_code: nil)
+        update!(plan_approved_at: Time.current, approved_plan: plan, error_code: nil)
         queue_next_step!
       end
     end

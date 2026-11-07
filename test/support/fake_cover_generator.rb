@@ -6,7 +6,7 @@ class FakeCoverGenerator
     @calls = []
   end
 
-  def generate(course, cancelled:, run: nil)
+  def generate(course, cancelled:, run: nil, brief: nil)
     @calls << course.id
     raise LocalAi::Error, error if error
     before_finish&.call

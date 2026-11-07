@@ -8,14 +8,14 @@ class CourseAssistantTest < ActionDispatch::IntegrationTest
     host! "localhost"
     @ai = Rails.configuration.x.local_ai
     @authoring = Rails.configuration.x.local_authoring
-    @previous = [ @ai.enabled, @ai.adapter, @authoring.enabled ]
+    @previous = [ @ai.enabled, @ai.adapter, @authoring.enabled, @ai.editor ]
     @ai.enabled = @authoring.enabled = true
-    @ai.adapter = FakeTutor.new
+    @ai.adapter = @ai.editor = FakeTutor.new
     @local = { "REMOTE_ADDR" => "127.0.0.1" }
     @course = courses(:listening)
   end
 
-  teardown { @ai.enabled, @ai.adapter, @authoring.enabled = @previous }
+  teardown { @ai.enabled, @ai.adapter, @authoring.enabled, @ai.editor = @previous }
 
   test "outline and lesson questions share history with distinct immutable context" do
     perform_enqueued_jobs { ask("Where should I start?") }
@@ -60,7 +60,7 @@ class CourseAssistantTest < ActionDispatch::IntegrationTest
     assert exchange.reload.queued?
   end
 
-  test "draft discussion is local, read only and separate after publication" do
+  test "draft discussion is local and separate after publication" do
     @course.update!(status: :draft)
     perform_enqueued_jobs { ask("A private improvement idea", mode: "editor") }
     editor = Exchange.last
@@ -100,6 +100,9 @@ class CourseAssistantTest < ActionDispatch::IntegrationTest
     assert_includes response.parsed_body["activity_html"], "Checking sources online"
     assert_includes response.parsed_body["activity_html"], "generation-#{generation.id}"
     assert_empty @ai.adapter.calls
+    assert_no_enqueued_jobs { ask("Wait for generation", mode: "editor") }
+    assert_response :conflict
+    generation.update!(status: :awaiting_approval)
     perform_enqueued_jobs { ask("What is the scope?", mode: "editor") }
     assert_equal "Sound", Exchange.last.lesson_context.dig("generation", "topic")
     assert_nil Exchange.last.lesson_context["body"]

@@ -18,6 +18,7 @@
     </a>
     <%= render "layouts/navigation" %>
     <main id="main-content" tabindex="-1" class="mx-auto max-w-5xl px-4 py-12 sm:px-8">
+        <% if alert %><p role="alert" class="mb-6 rounded-box bg-base-200 p-4"><%= alert %></p><% end %>
       <% if notice %><p role="status" class="mb-6 rounded-box bg-secondary p-4" data-motion="enter"><%= notice %></p><% end %>
       <%= yield %>
     </main>

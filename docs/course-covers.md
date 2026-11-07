@@ -18,7 +18,7 @@ $env:FILE = "C:/images/cover.png"
 ruby bin/rails courses:attach_cover
 ```
 
-The importer accepts decoded PNG, JPEG, and WebP files up to 5 MB and 20 million pixels. It detects content from the bytes, not the extension, and validates the input before changing the course. Repeating the same import reuses the blob; reimporting can restore a missing stored file. Changing the cover leaves lessons and learning progress intact.
+The importer accepts decoded PNG, JPEG, and WebP files up to 5 MB and 20 million pixels. It detects content from the bytes, not the extension, and validates the input before changing the course. Repeating the same import reuses the blob; reimporting can restore a missing stored file. Changing the cover leaves lessons and learning progress intact. Draft imports wait for active generation, editor or image work and advance the revision when the attachment changes.
 
 The task prepares a 960 × 540 WebP card variant at quality 82. A fixed 16:9 frame prevents layout shifts. Cover images use empty alternative text because the adjacent course title supplies the link's accessible name. A missing or failed image falls back to a decorative bookshelf without blocking navigation.
 
@@ -30,11 +30,11 @@ The learner first approves the model's plan. Lesson writing may also request an 
 
 `CourseCoverGeneration` persists the course, status (`queued`, `running`, `completed`, `failed`), attempt, expiry and error code. Its unique course index and locked claim prevent duplicate delivery from creating more images. Completion creates this record in the same transaction as the finished lessons and enqueues it after commit. Images have a five-minute runtime deadline and a seven-minute persisted expiry. The local Async queue is not durable across restarts; the progress page expires stale work and offers an explicit retry.
 
-The progress screen distinguishes lesson completion from image creation. **Retry cover** increments only the image attempt, leaving lesson IDs, text and approval unchanged. Late results from an earlier attempt cannot attach an image. A manually imported cover is preserved even when the image job finishes afterwards. Quota, unsupported runtime, invalid image and other failures have localized explanations. Course review and approval remain available without a cover, using the normal bookshelf fallback.
+The progress screen distinguishes lesson completion from image creation. **Retry cover** increments only the image attempt, leaving lesson IDs, text and approval unchanged. Late results from an earlier attempt cannot attach an image. Initial generation preserves an already attached cover. Quota, unsupported runtime, invalid image and other failures have localized explanations. Review remains available while the image is pending; approval waits for active writers. After image failure, approval is available without a cover, using the bookshelf fallback.
 
 The image session receives only the course title, description and category plus a fixed Reading Room visual brief. It disables MCP, web search, shell, apps, plugins and project instructions. The adapter accepts only a matching `imageGeneration` completion item's inline base64 result, within the existing decoded byte/pixel limits. It never follows file paths or URLs from model prose, `savedPath` or `fileId`. A runtime that supplies only a file reference produces a retryable error rather than reading an arbitrary file. No raw image response is stored in PostgreSQL or application logs.
 
-Automatic covers currently belong to the form workflow. Manually authored MCP drafts and older completed generations retain their existing covers or fallback; import an image for those with the task above.
+Initial automatic covers belong to the form workflow. Any editable local draft, including an older or externally authored draft, can request a replacement through its assistant. [Draft editing](draft-editing.md) documents retained blobs, image-only retries and undo.
 
 ## Codex verification
 

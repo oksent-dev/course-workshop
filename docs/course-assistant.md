@@ -1,6 +1,6 @@
-# Course assistant: implementation and planned design
+# Course assistant
 
-Status: the durable execution foundation and shared interface are implemented as of 2026-11-07. The panel follows outlines, lessons and drafts, with context labels, preserved composers, persisted generation/cover status cards and explicit content refresh. Draft editing tools, operation receipts, refresh tools and undo remain planned. [Local AI](local-ai.md) documents the implemented lifecycle and limits.
+Status: durable execution, the shared interface and recoverable draft editing are implemented as of 2026-11-07. The panel follows outlines, lessons and drafts, with preserved composers, persisted activity, scoped editing tools, revision previews and undo. [Local AI](local-ai.md) documents runtime setup; [draft editing](draft-editing.md) defines the tools, coordination and recovery contract.
 
 The assistant should follow a course from its outline into individual lessons. Published courses offer tutoring; drafts offer editing through bounded tools. The panel, quote interaction and navigation remain consistent, while permissions and conversation ownership remain explicit.
 
@@ -22,8 +22,8 @@ Use one course-level transcript per owner and mode. Locally, use the existing sh
 | --- | --- | --- |
 | Published course outline | Title, description, language and ordered lesson titles | Explain the course and suggest a learning path |
 | Published lesson | Outline plus the current lesson and optional selected passage | Explain and discuss; no writes |
-| Draft plan/status | Topic, current metadata, outline, generation state and revision | Discuss the draft and suggest improvements; editing tools are planned |
-| Draft lesson | Draft overview plus the current lesson and optional selected passage | Discuss the lesson; scoped mutations are planned |
+| Draft plan/status | Topic, current metadata, outline, generation state and revision | Discuss or edit through scoped tools; plan revisions require approval |
+| Draft lesson | Draft overview plus the current lesson and optional selected passage | Discuss or edit the lesson, with revision previews and undo |
 
 Do not attach every lesson body to every message. The draft editor may explicitly read a relevant lesson through a scoped tool when a course-level request requires it; display that read as activity. Context scope controls newly supplied material, not forgetting material already seen in the conversation.
 
@@ -43,12 +43,12 @@ For old courses, construct the handoff from persisted course and generation reco
 
 Authorize the mode on the server for every request and every mutation. A read-only tutor cannot gain write permissions through its prompt. The editor gets a token scoped to one draft and one active run; it cannot modify other courses or publish anything.
 
-Proposed capabilities:
+Implemented capabilities:
 
 - Read the current course outline, revision, individual lessons and attached-image metadata.
 - Update title, description and category, using the existing category catalog.
 - Add or replace a lesson, reorder lessons and remove a lesson recoverably.
-- Request a new cover or lesson illustration through the existing native image mechanism.
+- Request a replacement cover through the existing native image mechanism. New lesson illustrations remain part of initial generation; editor rewrites can use tables, formulas, diagrams or existing attachments.
 - Request a view refresh for the committed course revision.
 
 Keep content validation, required lesson visuals, attachment validation and category reuse. Store a revision and operation receipt with every successful mutation. Validate the expected revision before committing. Replayed tool requests return their original receipt instead of creating duplicate lessons or image jobs.
@@ -59,7 +59,7 @@ Separate the current editable outline from the historical plan of the initial ge
 
 ## Recoverable changes and images
 
-Record the before/after material and the related run for each change. Keep removed lessons recoverable, with stable IDs and retained assets. Offer an application-owned undo action for a change or the latest editing run. Undo creates a new revision and refuses to overwrite later unrelated edits without reconciliation. Codex thread rollback is not a database rollback.
+Record the before/after material and related exchange for each change. Keep removed lessons recoverable, with stable IDs and retained assets. Offer application-owned undo for the latest eligible change; repeated undo walks backward through operations. Undo creates a new revision and refuses to overwrite later unrelated edits. Codex thread rollback is not a database rollback.
 
 Do not detach a usable cover while a replacement is being generated. Validate the new image before swapping it. Retain previous blobs while revisions reference them. Image generation has a separate persisted job, status and attempt identity; a failed image does not erase successful text changes. Cancellation revokes write access so a late image cannot replace a newer cover.
 
@@ -69,18 +69,18 @@ Multi-operation requests can finish partially. Show which changes were saved and
 
 The current panel reconstructs generation and cover cards from persisted records with stable IDs. Exchange states show queued, running, recovering and terminal reply outcomes. These are current status cards, not a complete audit trail of earlier transitions. An open panel polls for changes; version mismatches offer explicit content refresh while retaining the permanent panel, unsent text and quote. Each tab compares its own displayed material version. Publishing rejects further requests from the old editor mode and offers a route to the published overview.
 
-The editing stage will add compact activity cards for scoped tools and committed receipts, for example:
+The editor shows compact activity cards for scoped tools and committed receipts, for example:
 
 - Reading lesson 3.
 - Updating the example — saved.
 - Adding a practice lesson — saved.
 - Generating a new cover — running / failed / saved.
 
-Use runtime tool events for started/running activity and committed application receipts for saved results. Never infer a successful write from an assistant sentence. Show readable summaries and optional change previews, not raw tool JSON, credentials or model reasoning. Persist events with stable IDs so reconnecting does not duplicate them.
+The scoped MCP handler persists started/completed/failed activity, and committed application receipts establish saved results. Never infer a successful write from an assistant sentence. Show readable summaries and optional change previews, not raw tool JSON, credentials or model reasoning. Persist stable IDs so reconnecting does not duplicate cards.
 
-Expose a bounded `refresh_course_view` tool. It accepts the affected course revision and resources, not JavaScript or an arbitrary URL. The tool records a refresh request; it does not claim the user's browser has already applied it. Committed writes and turn completion also announce changes, so visibility does not depend entirely on the model remembering to call the tool.
+The bounded `refresh_course_view` tool accepts an expected revision and idempotency key, not JavaScript or an arbitrary URL. It records a refresh request; it does not claim the browser has applied it. Version polling also exposes committed changes through a manual refresh action, so visibility does not depend entirely on the model remembering the tool.
 
-The browser refreshes relevant material, outline and cover through Turbo while retaining the assistant panel and composer. Coalesce multiple changes and defer disruptive refresh while a selection or edit is in progress, with a visible “Updates available” action. Maintain the current lesson and approximate reading position; if that lesson was removed, return to the overview with an explanation. Each tab tracks its own event cursor. Closing every tab leaves the job running, and reopening loads the newest state.
+The browser refreshes material, outline and cover through Turbo while retaining the assistant panel and composer. It defers automatic refresh during selection, composition or expanded change previews, with a visible refresh action. It maintains the current lesson and approximate reading position; a removed lesson returns to the overview. Each tab compares its own displayed material version. Closing every tab leaves accepted work running while the local worker remains available; reopening loads the newest state.
 
 ## Durable execution and history recovery
 
@@ -97,7 +97,7 @@ Solid Queue [does not automatically retry work abandoned by a crashed worker](ht
 ## Delivery slices and acceptance
 
 1. **Durable conversation foundation — implemented.** Course-level ownership, context snapshots, runtime identifiers, retained legacy history, database queue and recovery states. Covers new browser sessions, duplicate submission, lost response and worker restart. Generation conversations are recorded as separate runs.
-2. **Shared assistant interface — implemented.** Outline, published lesson, draft overview and draft lesson; mode/context labels, selected passages with origin, persisted generation/cover cards and explicit content refresh. Preserves tab-specific composers and pending reply context. Draft discussion is read-only; its history and runtime thread are separate from generation runs and the published tutor.
-3. **Draft editing and recovery.** Scoped editor tools, metadata and lesson changes, recoverable removal, image replacement, operation receipts, revision previews and undo. Verify isolation, stale quotes/revisions, edit/generation/approval conflicts, image failure, cancellation and recovery after a write whose response was lost.
+2. **Shared assistant interface — implemented.** Outline, published lesson, draft overview and draft lesson; mode/context labels, selected passages with origin, persisted generation/cover cards and explicit content refresh. Preserves tab-specific composers and pending reply context. Editor history and its runtime thread are separate from generation runs and the published tutor.
+3. **Draft editing and recovery — implemented.** Scoped tools, metadata and lesson changes, recoverable removal, cover replacement, receipts, revision previews and undo. Tests cover isolation, stale quotes/revisions, writer conflicts, image failure, cancellation and recovery after a saved write whose response was lost.
 
 Finish with a real local workflow on an isolated draft: change a quoted passage, add and remove a lesson, replace the cover, leave and reopen the page, and undo a change. Automated tests use fake model/image adapters; genuine checks remain explicit and bounded. The public demo milestone remains separate.

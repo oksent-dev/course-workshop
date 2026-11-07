@@ -16,6 +16,9 @@
           <p class="mt-1 whitespace-pre-wrap wrap-anywhere"><%= exchange.question %></p>
         </div>
         <div class="px-1" data-tutor-reply="true">
+          <% if exchange.conversation.mode == "editor" %>
+            <%= render "conversations/changes", exchange: exchange %>
+          <% end %>
           <p class="text-sm font-semibold"><%= t("conversation.modes.#{exchange.lesson_context.fetch("mode", "tutor")}") %></p>
           <% if exchange.completed? %>
             <p class="mt-1 whitespace-pre-wrap wrap-anywhere"><%= exchange.answer %></p>

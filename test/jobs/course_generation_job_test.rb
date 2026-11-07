@@ -32,6 +32,8 @@ class CourseGenerationJobTest < ActiveSupport::TestCase
     CourseGenerationJob.perform_now(@generation, 1, 1)
     assert_equal 19, @generator.calls.size
     assert @generation.course.draft?
+    cover = @generation.course.cover_generation
+    CourseCoverGenerationJob.perform_now(cover, cover.attempt)
     Drafts::Editor.publish(course_id: @generation.course_id, expected_revision: @generation.course.reload.revision)
     assert @generation.course.reload.published?
   end

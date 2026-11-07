@@ -1,3 +1,3 @@
 <%= button_to t("drafts.approve"), draft_path(course.id), method: :patch, params: { revision: course.revision },
-  disabled: local_assigns.fetch(:disabled, false), id: "course-approve",
+  disabled: local_assigns.fetch(:disabled, false) || draft_editing_busy?(course), id: "course-approve",
   form_class: "max-w-full", class: "btn btn-primary min-h-11 h-auto max-w-full py-3 whitespace-normal" %>

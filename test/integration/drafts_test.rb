@@ -62,7 +62,7 @@ class DraftsTest < ActionDispatch::IntegrationTest
     Drafts::Editor.save_lesson(course_id: @course.id, expected_revision: 0, lesson_id: @lesson.id, title: "Updated", body: "New material.")
     patch draft_path(@course.id, locale: :en), params: { revision: 0 }, headers: @local
     assert_response :unprocessable_content
-    assert_select "[role=alert]", /draft changed/
+    assert_select "[role=alert]", /draft has changed/
     assert @course.reload.draft?
     patch draft_path(@course.id, locale: :en), params: { revision: 1 }, headers: @local
     assert_redirected_to course_path(@course, locale: :en)

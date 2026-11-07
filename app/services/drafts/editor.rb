@@ -32,14 +32,7 @@ module Drafts
 
     def self.reorder_lessons(course_id:, expected_revision:, lesson_ids:)
       change(course_id, expected_revision) do |course|
-        lessons = course.lessons.to_a
-        unless lesson_ids.sort == lessons.map(&:id).sort && lesson_ids.uniq == lesson_ids
-          raise Error.new("invalid_order", "lesson_ids must include every lesson in this course exactly once.")
-        end
-        offset = (lessons.map(&:position).max || 0) + lessons.size + 1
-        course.lessons.update_all([ "position = position + ?", offset ])
-        by_id = lessons.index_by(&:id)
-        lesson_ids.each_with_index { |id, index| by_id.fetch(id).update_columns(position: index + 1, updated_at: Time.current) }
+        LessonOrder.apply!(course, lesson_ids)
         { lesson_ids: lesson_ids }
       end
     end
@@ -59,6 +52,7 @@ module Drafts
     def self.change(course_id, expected_revision)
       course = Course.find(course_id)
       course.with_lock do
+        Access.ensure_available!(course)
         raise Error.new("not_draft", "Only draft courses can be changed.") unless course.draft?
         if course.course_generation && !course.course_generation.completed?
           raise Error.new("generation_incomplete", "Finish course generation before editing or approving this draft.")

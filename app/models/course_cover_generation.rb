@@ -54,8 +54,12 @@ class CourseCoverGeneration < ApplicationRecord
   def retry!(expected_attempt)
     with_lock do
       return false unless failed? && attempt == expected_attempt
-      update!(status: :queued, attempt: attempt + 1, error_code: nil,
-        enqueued_job_id: nil, enqueued_at: nil, expires_at: EXPIRY.from_now)
+      course.with_lock do
+        Drafts::Access.ensure_no_editor!(course)
+        raise Drafts::Error.new("cover_busy", "A replacement cover is pending.") if course.draft_cover_requests.pending.exists?
+        update!(status: :queued, attempt: attempt + 1, error_code: nil,
+          enqueued_job_id: nil, enqueued_at: nil, expires_at: EXPIRY.from_now)
+      end
     end
   end
 end

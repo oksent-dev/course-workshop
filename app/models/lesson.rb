@@ -8,5 +8,6 @@ class Lesson < ApplicationRecord
 
   validates :title, :body, presence: true
   validates :title, length: { maximum: 160 }
-  validates :position, numericality: { only_integer: true, greater_than: 0 }, uniqueness: { scope: :course_id }
+  validates :position, numericality: { only_integer: true, greater_than: 0 }
+  validates :position, uniqueness: { scope: :course_id, conditions: -> { where(archived_at: nil) } }, unless: :archived_at?
 end

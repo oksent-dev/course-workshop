@@ -1,0 +1,51 @@
+<div class="mb-3 space-y-3" data-assistant-work="<%= exchange.id %>">
+  <% completed_reads = exchange.assistant_activities.select { |activity| activity.completed? && %w[get_authoring_guide read_draft read_lesson].include?(activity.tool) } %>
+  <% if completed_reads.any? %>
+    <details data-change-preview="activity-<%= exchange.id %>" class="rounded-field border border-base-300 bg-base-200 px-3 text-sm">
+      <summary class="min-h-11 cursor-pointer content-center font-medium" data-assistant-focus="activity-<%= exchange.id %>"><%= t("editor.work_details") %></summary>
+      <ul class="space-y-2 pb-3 text-muted-ink">
+        <% completed_reads.each do |activity| %><li data-activity-id="tool-<%= activity.id %>"><%= t("editor.tools.#{activity.tool}") %> · <%= t("editor.activity.completed") %></li><% end %>
+      </ul>
+    </details>
+  <% end %>
+  <% exchange.assistant_activities.sort_by(&:id).each do |activity| %>
+    <% next if activity.course_change_id? || completed_reads.include?(activity) || (activity.completed? && %w[request_cover refresh_course_view].include?(activity.tool)) %>
+    <div class="rounded-field border border-base-300 bg-base-200 p-3 text-sm" data-activity-id="tool-<%= activity.id %>">
+      <p class="font-semibold"><%= t("editor.tools.#{activity.tool}") %></p>
+      <p class="mt-1 text-muted-ink"><%= t("editor.activity.#{activity.status}") %></p>
+      <% if activity.failed? %><p class="mt-1"><%= t("editor.errors.#{activity.error_code}", default: t("editor.errors.invalid_content")) %></p><% end %>
+    </div>
+  <% end %>
+  <% exchange.course_changes.sort_by(&:revision).each do |change| %>
+    <div class="rounded-field border border-base-300 bg-base-200 p-3 text-sm" data-change-id="<%= change.id %>">
+      <p class="font-semibold"><%= t("editor.tools.#{change.operation}") %></p>
+      <p class="mt-1 text-muted-ink"><%= t(change.undone_at? ? "editor.undone" : "editor.saved", revision: change.revision) %></p>
+      <details class="mt-2" data-change-preview="<%= change.id %>">
+        <summary class="min-h-11 cursor-pointer content-center rounded-field font-medium text-primary" data-assistant-focus="preview-<%= change.id %>"><%= t("editor.preview") %></summary>
+        <%= render "conversations/change_preview", change: change %>
+      </details>
+      <% if @undoable_change&.id == change.id %>
+        <button type="button" class="btn btn-outline mt-2 min-h-11 h-auto max-w-full py-2 whitespace-normal"
+          data-assistant-focus="undo-<%= change.id %>" data-action="conversation#performAction"
+          data-url="<%= undo_change_course_conversation_path(@course, change_id: change.id, mode: "editor") %>"
+          data-params="<%= { expected_revision: @course.revision }.to_json %>"><%= t("editor.undo") %></button>
+      <% end %>
+    </div>
+  <% end %>
+  <% exchange.draft_cover_requests.sort_by(&:id).each do |cover| %>
+    <div class="rounded-field border border-base-300 bg-base-200 p-3 text-sm" data-cover-request-id="<%= cover.id %>">
+      <p class="font-semibold"><%= t("editor.tools.request_cover") %></p>
+      <p class="mt-1"><%= t("editor.covers.#{cover.status}") %></p>
+      <% if cover.pending? %>
+        <button type="button" class="btn btn-outline mt-2 min-h-11 h-auto py-2 whitespace-normal"
+          data-assistant-focus="cancel-cover-<%= cover.id %>" data-action="conversation#performAction" data-method="DELETE"
+          data-url="<%= cancel_cover_course_conversation_path(@course, cover_id: cover.id, mode: "editor") %>"><%= t("editor.cancel_cover") %></button>
+      <% elsif !cover.completed? && !exchange.pending? && @course.draft? %>
+        <p class="mt-1 text-muted-ink"><%= t("editor.cover_preserved") %></p>
+        <button type="button" class="btn btn-outline mt-2 min-h-11 h-auto py-2 whitespace-normal"
+          data-assistant-focus="retry-cover-<%= cover.id %>" data-action="conversation#performAction"
+          data-url="<%= retry_cover_course_conversation_path(@course, cover_id: cover.id, mode: "editor") %>"><%= t("editor.retry_cover") %></button>
+      <% end %>
+    </div>
+  <% end %>
+</div>

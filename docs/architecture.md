@@ -46,7 +46,7 @@ The library uses `?category=ID` for filtering. Counts are computed from publishe
 
 Additional interactive components remain possible extensions.
 
-The [course assistant design](course-assistant.md) separates the implemented history/recovery foundation and shared interface from planned editing tools and revision receipts. The same panel follows course outlines, lessons, generation overviews and draft previews. Both modes currently discuss supplied material without writing to the course.
+The [course assistant](course-assistant.md) follows course outlines, lessons, generation overviews and draft previews. Published tutoring is read-only. Draft editing uses a run-scoped MCP server, short database transactions, revision checks and idempotent receipts. `CourseChange` stores before/after snapshots, `AssistantActivity` records tool outcomes, and `DraftCoverRequest` owns asynchronous cover replacement. Archived lessons and retained cover blobs make undo independent of Codex history. See the [draft editing contract](draft-editing.md).
 
 Generated content is treated as input: HTML output is sanitized, and interactive blocks use validated data rather than arbitrary generated JavaScript.
 

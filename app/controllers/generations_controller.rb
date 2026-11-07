@@ -3,6 +3,10 @@ class GenerationsController < ApplicationController
   before_action :require_local_generation
   before_action :set_generation, only: [ :show, :cancel, :retry_generation, :retry_cover, :approve_plan ]
   helper_method :generation_version, :generation_busy?
+  rescue_from Drafts::Error do |error|
+    redirect_to generation_path(@generation), status: :see_other,
+      alert: t("editor.errors.#{error.code}", default: t("editor.errors.invalid_content"))
+  end
 
   def new
     @generation = CourseGeneration.new(language: I18n.locale, request_key: SecureRandom.uuid)

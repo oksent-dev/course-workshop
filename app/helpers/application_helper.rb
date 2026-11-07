@@ -37,4 +37,9 @@ module ApplicationHelper
     language_name = t("courses.languages.#{course.language}", default: course.language)
     t("courses.content_language", language: language_name)
   end
+
+  def draft_editing_busy?(course)
+    Exchange.pending.joins(:conversation).where(conversations: { course_id: course.id, mode: "editor" }).exists? ||
+      course.draft_cover_requests.pending.exists? || course.cover_generation&.pending?
+  end
 end

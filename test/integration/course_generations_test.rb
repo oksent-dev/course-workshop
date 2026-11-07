@@ -181,6 +181,8 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
     assert_select "#course-approve", count: 0
     perform_enqueued_jobs
     approve_and_finish(generation)
+    cover = course.cover_generation
+    CourseCoverGenerationJob.perform_now(cover, cover.attempt)
 
     get drafts_path(locale: :en), headers: @local
     assert_select "[data-course-card] a[href=?]", generation_path(generation, locale: :en), count: 2
@@ -199,7 +201,7 @@ class CourseGenerationsTest < ActionDispatch::IntegrationTest
       description: "Updated course scope.", language: course.language, category_id: course.category_id)
     patch draft_path(course.id, locale: :en), params: { revision: revision }, headers: @local
     assert_response :unprocessable_content
-    assert_select "[role=alert]", /draft changed/
+    assert_select "[role=alert]", /draft has changed/
     assert course.reload.draft?
     get generation_path(generation, locale: :en), headers: @local
     assert_select "input[name=revision][value=?]", course.revision.to_s

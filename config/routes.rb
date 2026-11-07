@@ -12,6 +12,9 @@ Rails.application.routes.draw do
     end
     resources :courses, only: :show, param: :slug do
       resource :conversation, only: :show do
+        post "changes/:change_id/undo", to: "conversations#undo", as: :undo_change
+        post "covers/:cover_id/retry", to: "conversations#retry_cover", as: :retry_cover
+        delete "covers/:cover_id", to: "conversations#cancel_cover", as: :cancel_cover
         resources :exchanges, only: [ :create, :destroy ], controller: :conversations
       end
       resources :lessons, only: :show do

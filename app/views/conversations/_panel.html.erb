@@ -62,6 +62,7 @@
       </div>
     </div>
     <div class="lesson-chat-composer border-t border-base-300 p-4">
+      <p class="mb-2 text-sm text-muted-ink" hidden data-conversation-target="editorHint"></p>
       <p role="status" class="text-sm text-error-content" data-conversation-target="status"></p>
       <button type="button" class="btn btn-ghost mb-2 min-h-11 hidden" data-conversation-target="refresh" data-action="conversation#refresh"><%= t("conversation.refresh") %></button>
       <%= form_with url: context[:exchanges_url], class: "mx-auto max-w-[75ch]", data: { turbo: false, action: "submit->conversation#send", conversation_target: "form" } do |form| %>

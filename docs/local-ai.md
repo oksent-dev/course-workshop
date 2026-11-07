@@ -1,6 +1,6 @@
 # Local course conversations
 
-The shared assistant is available on published course outlines and lessons, generation overviews, and draft lesson previews. It uses **GPT-6.1 Sol** (`gpt-6.1-sol`) with low reasoning effort through a local Codex App Server. Follow-ups resume the stored thread. Saved history belongs to the course, learner profile and mode. Both the course tutor and draft assistant are currently read-only; draft editing tools are a later feature.
+The shared assistant is available on published course outlines and lessons, generation overviews, and draft lesson previews. It uses **GPT-6.1 Sol** (`gpt-6.1-sol`) with low reasoning effort through a local Codex App Server. Follow-ups resume the stored thread. Saved history belongs to the course, learner profile and mode. The course tutor is read-only; the draft assistant can perform [scoped, recoverable edits](draft-editing.md).
 
 ## Enable the tutor
 
@@ -54,7 +54,7 @@ Each exchange stores the question, immutable course/outline/revision and lesson 
 
 The model receives this explicit lesson snapshot and question. Codex stores its own thread history using the existing local Codex account. The application does not copy login credentials or expose Codex thread identifiers to the browser. Questions and lesson content leave the machine for model inference; “local” refers to the runtime and application, not the model.
 
-The adapter overrides project instructions, disables shell execution, image viewing, search, memories, hooks, multi-agent work, apps, plugins, and configured MCP servers, and requests a read-only sandbox. Unexpected interactive tool requests fail the exchange. This tutor explains supplied material; the separate [course-authoring MCP server](course-authoring.md) is available to local clients but is not connected to lesson conversations. [Course generation](course-generation.md) uses its own scoped writing tools and web research. Codex configuration and protocol are evolving, so re-run the smoke check after upgrading the CLI.
+The adapters override project instructions, disable shell execution, image viewing, search, memories, hooks, multi-agent work, apps, plugins, and configured MCP servers, and request a read-only filesystem sandbox. The tutor has no writing tools. `Codex::Editor` enables only `course_editor`, with a short-lived credential bound to one exchange and one draft. Approval is configured for that server within the thread; global Codex approval settings remain unchanged. Unexpected interactive requests fail the exchange. The separate [course-authoring MCP server](course-authoring.md) remains available to external local clients. [Course generation](course-generation.md) uses its own scoped tools and web research. Re-run the smoke check after upgrading Codex.
 
 Question and selected-passage parameters are filtered from request logs. Development SQL logs and Codex session storage can still contain conversation content; these are local runtime data and must remain outside Git. Runtime exception details are not shown in the UI. Questions, quoted passages, and answers are escaped plain text; Markdown rendering is a separate reader feature. The tutor receives the passage as learning material, with an instruction to focus the current answer on it while retaining the full lesson context.
 

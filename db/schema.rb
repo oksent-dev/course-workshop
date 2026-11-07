@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_180000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_07_190000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -64,6 +64,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_180000) do
     t.check_constraint "status::text = ANY (ARRAY['running'::character varying, 'recovering'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying, 'uncertain'::character varying]::text[])", name: "ai_runs_valid_status"
   end
 
+  create_table "assistant_activities", force: :cascade do |t|
+    t.bigint "exchange_id", null: false
+    t.bigint "course_change_id"
+    t.string "key", null: false
+    t.string "tool", null: false
+    t.string "status", default: "running", null: false
+    t.string "error_code"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_change_id"], name: "index_assistant_activities_on_course_change_id"
+    t.index ["exchange_id", "key"], name: "index_assistant_activities_on_exchange_id_and_key", unique: true
+    t.index ["exchange_id"], name: "index_assistant_activities_on_exchange_id"
+    t.check_constraint "status::text = ANY (ARRAY['running'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "assistant_activities_valid_status"
+  end
+
   create_table "categories", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", null: false
@@ -88,6 +103,24 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_180000) do
     t.index ["lesson_id", "browser_key"], name: "index_conversations_on_lesson_id_and_browser_key", unique: true
     t.check_constraint "legacy OR learner_profile_id IS NOT NULL", name: "conversations_have_owner"
     t.check_constraint "mode::text = ANY (ARRAY['tutor'::character varying, 'editor'::character varying]::text[])", name: "conversations_valid_mode"
+  end
+
+  create_table "course_changes", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.bigint "exchange_id", null: false
+    t.bigint "undo_of_id"
+    t.string "operation", null: false
+    t.integer "revision", null: false
+    t.jsonb "before_state", null: false
+    t.jsonb "after_state", null: false
+    t.datetime "undone_at"
+    t.uuid "undo_key", default: -> { "gen_random_uuid()" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_id", "revision"], name: "index_course_changes_on_course_id_and_revision", unique: true
+    t.index ["course_id"], name: "index_course_changes_on_course_id"
+    t.index ["exchange_id"], name: "index_course_changes_on_exchange_id"
+    t.index ["undo_of_id"], name: "index_course_changes_on_undo_of_id"
   end
 
   create_table "course_cover_generations", force: :cascade do |t|
@@ -129,6 +162,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_180000) do
     t.string "illustration_alt"
     t.string "enqueued_job_id"
     t.datetime "enqueued_at"
+    t.jsonb "approved_plan", default: [], null: false
     t.index ["course_id"], name: "index_course_generations_on_course_id", unique: true
     t.index ["request_key"], name: "index_course_generations_on_request_key", unique: true
     t.check_constraint "(lesson_count IS NULL OR lesson_count >= 1 AND lesson_count <= 60) AND attempt > 0", name: "generations_valid_limits"
@@ -151,6 +185,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_180000) do
     t.index ["slug"], name: "index_courses_on_slug", unique: true
     t.check_constraint "revision >= 0", name: "courses_nonnegative_revision"
     t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'published'::character varying::text])", name: "courses_valid_status"
+  end
+
+  create_table "draft_cover_requests", force: :cascade do |t|
+    t.bigint "course_id", null: false
+    t.bigint "exchange_id", null: false
+    t.bigint "course_change_id"
+    t.text "prompt", null: false
+    t.integer "expected_revision", null: false
+    t.string "status", default: "queued", null: false
+    t.string "error_code"
+    t.datetime "expires_at"
+    t.string "enqueued_job_id"
+    t.datetime "enqueued_at"
+    t.uuid "retry_key", default: -> { "gen_random_uuid()" }, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["course_change_id"], name: "index_draft_cover_requests_on_course_change_id"
+    t.index ["course_id"], name: "index_draft_cover_requests_on_course_id"
+    t.index ["course_id"], name: "one_pending_draft_cover", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'running'::character varying, 'recovering'::character varying])::text[]))"
+    t.index ["exchange_id"], name: "index_draft_cover_requests_on_exchange_id"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'recovering'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying, 'uncertain'::character varying]::text[])", name: "draft_cover_requests_valid_status"
   end
 
   create_table "draft_operations", force: :cascade do |t|
@@ -176,6 +231,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_180000) do
     t.datetime "updated_at", null: false
     t.string "enqueued_job_id"
     t.datetime "enqueued_at"
+    t.string "editor_token_digest"
+    t.datetime "editor_expires_at"
     t.index ["conversation_id", "request_key"], name: "index_exchanges_on_conversation_id_and_request_key", unique: true
     t.index ["conversation_id"], name: "index_exchanges_on_conversation_id"
     t.index ["conversation_id"], name: "one_pending_exchange_per_conversation", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'running'::character varying, 'recovering'::character varying])::text[]))"
@@ -217,18 +274,27 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_180000) do
     t.text "body", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["course_id", "position"], name: "index_lessons_on_course_id_and_position", unique: true
+    t.datetime "archived_at"
+    t.index ["course_id", "position"], name: "index_lessons_on_course_id_and_position", unique: true, where: "(archived_at IS NULL)"
     t.check_constraint "\"position\" > 0", name: "lessons_positive_position"
   end
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "assistant_activities", "course_changes"
+  add_foreign_key "assistant_activities", "exchanges"
   add_foreign_key "conversations", "courses"
   add_foreign_key "conversations", "learner_profiles"
   add_foreign_key "conversations", "lessons"
+  add_foreign_key "course_changes", "course_changes", column: "undo_of_id"
+  add_foreign_key "course_changes", "courses"
+  add_foreign_key "course_changes", "exchanges"
   add_foreign_key "course_cover_generations", "courses"
   add_foreign_key "course_generations", "courses"
   add_foreign_key "courses", "categories"
+  add_foreign_key "draft_cover_requests", "course_changes"
+  add_foreign_key "draft_cover_requests", "courses"
+  add_foreign_key "draft_cover_requests", "exchanges"
   add_foreign_key "exchanges", "conversations"
   add_foreign_key "lesson_images", "lessons"
   add_foreign_key "lesson_progresses", "learner_profiles"

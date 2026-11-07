@@ -1,0 +1,35 @@
+<div class="max-h-72 space-y-4 overflow-y-auto rounded-field border border-base-300 bg-base-100 p-3" tabindex="0" data-preview-scroll="<%= change.id %>">
+  <% %w[metadata generation].each do |section| %>
+    <% before_values = change.before_state[section] || {}; after_values = change.after_state[section] || {} %>
+    <% (before_values.keys | after_values.keys).each do |key| %>
+      <% next if section == "generation" && !%w[plan lesson_count].include?(key) %>
+      <% next if before_values[key] == after_values[key] %>
+      <div>
+        <p class="font-semibold"><%= t("editor.fields.#{key}", default: t("editor.tools.revise_plan")) %></p>
+        <p class="mt-1 whitespace-pre-wrap wrap-anywhere"><%= t("editor.before") %>: <%= change_preview_value(key, before_values[key]) %></p>
+        <p class="mt-2 whitespace-pre-wrap wrap-anywhere"><%= t("editor.after") %>: <%= change_preview_value(key, after_values[key]) %></p>
+      </div>
+    <% end %>
+  <% end %>
+  <% before_lessons = change.before_state.fetch("lessons").index_by { |lesson| lesson["id"] }; after_lessons = change.after_state.fetch("lessons").index_by { |lesson| lesson["id"] } %>
+  <% (before_lessons.keys | after_lessons.keys).each do |id| %>
+    <% before_lesson = before_lessons[id]; after_lesson = after_lessons[id]; next if before_lesson == after_lesson %>
+    <div>
+      <p class="font-semibold wrap-anywhere"><%= (after_lesson || before_lesson)["title"] %></p>
+      <% [ [ "before", before_lesson ], [ "after", after_lesson ] ].each do |label, lesson| %>
+        <p class="mt-2 font-medium"><%= t("editor.#{label}") %><%= " · #{lesson["position"]}. #{lesson["title"]}" if lesson %></p>
+        <% if !before_lesson || !after_lesson || before_lesson["body"] != after_lesson["body"] %>
+          <p class="mt-1 whitespace-pre-wrap wrap-anywhere"><%= lesson ? lesson["body"] : t("editor.absent") %></p>
+        <% end %>
+      <% end %>
+    </div>
+  <% end %>
+  <% if change.before_state["cover_blob_id"] != change.after_state["cover_blob_id"] %>
+    <% [ [ "before", change.before_state ], [ "after", change.after_state ] ].each do |label, state| %>
+      <p class="font-medium"><%= t("editor.#{label}") %></p>
+      <% if state["cover_blob_id"] %>
+        <%= image_tag rails_blob_path(ActiveStorage::Blob.find(state["cover_blob_id"])), alt: t("editor.cover_preview"), class: "aspect-video w-full rounded-field object-cover", loading: "lazy" %>
+      <% else %><p><%= t("editor.absent") %></p><% end %>
+    <% end %>
+  <% end %>
+</div>

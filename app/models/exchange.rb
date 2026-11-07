@@ -3,6 +3,9 @@ class Exchange < ApplicationRecord
   MAX_SELECTION_LENGTH = 2000
 
   belongs_to :conversation
+  has_many :assistant_activities, dependent: :destroy
+  has_many :course_changes, dependent: :restrict_with_exception
+  has_many :draft_cover_requests, dependent: :restrict_with_exception
   store_accessor :lesson_context, :selected_text
 
   enum :status, %w[queued running recovering completed failed cancelled uncertain].index_with(&:itself)
@@ -36,14 +39,24 @@ class Exchange < ApplicationRecord
     with_lock do
       return unless pending?
       if cancel_requested_at?
-        update!(status: :cancelled)
+        update!(status: :cancelled, editor_token_digest: nil)
       else
-        update!(status: state, **attributes)
+        update!(status: state, editor_token_digest: nil, **attributes)
       end
     end
   end
 
   def cancel!
+    if conversation.mode == "editor"
+      Drafts::Access.synchronize(conversation.course) do
+        with_lock do
+          update!(editor_token_digest: nil, cancel_requested_at: Time.current,
+            status: running? ? :running : (pending? ? :cancelled : status))
+          draft_cover_requests.pending.find_each(&:cancel!)
+        end
+      end
+      return
+    end
     with_lock do
       if queued?
         update!(status: :cancelled)

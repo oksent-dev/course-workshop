@@ -70,7 +70,10 @@ class CourseCoverGenerationJobTest < ActiveSupport::TestCase
     @ai.enabled = true
     @cover.retry!(1)
     blob_id = nil
-    @adapter.before_finish = -> { blob_id = CourseCovers::Import.call(course: @cover.course, path: Rails.root.join("db/seeds/images/commute-times.png")).blob.id }
+    @adapter.before_finish = -> do
+      @cover.course.cover.attach(ImageUpload.new(Rails.root.join("db/seeds/images/commute-times.png")).attributes)
+      blob_id = @cover.course.cover.blob.id
+    end
     CourseCoverGenerationJob.perform_now(@cover, 2)
     assert @cover.reload.completed?
     assert_equal 1, ActiveStorage::Attachment.where(record: @cover.course, name: "cover").count

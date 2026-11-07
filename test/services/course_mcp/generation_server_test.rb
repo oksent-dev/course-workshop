@@ -80,11 +80,11 @@ class CourseMcpGenerationServerTest < ActiveSupport::TestCase
 
   test "ordinary authoring and publication cannot change a generation before it completes" do
     error = assert_raises(Drafts::Error) { Drafts::Editor.publish(course_id: @generation.course_id, expected_revision: 0) }
-    assert_equal "generation_incomplete", error.code
+    assert_equal "generation_busy", error.code
     error = assert_raises(Drafts::Error) do
       Drafts::Editor.save_lesson(course_id: @generation.course_id, expected_revision: 0, title: "Outside edit", body: "Text")
     end
-    assert_equal "generation_incomplete", error.code
+    assert_equal "generation_busy", error.code
   end
 
   test "a lesson needs a visual or a complete request for an illustration" do

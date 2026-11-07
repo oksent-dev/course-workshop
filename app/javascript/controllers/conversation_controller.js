@@ -4,7 +4,7 @@ import { Turbo } from "@hotwired/turbo-rails";
 import { readState, saveState, pageContext } from "../assistant_state.js";
 
 export default class extends Controller {
-  static targets = ["transcript", "scroll", "activity", "updates", "contextLabel", "courseTitle", "quoteSource", "loading", "form", "question", "submit", "cancel", "status", "refresh", "quotePreview", "quoteText", "removeQuote"];
+  static targets = ["transcript", "scroll", "activity", "updates", "contextLabel", "courseTitle", "quoteSource", "editorHint", "loading", "form", "question", "submit", "cancel", "status", "refresh", "quotePreview", "quoteText", "removeQuote"];
   static values = { key: String, url: String, networkError: String, sending: String };
 
   connect() {
@@ -108,18 +108,37 @@ export default class extends Controller {
   }
 
   refresh() {
-    if (this.loading || this.submitting) return;
+    if (this.loading || this.submitting || this.actionPending) return;
     this.refreshRequest = this.load(this.urlValue);
     return this.refreshRequest;
   }
 
   updateControls() {
-    this.submitTarget.disabled = !this.ready || this.busy || this.submitting || this.invalidContext || !this.questionTarget.value.trim();
+    this.submitTarget.disabled = !this.ready || this.busy || this.submitting || this.actionPending || this.editorBlocked || this.invalidContext || !this.questionTarget.value.trim();
+  }
+
+  async performAction(event) {
+    if (this.actionPending || this.submitting) return;
+    const button = event.currentTarget;
+    this.actionPending = true;
+    button.disabled = true;
+    this.updateControls();
+    try {
+      await this.refreshRequest;
+      await this.load(button.dataset.url, {
+        method: button.dataset.method || "POST",
+        body: button.dataset.params || "{}",
+      });
+    } finally {
+      this.actionPending = false;
+      if (button.isConnected) button.disabled = false;
+      this.updateControls();
+    }
   }
 
   async send(event) {
     event.preventDefault();
-    if (!this.ready || this.busy || this.submitting || !this.formTarget.reportValidity()) return;
+    if (!this.ready || this.busy || this.submitting || this.actionPending || this.editorBlocked || !this.formTarget.reportValidity()) return;
     const submission = JSON.stringify({
       question: this.questionTarget.value,
       selected_text: this.quotation?.text || "",
@@ -202,11 +221,23 @@ export default class extends Controller {
       }
       this.lessonIds = data.lesson_ids;
       this.overviewUrl = data.overview_url;
+      this.editorBlocked = data.editor_blocked;
+      this.editorHintTarget.textContent = data.editor_hint || "";
+      this.editorHintTarget.hidden = !data.editor_hint;
       this.updatesTarget.hidden = data.version === this.currentContext?.version;
       if (this.transcriptHTML !== data.html) {
         const previous = new Map(Array.from(transcript.querySelectorAll("[data-exchange-id]"),
           item => [item.dataset.exchangeId, item.dataset.exchangeStatus]));
+        const openPreviews = Array.from(transcript.querySelectorAll("details[open][data-change-preview]"), item => item.dataset.changePreview);
+        const previewScroll = new Map(Array.from(transcript.querySelectorAll("[data-preview-scroll]"), item => [item.dataset.previewScroll, item.scrollTop]));
+        const focused = transcript.contains(document.activeElement) ? document.activeElement.dataset.assistantFocus : null;
         transcript.innerHTML = data.html;
+        transcript.querySelectorAll("[data-change-preview]").forEach(item => { item.open = openPreviews.includes(item.dataset.changePreview); });
+        transcript.querySelectorAll("[data-preview-scroll]").forEach(item => { item.scrollTop = previewScroll.get(item.dataset.previewScroll) || 0; });
+        if (focused) {
+          const target = Array.from(transcript.querySelectorAll("[data-assistant-focus]")).find(item => item.dataset.assistantFocus === focused);
+          (target || this.questionTarget).focus({ preventScroll: true });
+        }
         this.transcriptHTML = data.html;
         if (!this.ready && this.opened) {
           fadeUp(transcript.firstElementChild, { duration: 180, distance: 6 });
@@ -230,6 +261,10 @@ export default class extends Controller {
       this.statusTarget.textContent = "";
       this.refreshTarget.classList.add("hidden");
       if (this.opened) this.timer = setTimeout(() => this.refresh(), data.busy ? 1000 : 3000);
+      if (this.opened && data.refresh_requested && !this.updatesTarget.hidden && !this.questionTarget.value.trim() &&
+          !this.quotation && !this.submitting && !this.actionPending && !transcript.querySelector("details[open]") && !window.getSelection()?.toString()) {
+        queueMicrotask(() => { if (this.element.isConnected) this.refreshPage(); });
+      }
       return true;
     } catch (error) {
       if (error.name !== "AbortError") {

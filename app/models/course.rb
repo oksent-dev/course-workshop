@@ -1,7 +1,10 @@
 class Course < ApplicationRecord
   belongs_to :category
+  has_many :lessons, -> { where(archived_at: nil).order(:position) }, inverse_of: :course
+  has_many :all_lessons, class_name: "Lesson", dependent: :destroy
+  has_many :course_changes, dependent: :destroy
+  has_many :draft_cover_requests, dependent: :destroy
   has_many :conversations, dependent: :destroy
-  has_many :lessons, -> { order(:position) }, inverse_of: :course, dependent: :destroy
   has_one :course_generation, dependent: :destroy
   has_one :cover_generation, class_name: "CourseCoverGeneration", dependent: :destroy
   has_one_attached :cover do |attachment|

@@ -6,7 +6,14 @@ class AiRecovery
   end
 
   def call
+    return finish_run(:completed) if @subject.is_a?(DraftCoverRequest) && @subject.reload.completed? && @subject.course_change_id?
     return finish_run(:cancelled) unless current_request?
+
+    if @subject.is_a?(Exchange) && @subject.conversation.mode == "editor"
+      Drafts::Access.synchronize(@subject.conversation.course) do
+        @subject.with_lock { @subject.update!(editor_token_digest: nil) }
+      end
+    end
 
     # Revoke stale generation tools before inspecting committed results.
     if @subject.is_a?(CourseGeneration)
@@ -29,6 +36,8 @@ class AiRecovery
     else
       retry_or_uncertain
     end
+  rescue Drafts::Error => error
+    fail_request(error.code, :failed)
   rescue LocalAi::Error, ImageUpload::InvalidImage, KeyError => error
     Rails.logger.warn("AI history recovery incomplete: #{error.class}")
     retry_or_uncertain
@@ -45,6 +54,8 @@ class AiRecovery
       @subject.running? && @run.operation_key == "#{@subject.attempt}:#{@subject.step}"
     when CourseCoverGeneration
       @subject.running? && @run.operation_key == @subject.attempt.to_s
+    when DraftCoverRequest
+      @subject.pending? && !@subject.cancelled_by_exchange?
     else
       false
     end
@@ -95,6 +106,11 @@ class AiRecovery
         @subject.complete!(@subject.attempt, upload: upload)
         finish_run(:completed)
       end
+    when DraftCoverRequest
+      upload = Codex::CoverGenerator.new.upload_from_history(turn)
+      @subject.update!(expires_at: 1.minute.from_now) if current_request?
+      @subject.complete!(upload)
+      finish_run(@subject.reload.status, error_code: @subject.error_code)
     when CourseGeneration
       if @subject.stage == "illustrating"
         upload = Codex::CoverGenerator.new.upload_from_history(turn)
@@ -152,6 +168,8 @@ class AiRecovery
         @subject.finish!(@subject.attempt, status: :failed, error_code: code)
       when CourseCoverGeneration
         @subject.fail!(@subject.attempt, code)
+      when DraftCoverRequest
+        @subject.fail!(code, state: state)
       end
       finish_run(state, error_code: code)
     end

@@ -7,7 +7,7 @@ class FakeTutor
     @answer = "A high note has a higher frequency."
   end
 
-  def reply(exchange, on_thread:, cancelled:, run: nil)
+  def reply(exchange, on_thread:, cancelled:, run: nil, token: nil)
     @calls << {
       question: exchange.question, context: exchange.lesson_context,
       locale: exchange.locale, thread_id: exchange.conversation.reload.runtime_thread_id

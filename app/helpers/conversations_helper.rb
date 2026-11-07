@@ -1,4 +1,9 @@
 module ConversationsHelper
+  def change_preview_value(key, value)
+    return Category.find_by(id: value)&.name if key == "category_id"
+    Array(value).join("\n")
+  end
+
   def assistant_page_context
     return unless @course && LocalAi.available?(request)
     return if @course.draft? && !LocalAuthoring.available?(request)

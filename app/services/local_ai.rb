@@ -25,4 +25,8 @@ module LocalAi
   def self.adapter
     Rails.configuration.x.local_ai.adapter || Codex::Tutor.new
   end
+
+  def self.editor_adapter
+    Rails.configuration.x.local_ai.editor || Codex::Editor.new
+  end
 end
