@@ -16,7 +16,7 @@ class CodexCoverGeneratorTest < ActiveSupport::TestCase
     assert_equal @bytes, upload.attributes[:io].read
     assert_equal CourseCoverGeneration::TIMEOUT, @connection.open_options[:timeout]
     params = @connection.calls.assoc("thread/start").last
-    assert_equal LocalAi::MODEL, params[:model]
+    assert_equal LocalAi::DEFAULT_MODEL, params[:model]
     assert_equal "never", params[:approvalPolicy]
     assert_equal "read-only", params[:sandbox]
     assert_equal true, params[:config]["features.image_generation"]

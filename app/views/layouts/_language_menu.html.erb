@@ -1,4 +1,4 @@
-<details class="relative z-20 order-2 justify-self-end open:z-[60] lg:order-4" data-controller="language-menu"
+<details class="relative z-20 open:z-[60]" data-controller="language-menu"
   data-action="keydown.esc->language-menu#dismiss pointerdown@window->language-menu#closeOutside focusout->language-menu#closeOnBlur turbo:before-cache@document->language-menu#close">
   <summary class="flex min-h-11 cursor-pointer list-none items-center gap-2 rounded-field px-2 text-sm font-medium hover:bg-secondary [&::-webkit-details-marker]:hidden"
     aria-label="<%= t("navigation.change_language", language: t("languages.#{I18n.locale}")) %>" data-language-menu-target="trigger">

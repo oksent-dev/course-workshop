@@ -1,5 +1,5 @@
 module LocalAi
-  MODEL = "gpt-6.1-sol"
+  DEFAULT_MODEL = "gpt-6.1-sol"
   TIMEOUT = 180
 
   class Error < StandardError
@@ -28,5 +28,9 @@ module LocalAi
 
   def self.editor_adapter
     Rails.configuration.x.local_ai.editor || Codex::Editor.new
+  end
+
+  def self.model_catalog
+    Rails.configuration.x.local_ai.model_catalog || Codex::ModelCatalog.new
   end
 end

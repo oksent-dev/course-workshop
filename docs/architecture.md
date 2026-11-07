@@ -88,11 +88,17 @@ The optional floating panel separates interface and transport. The layout render
 
 `Exchange` captures the course ID, description, outline, revision, mode, current lesson ID/body, locale and optional passage at submission. Moving between lessons does not change this snapshot. The passage is limited to 2,000 characters and is not inherited by later questions. The transcript labels saved questions with their original lesson. Course history survives deleting an individual lesson.
 
-`LessonReplyJob` calls a replaceable tutor adapter outside the HTTP request. `Codex::Tutor` manages thread and turn semantics; `Codex::Connection` owns the stdio process, JSON-lines transport, deadline, and cleanup. The adapter pins GPT-6.1 Sol and resumes the conversation's Codex thread for follow-ups. Only final answer text is saved, never raw reasoning or tool events.
+`LessonReplyJob` calls a replaceable tutor adapter outside the HTTP request. `Codex::Tutor` manages thread and turn semantics; `Codex::Connection` owns the stdio process, JSON-lines transport, deadline, and cleanup. The adapter uses the accepted message's model and style preferences and resumes the conversation's Codex thread for follow-ups. Only final answer text is saved, never raw reasoning or tool events.
 
 `AiRun` records each reply, generation step or image attempt with its job ID, operation key, submission marker, runtime IDs, result item IDs and recovery lease. `DurableDispatch` records queue delivery on the subject; the recurring sweep repairs the gap between a primary-database commit and a queue-database enqueue. Repeated jobs cannot claim the same request twice. `AiRecovery` imports a mapped completed turn or reconciles saved generation checkpoints. Unknown results are checked at most three times before becoming explicitly uncertain; recovery never sends a model turn or regenerates an image.
 
 The integration is opt-in and restricted to local development. Production rejects all conversation endpoints. See [local AI](local-ai.md) for access checks, cancellation, data retention, recovery and verification. The separate MCP interface exposes course operations; the lesson tutor continues to disable all MCP tools.
+
+## AI preferences and provenance
+
+`AiSetting` stores the shared local model choice, display label and bounded style instruction with optimistic locking. `SettingsController` validates changed selections against `Codex::ModelCatalog`, which reads the authenticated runtime catalog without starting inference. Codex is the fixed provider and Sol remains the default. The same local access guard protects the page and updates.
+
+`AiConfigured` snapshots preferences when a course request or conversation message is accepted. Generation stages and original images inherit that course request; replacement covers inherit their editor message. Retries and `AiRun` keep the accepted configuration. Each turn carries the style preference, including an explicit reset, under a stable developer policy. Course provenance records the original generation model independently of subsequent editing. See [AI settings](ai-settings.md) for the lifecycle and failure behavior.
 
 ## Development and production
 

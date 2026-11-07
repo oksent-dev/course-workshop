@@ -1,5 +1,6 @@
 class DraftCoverRequest < ApplicationRecord
   include DurableDispatch
+  include AiConfigured
   belongs_to :course
   belongs_to :exchange
   belongs_to :course_change, optional: true
@@ -9,6 +10,7 @@ class DraftCoverRequest < ApplicationRecord
   after_create_commit :enqueue
 
   def pending? = queued? || running? || recovering?
+  private def inherited_ai_configuration = exchange.ai_configuration.presence || super
   def enqueue = dispatch_job!(DraftCoverJob)
   def cancelled_by_exchange? = exchange.reload.cancel_requested_at && exchange.cancel_requested_at >= created_at
 

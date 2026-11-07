@@ -1,10 +1,11 @@
 class AiRun < ApplicationRecord
+  include AiConfigured
   belongs_to :subject, polymorphic: true
   enum :status, %w[running recovering completed failed cancelled uncertain].index_with(&:itself)
   scope :active, -> { where(status: %w[running recovering]) }
 
   def self.start!(subject, operation_key, job_id)
-    create!(subject: subject, operation_key: operation_key, job_id: job_id, lease_until: 8.minutes.from_now)
+    create!(subject: subject, operation_key: operation_key, job_id: job_id, lease_until: 8.minutes.from_now, ai_configuration: subject.ai_configuration)
   end
 
   def record!(**attributes)

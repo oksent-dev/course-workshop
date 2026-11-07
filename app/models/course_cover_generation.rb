@@ -1,5 +1,6 @@
 class CourseCoverGeneration < ApplicationRecord
   include DurableDispatch
+  include AiConfigured
   TIMEOUT = 300
   EXPIRY = 7.minutes
 
@@ -9,6 +10,10 @@ class CourseCoverGeneration < ApplicationRecord
 
   def pending?
     queued? || running?
+  end
+
+  private def inherited_ai_configuration
+    course.course_generation&.ai_configuration.presence || super
   end
 
   def enqueue

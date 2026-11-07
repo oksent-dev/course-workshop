@@ -1,6 +1,6 @@
 # Plan and generate a course
 
-Open **Create a course**, describe your topic and learning goal, and choose Polish or English. GPT-6.1 Sol proposes a title, category, description and lesson outline. It chooses the number of lessons; the form does not ask the learner to estimate it. The application supports 1–60 lessons per course, matching the authoring limit.
+Open **Create a course**, describe your topic and learning goal, and choose Polish or English. The selected model proposes a title, category, description and lesson outline. It chooses the number of lessons; the form does not ask the learner to estimate it. The application supports 1–60 lessons per course, matching the authoring limit.
 
 **Approve plan and generate lessons** starts writing. Planning never grants permission to write lessons: the server enforces the approval boundary. Completed courses still remain drafts until separately reviewed and added to the library.
 
@@ -79,7 +79,7 @@ Successful course completion atomically reserves an independent `CourseCoverGene
 
 Every distinct mutation requires a UUID `request_key`. The existing `DraftOperation` receipt protects identical retries; conflicting reuse is rejected. The token and generation ID travel only through the scoped child environment; PostgreSQL stores a digest. Every tool checks running state, expiry, token and local enablement, including receipt replay. A token cannot authorize plan approval or publication.
 
-Text sessions enable only their MCP allow list and live web search. Image sessions enable only native image generation and receive a bounded visual brief. Both pin `gpt-6.1-sol`, disable unrelated MCP servers, shell, apps, plugins, project instructions and hooks, and use a read-only sandbox. Session-only MCP approval authorizes writes within the submitted workflow; global Codex configuration is unchanged. Unexpected interactive requests are rejected.
+Text sessions enable only their MCP allow list and live web search. Image sessions enable only native image generation and receive a bounded visual brief. Both use the generation request's saved model and style preferences, disable unrelated MCP servers, shell, apps, plugins, project instructions and hooks, and use a read-only sandbox. Session-only MCP approval authorizes writes within the submitted workflow; global Codex configuration is unchanged. Unexpected interactive requests are rejected.
 
 HTTP actions require both feature flags, development/test and loopback host/client addresses. Production rejects them regardless of flags. This is one local workspace, not a multi-tenant permission system. Topics are filtered from HTTP logs; local SQL logs and Codex history may contain course material and should stay outside Git.
 

@@ -1,8 +1,10 @@
 class FakeCodexProtocol
   attr_reader :calls, :open_options
+  attr_accessor :models
 
   def initialize
     @calls = []
+    @models = [ { "model" => LocalAi::DEFAULT_MODEL, "supportedReasoningEfforts" => [ { "reasoningEffort" => "low" } ] } ]
   end
 
   def open(**options)
@@ -18,10 +20,10 @@ class FakeCodexProtocol
     @calls << [ method, params ]
     case method
     when "account/read" then { "requiresOpenaiAuth" => true, "account" => { "type" => "chatgpt" } }
-    when "model/list" then { "data" => [ { "model" => LocalAi::MODEL } ] }
+    when "model/list" then { "data" => models }
     when "config/read" then { "config" => { "mcp_servers" => { "example" => {} }, "plugins" => { "example@local" => {} } } }
     when "modelProvider/capabilities/read" then { "imageGeneration" => true }
-    when "thread/start", "thread/resume" then { "model" => LocalAi::MODEL, "thread" => { "id" => "thread-1" } }
+    when "thread/start", "thread/resume" then { "model" => params.fetch(:model), "thread" => { "id" => "thread-1" } }
     when "turn/start" then { "turn" => { "id" => "turn-1" } }
     end
   end

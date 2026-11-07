@@ -42,7 +42,8 @@ module Codex
 
     def generate(generation, token:, cancelled:, run: nil)
       @connection.open(cancelled: cancelled, timeout: CourseGeneration::TIMEOUT) do |connection|
-        Runtime.verify(connection)
+        model = generation.ai_model
+        metadata = Runtime.verify(connection, model: model)
         config = Runtime.restricted_config(connection).merge(
           "web_search" => "live",
           "mcp_servers.course_generation.command" => RbConfig.ruby,
@@ -58,15 +59,16 @@ module Codex
           "mcp_servers.course_generation.default_tools_approval_mode" => "approve",
           "mcp_servers.course_generation.startup_timeout_sec" => 30
         )
-        thread = connection.rpc("thread/start", model: LocalAi::MODEL, approvalPolicy: "never", sandbox: "read-only",
+        thread = connection.rpc("thread/start", model: model, approvalPolicy: "never", sandbox: "read-only",
           cwd: Rails.root.join("tmp/codex-workspace").to_s, config: config,
-          baseInstructions: INSTRUCTIONS, developerInstructions: "")
-        raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == LocalAi::MODEL
+          baseInstructions: INSTRUCTIONS, developerInstructions: Runtime.style_policy)
+        raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == model
         thread_id = thread.fetch("thread").fetch("id")
         run&.record!(thread_id: thread_id)
         run&.submitted!
-        turn = connection.rpc("turn/start", threadId: thread_id, model: LocalAi::MODEL, effort: "low",
-          input: [ { type: "text", text: JSON.generate(app_request_id: run&.id&.to_s, topic: generation.topic, language: generation.language, stage: generation.stage, current_position: generation.current_position) } ])
+        turn = connection.rpc("turn/start", threadId: thread_id, model: model, effort: Runtime.reasoning_effort(metadata),
+          input: [ { type: "text", text: JSON.generate(app_request_id: run&.id&.to_s, topic: generation.topic, language: generation.language,
+            response_style: generation.ai_configuration.fetch("style_instructions", ""), stage: generation.stage, current_position: generation.current_position) } ])
         turn_id = turn.fetch("turn").fetch("id")
         run&.record!(turn_id: turn_id)
         await_completion(connection, thread_id, turn_id, generation, token)

@@ -23,13 +23,14 @@ module Codex
 
     def reply(exchange, on_thread:, cancelled:, run: nil)
       @connection.open(cancelled: cancelled, timeout: timeout) do |connection|
-        Runtime.verify(connection)
+        model = exchange.ai_model
+        metadata = Runtime.verify(connection, model: model)
         config = configuration(connection)
         conversation = exchange.conversation.reload
         params = {
-          model: LocalAi::MODEL, approvalPolicy: "never", sandbox: "read-only",
+          model: model, approvalPolicy: "never", sandbox: "read-only",
           cwd: Rails.root.join("tmp", "codex-workspace").to_s,
-          baseInstructions: instructions, developerInstructions: "", config: config
+          baseInstructions: instructions, developerInstructions: Runtime.style_policy, config: config
         }
         restored = false
         begin
@@ -45,14 +46,14 @@ module Codex
           run&.record!(thread_replaced: true)
           thread = connection.rpc("thread/start", **params)
         end
-        raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == LocalAi::MODEL
+        raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == model
 
         thread_id = thread.fetch("thread").fetch("id")
         run&.record!(thread_id: thread_id)
         on_thread.call(thread_id)
         run&.submitted!
         turn = connection.rpc(
-          "turn/start", threadId: thread_id, model: LocalAi::MODEL, effort: "low",
+          "turn/start", threadId: thread_id, model: model, effort: Runtime.reasoning_effort(metadata),
           input: [ { type: "text", text: prompt(exchange, run: run, restored: restored) } ]
         )
         turn_id = turn.fetch("turn").fetch("id")
@@ -74,6 +75,7 @@ module Codex
       JSON.generate(
         app_request_id: run&.id&.to_s,
         response_language: exchange.locale,
+        response_style: exchange.ai_configuration.fetch("style_instructions", ""),
         lesson: exchange.lesson_context,
         question: exchange.question,
         restored_history: restored ? recent_history(exchange) : []

@@ -1,10 +1,10 @@
 # Local course conversations
 
-The shared assistant is available on published course outlines and lessons, generation overviews, and draft lesson previews. It uses **GPT-6.1 Sol** (`gpt-6.1-sol`) with low reasoning effort through a local Codex App Server. Follow-ups resume the stored thread. Saved history belongs to the course, learner profile and mode. The course tutor is read-only; the draft assistant can perform [scoped, recoverable edits](draft-editing.md).
+The shared assistant is available on published course outlines and lessons, generation overviews, and draft lesson previews. It uses the selected model through a local Codex App Server. GPT-6.1 Sol remains the default; [AI settings](ai-settings.md) define model selection, tone preferences and execution snapshots. Follow-ups resume the stored thread. Saved history belongs to the course, learner profile and mode. The course tutor is read-only; the draft assistant can perform [scoped, recoverable edits](draft-editing.md).
 
 ## Enable the tutor
 
-Install Codex CLI and sign in using `codex login`. The account must list `gpt-6.1-sol` in App Server's `model/list` response. The adapter checks this before starting a turn and does not substitute another model.
+Install Codex CLI and sign in using `codex login`. The account must list the selected model in App Server's `model/list` response. The adapter checks this before starting a turn and does not substitute another model.
 
 Add these settings to the private `.env`:
 

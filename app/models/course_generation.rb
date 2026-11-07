@@ -2,6 +2,7 @@ require "digest"
 
 class CourseGeneration < ApplicationRecord
   include DurableDispatch
+  include AiConfigured
   TIMEOUT = 300
   EXPIRY = 7.minutes
   MAX_LESSONS = 60
@@ -19,10 +20,12 @@ class CourseGeneration < ApplicationRecord
     return identical_submission!(existing, input) if existing
 
     transaction do
+      configuration = AiSetting.current.snapshot
       course = Course.new(slug: "generated-#{SecureRandom.uuid}", title: input[:topic].truncate(160),
         description: "Draft awaiting generation.", language: language,
+        generation_provider: configuration.fetch("provider"), generation_model: configuration.fetch("model"), generation_model_name: configuration.fetch("model_name"),
         category: Category.find_or_create_by!(name: "Drafts"))
-      create!(**input, course: course, expires_at: EXPIRY.from_now)
+      create!(**input, course: course, ai_configuration: configuration, expires_at: EXPIRY.from_now)
     end
   rescue ActiveRecord::RecordNotUnique
     existing = find_by(request_key: request_key)

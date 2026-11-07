@@ -1,6 +1,6 @@
 # Recoverable draft editing
 
-The local draft assistant uses GPT-6.1 Sol to improve an existing draft. Ask from its generation overview or a lesson; a selected passage retains its source lesson after navigation. Published courses keep a separate, read-only tutor. Enable both local AI and course authoring, migrate the primary database, and restart `ruby bin/dev` after updating the application.
+The local draft assistant uses the selected AI model to improve an existing draft. Each new message captures the current [AI settings](ai-settings.md); a queued message and its cover request retain that configuration. Ask from its generation overview or a lesson; a selected passage retains its source lesson after navigation. Published courses keep a separate, read-only tutor. Enable both local AI and course authoring, migrate the primary database, and restart `ruby bin/dev` after updating the application.
 
 ## User workflow
 

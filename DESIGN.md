@@ -89,6 +89,14 @@ Course covers use a consistent, quiet editorial illustration style: warm paper, 
 
 Category filters are wrapping links with at least 44 px touch targets, visible selected styling, and `aria-current`. Counts include published courses only. Preserve the selected category in the URL, browser history, and language switch. Category names are catalog content; changing the interface language does not translate them.
 
+## Local settings
+
+Place a labeled 44 px gear control immediately to the right of the language selector. Give it an active sage wash on the settings page; neither Library nor Drafts is active there. Keep the header usable at 320 px by letting the brand wrap and retaining the existing second row for section navigation and course creation.
+
+Use a single quiet form panel, at most 42 rem wide: read-only Codex source, model selector populated from the account, and an optional tone/style textarea. Mark the default model in the picker. Explain the instruction limit, clearing behavior, and when saved settings apply. Keep submitted values visible after validation or stale-save errors. If the model catalog is unavailable, retain the saved choice, explain the state and offer a reload link; allow style-only updates.
+
+Show the original generation model as quiet, localized metadata beneath the course, draft and generation headings when known. Do not label externally authored material with a guessed model or rewrite this credit after later editing.
+
 ## Motion
 
 Use a short fade-up to introduce a new screen, not to pace the learner's reading. Page headings, library filters and result counts, course cards, outlines, lesson articles, and forms enter once when rendered, including Turbo navigation. Animate the lesson article as one surface; scrolling does not hide or reveal individual paragraphs. The site header stays steady. Never transform an ancestor of the fixed chat widget.

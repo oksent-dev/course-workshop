@@ -1,5 +1,6 @@
 class Exchange < ApplicationRecord
   include DurableDispatch
+  include AiConfigured
   MAX_SELECTION_LENGTH = 2000
 
   belongs_to :conversation

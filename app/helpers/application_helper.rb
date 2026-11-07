@@ -9,6 +9,7 @@ module ApplicationHelper
   end
 
   def navigation_section
+    return :settings if controller_name == "settings"
     return :create if controller_name == "generations" && %w[new create].include?(action_name)
     return :drafts if %w[drafts generations].include?(controller_name)
     :library

@@ -20,19 +20,22 @@ module Codex
 
     def generate(course, cancelled:, brief: nil, run: nil)
       @connection.open(cancelled: cancelled, timeout: CourseCoverGeneration::TIMEOUT) do |connection|
-        Runtime.verify(connection)
+        configuration = run&.ai_configuration.presence || course.course_generation&.ai_configuration.presence || AiSetting.current.snapshot
+        model = configuration.fetch("model")
+        metadata = Runtime.verify(connection, model: model)
         capabilities = connection.rpc("modelProvider/capabilities/read")
         raise LocalAi::Error, "image_unavailable" unless capabilities["imageGeneration"]
         config = Runtime.restricted_config(connection).merge("features.image_generation" => true)
-        thread = connection.rpc("thread/start", model: LocalAi::MODEL, approvalPolicy: "never", sandbox: "read-only",
+        thread = connection.rpc("thread/start", model: model, approvalPolicy: "never", sandbox: "read-only",
           cwd: Rails.root.join("tmp/codex-workspace").to_s, config: config,
-          baseInstructions: @instructions, developerInstructions: "")
-        raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == LocalAi::MODEL
+          baseInstructions: @instructions, developerInstructions: Runtime.style_policy)
+        raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == model
         thread_id = thread.fetch("thread").fetch("id")
         run&.record!(thread_id: thread_id)
         run&.submitted!
-        input = (brief || { title: course.title, description: course.description, category: course.category.name }).merge(app_request_id: run&.id&.to_s)
-        turn = connection.rpc("turn/start", threadId: thread_id, model: LocalAi::MODEL, effort: "low",
+        input = (brief || { title: course.title, description: course.description, category: course.category.name })
+          .merge(app_request_id: run&.id&.to_s, response_style: configuration.fetch("style_instructions", ""))
+        turn = connection.rpc("turn/start", threadId: thread_id, model: model, effort: Runtime.reasoning_effort(metadata),
           input: [ { type: "text", text: JSON.generate(input) } ])
         turn_id = turn.fetch("turn").fetch("id")
         run&.record!(turn_id: turn_id)
