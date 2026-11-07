@@ -1,6 +1,7 @@
 require "digest"
 
 class CourseGeneration < ApplicationRecord
+  include DurableDispatch
   TIMEOUT = 300
   EXPIRY = 7.minutes
   MAX_LESSONS = 60
@@ -44,7 +45,7 @@ class CourseGeneration < ApplicationRecord
 
   def claim!(expected_attempt, expected_step = step)
     with_lock do
-      return unless queued? && attempt == expected_attempt && step == expected_step && expires_at.future?
+      return unless queued? && attempt == expected_attempt && step == expected_step
       token = SecureRandom.hex(32)
       update!(status: :running, token_digest: Digest::SHA256.hexdigest(token), expires_at: EXPIRY.from_now,
         activity: stage, activity_at: Time.current)
@@ -69,15 +70,20 @@ class CourseGeneration < ApplicationRecord
     with_lock do
       return false unless (failed? || cancelled?) && attempt == expected_attempt && course.draft?
       next_state = plan.any? && !plan_approved_at ? :awaiting_approval : :queued
-      update!(status: next_state, attempt: attempt + 1, error_code: nil, token_digest: nil, expires_at: EXPIRY.from_now)
+      update!(status: next_state, attempt: attempt + 1, error_code: nil, token_digest: nil,
+        enqueued_job_id: nil, enqueued_at: nil, expires_at: EXPIRY.from_now)
       queue_next_step! if plan_approved_at
       true
     end
   end
 
   def expire_stale!
+    if (run = ai_runs.active.find_by(operation_key: "#{attempt}:#{step}"))
+      AiRecoveryJob.perform_later(run) if run.recoverable_now?
+      return
+    end
     with_lock do
-      update!(status: :failed, error_code: "timeout", token_digest: nil) if pending? && expires_at.past?
+      update!(status: :failed, error_code: "timeout", token_digest: nil) if running? && expires_at.past?
     end
   end
 
@@ -167,12 +173,14 @@ class CourseGeneration < ApplicationRecord
   def queue_next_step!
     if illustration_prompt.present?
       update!(status: :queued, stage: "illustrating", step: step + 1, token_digest: nil,
+        enqueued_job_id: nil, enqueued_at: nil,
         expires_at: EXPIRY.from_now, activity: "queued", activity_at: Time.current)
       return true
     end
     saved = course.lessons.pluck(:position)
     position = (1..lesson_count).find { |number| !saved.include?(number) }
     update!(status: :queued, stage: position ? "writing" : "checking", current_position: position,
+      enqueued_job_id: nil, enqueued_at: nil,
       step: step + 1, token_digest: nil, expires_at: EXPIRY.from_now, activity: "queued", activity_at: Time.current)
     true
   end

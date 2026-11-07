@@ -1,5 +1,5 @@
 class Lesson < ApplicationRecord
-  has_many :conversations, dependent: :destroy
+  has_many :conversations, dependent: :nullify
   has_many :lesson_images, dependent: :destroy
   has_many :lesson_progresses, dependent: :destroy
   belongs_to :course

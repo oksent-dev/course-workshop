@@ -46,6 +46,8 @@ The library uses `?category=ID` for filtering. Counts are computed from publishe
 
 Additional interactive components remain possible extensions.
 
+The [course assistant design](course-assistant.md) separates the implemented history/recovery foundation from the planned shared tutor/editor interface, draft tools and activity cards. Course-level history and durable execution are available. The current panel still opens from published lessons and the tutor remains read-only.
+
 Generated content is treated as input: HTML output is sanitized, and interactive blocks use validated data rather than arbitrary generated JavaScript.
 
 ## Draft authoring
@@ -68,7 +70,7 @@ Publication is a human action in the local preview, outside the MCP tool set. Se
 
 `Codex::CourseGenerator` uses the shared `Codex::Runtime` restrictions, then enables live web search and a dedicated `CourseMcp::GenerationServer`. This server is bound to one generation and a revocable step token. Planning and each lesson run as separate jobs and fresh threads. Only the current approved position is writable, with the same validation and receipts as ordinary authoring. A database step number guards duplicate/late delivery. No course identifier supplied by the model can change the scope.
 
-Cancellation revokes the token immediately. Resume starts a new attempt and thread while retaining the draft, plan and existing lesson IDs. Completeness is checked in the application before the draft becomes eligible for human approval. The development queue remains Async; expired records require an explicit resume. See [course generation](course-generation.md) for lifecycle, limits and recovery.
+Cancellation revokes the token immediately. Explicit resume starts a new attempt and thread while retaining the draft, plan and existing lesson IDs. Completeness is checked before approval. Development uses Solid Queue with a separate database and worker. Recovery checks committed material before starting another step; an uncertain result requires explicit resume. See [course generation](course-generation.md) for lifecycle, limits and recovery.
 
 Each generated lesson needs a table, math block, diagram or attached image in its main material. A paired illustration brief/alternative text can reserve a separate image step after saving the lesson text. `Codex::LessonIllustrator` reuses the restricted image transport with an educational brief. The result becomes a local `LessonImage`; its reference is appended only after validated attachment. Image failures retain the text and retry the image step. Checking every lesson and its visual precedes final completion.
 
@@ -80,11 +82,15 @@ Completed form generations reserve a `CourseCoverGeneration` in the completion t
 
 The optional floating lesson panel separates interface and transport. `LessonChatController` opens a non-modal dialog, manages focus and viewport placement, and captures text selected within the current lesson body. `ConversationController` submits questions and polls Rails for saved outcomes while open, retaining an unsent question and optional quote across panel close/reopen. Navigation creates a fresh widget for the new lesson.
 
-`ConversationsController` resolves the lesson through its course, then scopes the conversation to a random key in the browser session. `Conversation` owns ordered `Exchange` records containing question, lesson snapshot, answer, and status. An optional `selected_text` key in that snapshot preserves the submitted passage for the transcript and tutor. `Exchange` limits it to 2,000 characters. Subsequent questions do not inherit the selection automatically.
+`ConversationsController` resolves the lesson through its course, then uses `LearnerContext` to find a course conversation for the current profile and tutor mode. A partial unique index protects this ownership. Legacy lesson conversations retain their IDs, messages and runtime links; only a matching old session key can associate them with a profile. `Conversation#history` includes that profile's retained legacy messages without moving records or merging runtime threads.
+
+`Exchange` captures the course ID, description, outline, revision, mode, current lesson ID/body, locale and optional passage at submission. Moving between lessons does not change this snapshot. The passage is limited to 2,000 characters and is not inherited by later questions. The transcript labels saved questions with their original lesson. Course history survives deleting an individual lesson.
 
 `LessonReplyJob` calls a replaceable tutor adapter outside the HTTP request. `Codex::Tutor` manages thread and turn semantics; `Codex::Connection` owns the stdio process, JSON-lines transport, deadline, and cleanup. The adapter pins GPT-6.1 Sol and resumes the conversation's Codex thread for follow-ups. Only final answer text is saved, never raw reasoning or tool events.
 
-The integration is opt-in and restricted to local development. Production rejects all conversation endpoints. See [local AI](local-ai.md) for access checks, cancellation, data retention, queue limitations, and the verification procedure. The separate MCP interface exposes course operations; the lesson tutor continues to disable all MCP tools.
+`AiRun` records each reply, generation step or image attempt with its job ID, operation key, submission marker, runtime IDs, result item IDs and recovery lease. `DurableDispatch` records queue delivery on the subject; the recurring sweep repairs the gap between a primary-database commit and a queue-database enqueue. Repeated jobs cannot claim the same request twice. `AiRecovery` imports a mapped completed turn or reconciles saved generation checkpoints. Unknown results are checked at most three times before becoming explicitly uncertain; recovery never sends a model turn or regenerates an image.
+
+The integration is opt-in and restricted to local development. Production rejects all conversation endpoints. See [local AI](local-ai.md) for access checks, cancellation, data retention, recovery and verification. The separate MCP interface exposes course operations; the lesson tutor continues to disable all MCP tools.
 
 ## Development and production
 

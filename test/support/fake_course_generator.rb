@@ -25,7 +25,7 @@ class FakeCourseGenerator
     @lesson_count = 3
   end
 
-  def generate(generation, token:, cancelled:)
+  def generate(generation, token:, cancelled:, run: nil)
     @calls << [ generation.stage, generation.current_position ]
     server = CourseMcp::GenerationServer.new(generation_id: generation.id, token: token).build
     if generation.stage == "planning" && generation.reload.plan.empty?

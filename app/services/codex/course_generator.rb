@@ -40,7 +40,7 @@ module Codex
       @connection = connection
     end
 
-    def generate(generation, token:, cancelled:)
+    def generate(generation, token:, cancelled:, run: nil)
       @connection.open(cancelled: cancelled, timeout: CourseGeneration::TIMEOUT) do |connection|
         Runtime.verify(connection)
         config = Runtime.restricted_config(connection).merge(
@@ -63,9 +63,12 @@ module Codex
           baseInstructions: INSTRUCTIONS, developerInstructions: "")
         raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == LocalAi::MODEL
         thread_id = thread.fetch("thread").fetch("id")
+        run&.record!(thread_id: thread_id)
+        run&.submitted!
         turn = connection.rpc("turn/start", threadId: thread_id, model: LocalAi::MODEL, effort: "low",
-          input: [ { type: "text", text: JSON.generate(topic: generation.topic, language: generation.language, stage: generation.stage, current_position: generation.current_position) } ])
+          input: [ { type: "text", text: JSON.generate(app_request_id: run&.id&.to_s, topic: generation.topic, language: generation.language, stage: generation.stage, current_position: generation.current_position) } ])
         turn_id = turn.fetch("turn").fetch("id")
+        run&.record!(turn_id: turn_id)
         await_completion(connection, thread_id, turn_id, generation, token)
       rescue LocalAi::Cancelled, LocalAi::Error
         connection.interrupt(thread_id, turn_id) if thread_id && turn_id

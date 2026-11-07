@@ -4,6 +4,54 @@ require_relative "../support/fake_tutor"
 class LessonConversationSystemTest < ApplicationSystemTestCase
   include ActiveJob::TestHelper
 
+  test "course history survives navigation and a fresh local browser session" do
+    progress = Rails.configuration.x.learning_progress
+    previous = progress.local_profile
+    progress.local_profile = true
+    lesson = lessons(:pitch)
+    visit course_lesson_path(lesson.course, lesson, locale: :en)
+    click_button "Ask about this lesson"
+    fill_in "Your question", with: "Keep my course conversation"
+    click_button "Send question"
+    assert_text "Waiting to start"
+    perform_enqueued_jobs
+    assert_text "A high note has a higher frequency."
+
+    visit course_lesson_path(lesson.course, lessons(:rhythm), locale: :en)
+    click_button "Ask about this lesson"
+    assert_text "Keep my course conversation"
+    assert_selector "[data-exchange-id]", text: lesson.title
+
+    Capybara.reset_sessions!
+    visit course_lesson_path(lesson.course, lesson, locale: :pl)
+    click_button "Zapytaj o tę lekcję"
+    assert_text "Keep my course conversation"
+    assert_text "A high note has a higher frequency."
+  ensure
+    progress.local_profile = previous
+  end
+
+  test "recovery and an uncertain answer are visible without a new model request" do
+    lesson = lessons(:pitch)
+    visit course_lesson_path(lesson.course, lesson, locale: :en)
+    click_button "Ask about this lesson"
+    fill_in "Your question", with: "A question interrupted by restart"
+    click_button "Send question"
+    assert_text "Waiting to start"
+    exchange = Exchange.last
+    exchange.update!(status: :recovering)
+    assert_text "Checking for a saved answer"
+    assert_button "Send question", disabled: true
+    exchange.update!(status: :uncertain, error_code: "uncertain")
+    assert_text "The answer could not be recovered."
+    assert_no_button "Cancel reply"
+    assert_empty @settings.adapter.calls
+    click_button "Close conversation"
+    visit course_lesson_path(lesson.course, lesson, locale: :pl)
+    click_button "Zapytaj o tę lekcję"
+    assert_text "Nie udało się odzyskać odpowiedzi."
+  end
+
   setup do
     @settings = Rails.configuration.x.local_ai
     @previous_enabled, @previous_adapter = @settings.enabled, @settings.adapter
@@ -102,8 +150,10 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     click_button "Remove"
     assert_no_selector "[data-conversation-target='quotePreview']"
     click_button "Close conversation"
+    assert_no_selector "dialog[open]"
 
     select_text(".lesson-content pre code")
+    assert_button "Ask about this passage"
     page.driver.browser.action.key_down(:alt).send_keys(:enter).key_up(:alt).perform
     assert_selector "dialog[open]"
     click_button "Send question"

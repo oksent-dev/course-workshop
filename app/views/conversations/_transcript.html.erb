@@ -6,6 +6,9 @@
       <li class="space-y-3" data-exchange-id="<%= exchange.id %>" data-exchange-status="<%= exchange.status %>">
         <div class="rounded-box bg-secondary p-4">
           <p class="text-sm font-semibold"><%= t("conversation.you") %></p>
+          <% if exchange.lesson_context["title"].present? %>
+            <p class="mt-1 text-sm text-muted-ink"><%= exchange.lesson_context["title"] %></p>
+          <% end %>
           <% if exchange.selected_text.present? %>
             <div class="mt-2 border-s-2 border-primary ps-3 text-sm">
               <p class="font-medium text-muted-ink"><%= t("conversation.selected_passage") %></p>
@@ -18,7 +21,7 @@
           <p class="text-sm font-semibold"><%= t("conversation.tutor") %></p>
           <% if exchange.completed? %>
             <p class="mt-1 whitespace-pre-wrap wrap-anywhere"><%= exchange.answer %></p>
-          <% elsif exchange.failed? %>
+          <% elsif exchange.failed? || exchange.uncertain? %>
             <p class="mt-1 text-error-content"><%= t("conversation.errors.#{exchange.error_code}", default: t("conversation.errors.unavailable")) %></p>
             <p class="mt-1 text-sm text-muted-ink"><%= t("conversation.retry_hint") %></p>
           <% else %>

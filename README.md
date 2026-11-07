@@ -16,7 +16,7 @@ Lessons render Markdown with headings, lists, syntax-highlighted code, links, an
 
 The statistics lesson also includes a KaTeX formula, a Mermaid flow diagram, and a practice exercise with a revealable answer. See [learning blocks](docs/learning-blocks.md) for the supported formats.
 
-An optional local tutor uses GPT-6.1 Sol through Codex App Server. Open the floating chat while reading, or select a lesson passage and attach it to your question. Each saved question retains its quoted passage. See [local AI setup and verification](docs/local-ai.md); AI is disabled by default and unavailable in production.
+An optional local tutor uses GPT-6.1 Sol through Codex App Server. Open the floating chat while reading, or select a lesson passage and attach it to your question. Course history belongs to the learner profile; each question retains its original lesson context and quote. A database queue and bounded recovery checks preserve work across restarts and recover completed replies from Codex history. See [local AI setup and verification](docs/local-ai.md); AI is disabled by default and unavailable in production.
 
 ## Requirements
 
@@ -43,7 +43,7 @@ Open [http://localhost:3000](http://localhost:3000). The application redirects t
 
 Open **Statystyka na co dzień** in the library, then select the first lesson from the course outline. Follow the navigation to the final lesson or jump to a title in the outline. Switching the interface to English keeps the current lesson open and the original Polish text visible.
 
-The development command runs Rails, the JavaScript watcher, and the Tailwind watcher. Stop them with Ctrl+C. If PowerShell does not find Ruby, reopen the terminal after installing RubyInstaller.
+The development command runs Rails, a Solid Queue worker, the JavaScript watcher, and the Tailwind watcher. Stop them with Ctrl+C. The worker uses the threaded supervisor mode on Windows and Linux. Queued jobs persist in the development queue database; a running model request may need recovery after stopping the worker. If PowerShell does not find Ruby, reopen the terminal after installing RubyInstaller.
 
 ## Database and files
 
@@ -81,7 +81,7 @@ Tests use a separate `course_workshop_test` database. Browser tests run headless
 - Tailwind CSS through `tailwindcss-rails`, with daisyUI components in ERB views
 - Rails I18n with English and Polish locale dictionaries
 - Active Storage with the local disk adapter
-- Solid Queue, Solid Cache, and Solid Cable for production infrastructure
+- Solid Queue in development and production; Solid Cache and Solid Cable for production infrastructure
 
 Commonmarker renders lesson Markdown, KaTeX renders math, and Mermaid with DOMPurify renders restricted flow diagrams. The Ruby MCP SDK serves local course-authoring tools. Chart.js is installed for upcoming interactive chart features.
 

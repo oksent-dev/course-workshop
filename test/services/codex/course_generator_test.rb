@@ -22,7 +22,7 @@ class CodexCourseGeneratorTest < ActiveSupport::TestCase
       assert_equal "attempt-token", env["COURSE_GENERATION_TOKEN"]
       turn = connection.calls.assoc("turn/start").last
       payload = JSON.parse(turn[:input].first[:text])
-      assert_equal({ "topic" => "Active Record", "language" => "pl", "stage" => "planning", "current_position" => nil }, payload)
+      assert_equal({ "app_request_id" => nil, "topic" => "Active Record", "language" => "pl", "stage" => "planning", "current_position" => nil }, payload)
       assert_nil connection.calls.assoc("thread/resume")
     end
   end

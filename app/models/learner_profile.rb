@@ -1,5 +1,6 @@
 class LearnerProfile < ApplicationRecord
   has_many :lesson_progresses, dependent: :destroy
+  has_many :conversations, dependent: :destroy
 
   validates :key, format: { with: /\A(?:local|[a-f0-9]{64})\z/ }
 

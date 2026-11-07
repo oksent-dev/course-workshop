@@ -1,5 +1,6 @@
 class Course < ApplicationRecord
   belongs_to :category
+  has_many :conversations, dependent: :destroy
   has_many :lessons, -> { order(:position) }, inverse_of: :course, dependent: :destroy
   has_one :course_generation, dependent: :destroy
   has_one :cover_generation, class_name: "CourseCoverGeneration", dependent: :destroy

@@ -8,8 +8,13 @@ default: &default
   max_connections: <%= ENV.fetch("RAILS_MAX_THREADS", 5) %>
 
 development:
-  <<: *default
-  database: course_workshop_development
+  primary:
+    <<: *default
+    database: course_workshop_development
+  queue:
+    <<: *default
+    database: course_workshop_development_queue
+    migrations_paths: db/queue_migrate
 
 test:
   <<: *default

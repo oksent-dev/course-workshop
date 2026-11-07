@@ -51,7 +51,7 @@ module Codex
       loop do
         message = read_message
         if message["id"] == id
-          raise LocalAi::Error, "unavailable" if message["error"]
+          raise RpcError.new(message["error"]) if message["error"]
           return message.fetch("result")
         end
         handle_notification(message)

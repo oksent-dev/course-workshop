@@ -15,8 +15,8 @@ module Codex
       @generator = generator
     end
 
-    def illustrate(generation, cancelled:)
-      @generator.generate(generation.course, cancelled: cancelled, brief: {
+    def illustrate(generation, cancelled:, run: nil)
+      @generator.generate(generation.course, cancelled: cancelled, run: run, brief: {
         course: generation.course.title, lesson: generation.plan[generation.current_position - 1],
         concept: generation.illustration_prompt, description: generation.illustration_alt
       })

@@ -18,7 +18,7 @@ module Codex
       @instructions = instructions
     end
 
-    def generate(course, cancelled:, brief: nil)
+    def generate(course, cancelled:, brief: nil, run: nil)
       @connection.open(cancelled: cancelled, timeout: CourseCoverGeneration::TIMEOUT) do |connection|
         Runtime.verify(connection)
         capabilities = connection.rpc("modelProvider/capabilities/read")
@@ -29,14 +29,24 @@ module Codex
           baseInstructions: @instructions, developerInstructions: "")
         raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == LocalAi::MODEL
         thread_id = thread.fetch("thread").fetch("id")
+        run&.record!(thread_id: thread_id)
+        run&.submitted!
+        input = (brief || { title: course.title, description: course.description, category: course.category.name }).merge(app_request_id: run&.id&.to_s)
         turn = connection.rpc("turn/start", threadId: thread_id, model: LocalAi::MODEL, effort: "low",
-          input: [ { type: "text", text: JSON.generate(brief || { title: course.title, description: course.description, category: course.category.name }) } ])
+          input: [ { type: "text", text: JSON.generate(input) } ])
         turn_id = turn.fetch("turn").fetch("id")
+        run&.record!(turn_id: turn_id)
         await_image(connection, thread_id, turn_id)
       rescue LocalAi::Cancelled, LocalAi::Error, ImageUpload::InvalidImage
         connection.interrupt(thread_id, turn_id) if thread_id && turn_id
         raise
       end
+    end
+
+    def upload_from_history(turn)
+      item = turn.fetch("items", []).find { |entry| entry["type"] == "imageGeneration" && entry["status"] == "completed" }
+      raise LocalAi::Error, "invalid_image" unless item
+      decode(item)
     end
 
     private

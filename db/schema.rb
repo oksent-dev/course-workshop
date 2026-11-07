@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_091000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_07_180000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -42,6 +42,28 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_091000) do
     t.index ["blob_id", "variation_digest"], name: "index_active_storage_variant_records_uniqueness", unique: true
   end
 
+  create_table "ai_runs", force: :cascade do |t|
+    t.string "subject_type", null: false
+    t.bigint "subject_id", null: false
+    t.string "operation_key", null: false
+    t.string "job_id", null: false
+    t.string "status", default: "running", null: false
+    t.string "thread_id"
+    t.string "turn_id"
+    t.datetime "submitted_at"
+    t.datetime "lease_until", null: false
+    t.integer "recovery_attempts", default: 0, null: false
+    t.jsonb "item_ids", default: [], null: false
+    t.string "error_code"
+    t.boolean "thread_replaced", default: false, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["status", "lease_until"], name: "index_ai_runs_on_status_and_lease_until"
+    t.index ["subject_type", "subject_id", "operation_key"], name: "index_ai_runs_on_subject_type_and_subject_id_and_operation_key", unique: true
+    t.index ["subject_type", "subject_id"], name: "index_ai_runs_on_subject"
+    t.check_constraint "status::text = ANY (ARRAY['running'::character varying, 'recovering'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying, 'uncertain'::character varying]::text[])", name: "ai_runs_valid_status"
+  end
+
   create_table "categories", force: :cascade do |t|
     t.string "name", null: false
     t.datetime "created_at", null: false
@@ -51,12 +73,21 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_091000) do
   end
 
   create_table "conversations", force: :cascade do |t|
-    t.bigint "lesson_id", null: false
-    t.string "browser_key", null: false
+    t.bigint "lesson_id"
+    t.string "browser_key"
     t.string "runtime_thread_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "course_id", null: false
+    t.bigint "learner_profile_id"
+    t.string "mode", default: "tutor", null: false
+    t.boolean "legacy", default: false, null: false
+    t.index ["course_id", "learner_profile_id", "mode"], name: "unique_course_assistant_owner", unique: true, where: "(legacy = false)"
+    t.index ["course_id"], name: "index_conversations_on_course_id"
+    t.index ["learner_profile_id"], name: "index_conversations_on_learner_profile_id"
     t.index ["lesson_id", "browser_key"], name: "index_conversations_on_lesson_id_and_browser_key", unique: true
+    t.check_constraint "legacy OR learner_profile_id IS NOT NULL", name: "conversations_have_owner"
+    t.check_constraint "mode::text = ANY (ARRAY['tutor'::character varying, 'editor'::character varying]::text[])", name: "conversations_valid_mode"
   end
 
   create_table "course_cover_generations", force: :cascade do |t|
@@ -67,9 +98,11 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_091000) do
     t.datetime "expires_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "enqueued_job_id"
+    t.datetime "enqueued_at"
     t.index ["course_id"], name: "index_course_cover_generations_on_course_id", unique: true
     t.check_constraint "attempt > 0", name: "covers_positive_attempt"
-    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying]::text[])", name: "covers_valid_status"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying::text, 'running'::character varying::text, 'completed'::character varying::text, 'failed'::character varying::text])", name: "covers_valid_status"
   end
 
   create_table "course_generations", force: :cascade do |t|
@@ -94,12 +127,14 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_091000) do
     t.datetime "activity_at"
     t.text "illustration_prompt"
     t.string "illustration_alt"
+    t.string "enqueued_job_id"
+    t.datetime "enqueued_at"
     t.index ["course_id"], name: "index_course_generations_on_course_id", unique: true
     t.index ["request_key"], name: "index_course_generations_on_request_key", unique: true
     t.check_constraint "(lesson_count IS NULL OR lesson_count >= 1 AND lesson_count <= 60) AND attempt > 0", name: "generations_valid_limits"
-    t.check_constraint "(stage::text = ANY (ARRAY['planning'::character varying, 'writing'::character varying, 'illustrating'::character varying, 'checking'::character varying]::text[])) AND step >= 0 AND (current_position IS NULL OR current_position >= 1 AND current_position <= 60)", name: "generations_valid_step"
-    t.check_constraint "language::text = ANY (ARRAY['pl'::character varying, 'en'::character varying]::text[])", name: "generations_valid_language"
-    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'awaiting_approval'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "generations_valid_status"
+    t.check_constraint "(stage::text = ANY (ARRAY['planning'::character varying::text, 'writing'::character varying::text, 'illustrating'::character varying::text, 'checking'::character varying::text])) AND step >= 0 AND (current_position IS NULL OR current_position >= 1 AND current_position <= 60)", name: "generations_valid_step"
+    t.check_constraint "language::text = ANY (ARRAY['pl'::character varying::text, 'en'::character varying::text])", name: "generations_valid_language"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying::text, 'running'::character varying::text, 'awaiting_approval'::character varying::text, 'completed'::character varying::text, 'failed'::character varying::text, 'cancelled'::character varying::text])", name: "generations_valid_status"
   end
 
   create_table "courses", force: :cascade do |t|
@@ -115,7 +150,7 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_091000) do
     t.index ["category_id"], name: "index_courses_on_category_id"
     t.index ["slug"], name: "index_courses_on_slug", unique: true
     t.check_constraint "revision >= 0", name: "courses_nonnegative_revision"
-    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying, 'published'::character varying]::text[])", name: "courses_valid_status"
+    t.check_constraint "status::text = ANY (ARRAY['draft'::character varying::text, 'published'::character varying::text])", name: "courses_valid_status"
   end
 
   create_table "draft_operations", force: :cascade do |t|
@@ -139,11 +174,13 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_091000) do
     t.datetime "cancel_requested_at"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "enqueued_job_id"
+    t.datetime "enqueued_at"
     t.index ["conversation_id", "request_key"], name: "index_exchanges_on_conversation_id_and_request_key", unique: true
     t.index ["conversation_id"], name: "index_exchanges_on_conversation_id"
-    t.index ["conversation_id"], name: "one_pending_exchange_per_conversation", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'running'::character varying])::text[]))"
+    t.index ["conversation_id"], name: "one_pending_exchange_per_conversation", unique: true, where: "((status)::text = ANY ((ARRAY['queued'::character varying, 'running'::character varying, 'recovering'::character varying])::text[]))"
     t.check_constraint "char_length(question) >= 1 AND char_length(question) <= 4000", name: "exchanges_question_length"
-    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying]::text[])", name: "exchanges_valid_status"
+    t.check_constraint "status::text = ANY (ARRAY['queued'::character varying, 'running'::character varying, 'recovering'::character varying, 'completed'::character varying, 'failed'::character varying, 'cancelled'::character varying, 'uncertain'::character varying]::text[])", name: "exchanges_valid_status"
   end
 
   create_table "learner_profiles", force: :cascade do |t|
@@ -186,6 +223,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_091000) do
 
   add_foreign_key "active_storage_attachments", "active_storage_blobs", column: "blob_id"
   add_foreign_key "active_storage_variant_records", "active_storage_blobs", column: "blob_id"
+  add_foreign_key "conversations", "courses"
+  add_foreign_key "conversations", "learner_profiles"
   add_foreign_key "conversations", "lessons"
   add_foreign_key "course_cover_generations", "courses"
   add_foreign_key "course_generations", "courses"

@@ -39,11 +39,11 @@ class LessonConversationTest < ActionDispatch::IntegrationTest
     assert_equal false, response.parsed_body["busy"]
   end
 
-  test "conversations are isolated by lesson and browser" do
+  test "course history follows lessons while browser profiles stay isolated" do
     perform_enqueued_jobs { ask("Private question") }
     other = lessons(:rhythm)
     get course_lesson_conversation_path(other.course, other, locale: :en), headers: @local
-    assert_not_includes response.parsed_body["html"], "Private question"
+    assert_includes response.parsed_body["html"], "Private question"
 
     new_browser = open_session
     new_browser.host! "localhost"
@@ -149,17 +149,33 @@ class LessonConversationTest < ActionDispatch::IntegrationTest
     assert_empty @tutor.calls
   end
 
-  test "a restart does not leave an old queued question blocking the conversation forever" do
+  test "a queued question survives downtime and still runs once" do
     ask("Explain pitch")
     exchange = Exchange.last
-    exchange.update!(created_at: 6.minutes.ago)
+    exchange.update!(created_at: 2.days.ago, updated_at: 2.days.ago, enqueued_at: 2.days.ago)
 
     get @path, headers: @local
-    assert exchange.reload.failed?
-    assert_equal "timeout", exchange.error_code
-    assert_equal false, response.parsed_body["busy"]
+    assert exchange.reload.queued?
+    assert_nil exchange.error_code
+    assert_equal true, response.parsed_body["busy"]
     perform_enqueued_jobs
-    assert_empty @tutor.calls
+    assert exchange.reload.completed?
+    assert_equal 1, @tutor.calls.size
+  end
+
+  test "the local profile retains history in a new browser session" do
+    settings = Rails.configuration.x.learning_progress
+    previous = settings.local_profile
+    settings.local_profile = true
+    perform_enqueued_jobs { ask("Remember my question") }
+
+    new_browser = open_session
+    new_browser.host! "localhost"
+    new_browser.get @path, headers: @local
+    assert_includes new_browser.response.parsed_body["html"], "Remember my question"
+    assert_equal "local", Conversation.last.learner_profile.key
+  ensure
+    settings.local_profile = previous
   end
 
   test "questions and model output are escaped" do

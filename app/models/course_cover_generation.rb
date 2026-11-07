@@ -1,4 +1,5 @@
 class CourseCoverGeneration < ApplicationRecord
+  include DurableDispatch
   TIMEOUT = 300
   EXPIRY = 7.minutes
 
@@ -11,15 +12,12 @@ class CourseCoverGeneration < ApplicationRecord
   end
 
   def enqueue
-    current_attempt = attempt
-    fail!(current_attempt, "unavailable") unless CourseCoverGenerationJob.perform_later(self, current_attempt)
-  rescue ActiveJob::EnqueueError
-    fail!(current_attempt, "unavailable")
+    dispatch_job!(CourseCoverGenerationJob) { [ attempt ] }
   end
 
   def claim!(expected_attempt)
     with_lock do
-      return false unless queued? && attempt == expected_attempt && expires_at.future?
+      return false unless queued? && attempt == expected_attempt
       update!(status: :running, expires_at: EXPIRY.from_now)
     end
   end
@@ -44,15 +42,20 @@ class CourseCoverGeneration < ApplicationRecord
   end
 
   def expire_stale!
+    if (run = ai_runs.active.find_by(operation_key: attempt.to_s))
+      AiRecoveryJob.perform_later(run) if run.recoverable_now?
+      return
+    end
     with_lock do
-      update!(status: :failed, error_code: "timeout") if pending? && expires_at.past?
+      update!(status: :failed, error_code: "timeout") if running? && expires_at.past?
     end
   end
 
   def retry!(expected_attempt)
     with_lock do
       return false unless failed? && attempt == expected_attempt
-      update!(status: :queued, attempt: attempt + 1, error_code: nil, expires_at: EXPIRY.from_now)
+      update!(status: :queued, attempt: attempt + 1, error_code: nil,
+        enqueued_job_id: nil, enqueued_at: nil, expires_at: EXPIRY.from_now)
     end
   end
 end

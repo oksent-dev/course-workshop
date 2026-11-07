@@ -10,7 +10,7 @@
   "scripts": {
     "build": "node esbuild.config.mjs",
     "build:css": "ruby bin/rails tailwindcss:build",
-    "dev": "concurrently --kill-others --names web,js,css \"ruby bin/rails server -b 127.0.0.1\" \"npm run build -- --watch\" \"ruby bin/rails tailwindcss:watch\""
+    "dev": "concurrently --kill-others --names web,jobs,js,css \"ruby bin/rails server -b 127.0.0.1\" \"ruby bin/jobs --mode async\" \"npm run build -- --watch\" \"ruby bin/rails tailwindcss:watch\""
   },
   "dependencies": {
     "@hotwired/stimulus": "3.2.2",

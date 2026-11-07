@@ -1,4 +1,5 @@
 class ConversationsController < ApplicationController
+  include LearnerContext
   before_action :require_local_ai
   before_action :set_conversation
 
@@ -14,23 +15,19 @@ class ConversationsController < ApplicationController
       question: input[:question],
       request_key: input[:request_key],
       selected_text: input[:selected_text],
+      lesson: @lesson,
       locale: I18n.locale.to_s
     )
-    if exchange.previously_new_record? && !LessonReplyJob.perform_later(exchange)
-      exchange.update!(status: :failed, error_code: "unavailable")
-    end
+    exchange.enqueue if exchange.previously_new_record?
     render_conversation
   rescue Conversation::Busy
     render json: { error: t("conversation.busy") }, status: :conflict
   rescue ActiveRecord::RecordInvalid
     render json: { error: t("conversation.invalid") }, status: :unprocessable_content
-  rescue ActiveJob::EnqueueError
-    exchange.update!(status: :failed, error_code: "unavailable")
-    render_conversation
   end
 
   def destroy
-    @conversation.exchanges.find(params[:id]).cancel!
+    @conversation.history.find(params[:id]).cancel!
     render_conversation
   end
 
@@ -42,13 +39,13 @@ class ConversationsController < ApplicationController
 
   def set_conversation
     course = Course.published.find_by!(slug: params[:course_slug])
-    lesson = course.lessons.find(params[:lesson_id])
-    browser_key = session[:lesson_chat_key] ||= SecureRandom.hex(32)
-    @conversation = lesson.conversations.find_or_create_by!(browser_key: browser_key)
+    @lesson = course.lessons.find(params[:lesson_id])
+    @conversation = Conversation.for_course!(course: course, learner: current_learner_profile,
+      browser_key: session[:lesson_chat_key])
   end
 
   def render_conversation
-    exchanges = @conversation.exchanges.to_a
+    exchanges = @conversation.history.to_a
     pending = exchanges.find(&:pending?)
     render json: {
       html: render_to_string(partial: "conversations/transcript", formats: [ :html ], locals: { exchanges: exchanges }),
