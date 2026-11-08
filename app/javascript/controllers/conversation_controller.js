@@ -4,8 +4,8 @@ import { Turbo } from "@hotwired/turbo-rails";
 import { readState, saveState, pageContext } from "../assistant_state.js";
 
 export default class extends Controller {
-  static targets = ["transcript", "scroll", "activity", "updates", "contextLabel", "courseTitle", "quoteSource", "editorHint", "loading", "form", "question", "submit", "cancel", "status", "refresh", "quotePreview", "quoteText", "removeQuote"];
-  static values = { key: String, url: String, networkError: String, sending: String };
+  static targets = ["transcript", "scroll", "activity", "updates", "contextLabel", "courseTitle", "quoteSource", "editorHint", "loading", "older", "olderButton", "olderStatus", "form", "question", "submit", "cancel", "status", "refresh", "quotePreview", "quoteText", "removeQuote"];
+  static values = { key: String, url: String, networkError: String, sending: String, olderError: String };
 
   connect() {
     if (!this.initialized) {
@@ -14,7 +14,6 @@ export default class extends Controller {
       this.lastSubmission = state.lastSubmission;
       this.questionTarget.value = state.question || "";
       this.quotation = state.quotation || null;
-      this.restoredScroll = state.scroll;
       this.busy = false;
       this.ready = false;
       this.initialized = true;
@@ -42,7 +41,20 @@ export default class extends Controller {
     this.courseTitleTarget.textContent = context.title;
     this.courseTitleTarget.lang = context.language;
     this.updatesTarget.hidden = true;
-    if (this.opened) this.refresh();
+    if (this.navigating) {
+      requestAnimationFrame(() => {
+        if (!this.element.isConnected) return;
+        this.scrollTarget.scrollTop = this.navigationScroll;
+        this.lastScrollTop = this.scrollTarget.scrollTop;
+        this.navigating = false;
+        if (this.opened) this.refresh();
+      });
+    } else if (this.opened) this.refresh();
+  }
+
+  beforeNavigate() {
+    this.navigationScroll = this.scrollTarget.scrollTop;
+    this.navigating = true;
   }
 
   input() {
@@ -50,11 +62,16 @@ export default class extends Controller {
     this.updateControls();
   }
 
+  keydown(event) {
+    if (event.key !== "Enter" || event.shiftKey || event.ctrlKey || event.altKey || event.metaKey || event.isComposing || event.keyCode === 229) return;
+    event.preventDefault();
+    if (!event.repeat && !this.submitTarget.disabled) this.formTarget.requestSubmit(this.submitTarget);
+  }
+
   save() {
     saveState(this.keyValue, {
       question: this.questionTarget.value, quotation: this.quotation,
       requestKey: this.requestKey, lastSubmission: this.lastSubmission,
-      scroll: this.ready ? this.scrollTarget.scrollTop : this.restoredScroll,
     });
   }
 
@@ -72,6 +89,8 @@ export default class extends Controller {
 
   open() {
     this.opened = true;
+    this.jumpToLatest = true;
+    if (this.ready) this.scrollToLatest();
     this.refresh();
   }
 
@@ -108,13 +127,79 @@ export default class extends Controller {
   }
 
   refresh() {
-    if (this.loading || this.submitting || this.actionPending) return;
+    if (this.loading || this.submitting || this.actionPending || this.navigating) return;
     this.refreshRequest = this.load(this.urlValue);
     return this.refreshRequest;
   }
 
+  scrolled() {
+    if (this.navigating) return;
+    const upward = this.scrollTarget.scrollTop < this.lastScrollTop;
+    this.lastScrollTop = this.scrollTarget.scrollTop;
+    if (this.scrollTarget.scrollTop >= 64) this.olderRequested = false;
+    else if (upward && !this.olderFailed) {
+      this.olderRequested = true;
+      this.loadOlder();
+    }
+  }
+
+  loadOlder() {
+    if (!this.opened || !this.ready || !this.nextBefore || this.loading || this.submitting || this.actionPending) return;
+    this.olderRequested = false;
+    this.olderFailed = false;
+    this.refreshRequest = this.load(this.urlValue, {}, true);
+    return this.refreshRequest;
+  }
+
+  historyUrl(url, older) {
+    const result = new URL(url, window.location.href);
+    if (older) result.searchParams.set("before", this.nextBefore);
+    else {
+      const first = this.transcriptTarget.querySelector("[data-exchange-id]");
+      if (first) result.searchParams.set("from", first.dataset.exchangeId);
+    }
+    return result;
+  }
+
+  updateHistoryControls() {
+    this.olderTarget.hidden = !this.nextBefore;
+    this.olderButtonTarget.disabled = this.loading || this.submitting || this.actionPending;
+    this.olderButtonTarget.textContent = this.loadingOlder ? this.olderButtonTarget.dataset.loadingLabel : this.olderButtonTarget.dataset.label;
+    this.olderStatusTarget.textContent = this.olderFailed ? this.olderErrorValue : "";
+  }
+
+  scrollAnchor() {
+    const top = this.scrollTarget.getBoundingClientRect().top;
+    const item = Array.from(this.transcriptTarget.querySelectorAll("[data-exchange-id]"))
+      .find(item => item.getBoundingClientRect().bottom > top);
+    return { id: item?.dataset.exchangeId, offset: item ? item.getBoundingClientRect().top - top : 0, scroll: this.scrollTarget.scrollTop };
+  }
+
+  restoreAnchor(anchor) {
+    const item = anchor.id && this.transcriptTarget.querySelector(`[data-exchange-id="${anchor.id}"]`);
+    if (item) this.scrollTarget.scrollTop += item.getBoundingClientRect().top - this.scrollTarget.getBoundingClientRect().top - anchor.offset;
+    else this.scrollTarget.scrollTop = anchor.scroll;
+    this.lastScrollTop = this.scrollTarget.scrollTop;
+  }
+
+  scrollToLatest() {
+    this.scrollTarget.scrollTop = this.scrollTarget.scrollHeight;
+    this.lastScrollTop = this.scrollTarget.scrollTop;
+  }
+
+  prependHistory(html) {
+    const template = document.createElement("template");
+    template.innerHTML = html;
+    const existing = new Set(Array.from(this.transcriptTarget.querySelectorAll("[data-exchange-id]"), item => item.dataset.exchangeId));
+    const items = Array.from(template.content.querySelectorAll("[data-exchange-id]"))
+      .filter(item => !existing.has(item.dataset.exchangeId));
+    this.transcriptTarget.querySelector("ol")?.prepend(...items);
+    this.transcriptHTML = null;
+  }
+
   updateControls() {
     this.submitTarget.disabled = !this.ready || this.busy || this.submitting || this.actionPending || this.editorBlocked || this.invalidContext || !this.questionTarget.value.trim();
+    this.updateHistoryControls();
   }
 
   async performAction(event) {
@@ -138,7 +223,7 @@ export default class extends Controller {
 
   async send(event) {
     event.preventDefault();
-    if (!this.ready || this.busy || this.submitting || this.actionPending || this.editorBlocked || !this.formTarget.reportValidity()) return;
+    if (!this.ready || this.busy || this.submitting || this.actionPending || this.editorBlocked || this.invalidContext || !this.questionTarget.value.trim() || !this.formTarget.reportValidity()) return;
     const submission = JSON.stringify({
       question: this.questionTarget.value,
       selected_text: this.quotation?.text || "",
@@ -183,9 +268,10 @@ export default class extends Controller {
     if (this.cancelUrl && !this.loading) await this.load(this.cancelUrl, { method: "DELETE" });
   }
 
-  async load(url, options = {}) {
+  async load(url, options = {}, older = false) {
     clearTimeout(this.timer);
     this.loading = true;
+    this.loadingOlder = older;
     if (!this.ready) {
       if (this.hasLoadingTarget) this.loadingTarget.hidden = false;
       this.scrollTarget.setAttribute("aria-busy", "true");
@@ -194,7 +280,7 @@ export default class extends Controller {
     this.cancelTarget.disabled = true;
     this.abortController = new AbortController();
     try {
-      const response = await fetch(url, {
+      const response = await fetch(this.historyUrl(url, older), {
         ...options,
         signal: this.abortController.signal,
         headers: {
@@ -214,7 +300,8 @@ export default class extends Controller {
       }
       const transcript = this.transcriptTarget;
       const scroll = this.scrollTarget;
-      const followLatest = (!this.ready && this.restoredScroll == null) || options.method === "POST" || (this.ready && scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 64);
+      const followLatest = !older && (!this.ready || this.jumpToLatest || this.submitting || scroll.scrollHeight - scroll.scrollTop - scroll.clientHeight < 64);
+      const anchor = this.scrollAnchor();
       if (this.activityHTML !== data.activity_html) {
         this.activityTarget.innerHTML = data.activity_html || "";
         this.activityHTML = data.activity_html;
@@ -225,7 +312,9 @@ export default class extends Controller {
       this.editorHintTarget.textContent = data.editor_hint || "";
       this.editorHintTarget.hidden = !data.editor_hint;
       this.updatesTarget.hidden = data.version === this.currentContext?.version;
-      if (this.transcriptHTML !== data.html) {
+      if (older) {
+        this.prependHistory(data.html);
+      } else if (this.transcriptHTML !== data.html) {
         const previous = new Map(Array.from(transcript.querySelectorAll("[data-exchange-id]"),
           item => [item.dataset.exchangeId, item.dataset.exchangeStatus]));
         const openPreviews = Array.from(transcript.querySelectorAll("details[open][data-change-preview]"), item => item.dataset.changePreview);
@@ -250,10 +339,14 @@ export default class extends Controller {
             }
           });
         }
-        if (followLatest) scroll.scrollTop = scroll.scrollHeight;
-        else if (!this.ready && this.restoredScroll != null) scroll.scrollTop = this.restoredScroll;
       }
+      this.nextBefore = data.next_before;
+      this.updateHistoryControls();
+      if (followLatest) this.scrollToLatest();
+      else this.restoreAnchor(anchor);
+      if (!older) this.jumpToLatest = false;
       this.busy = data.busy;
+      this.cancelling = data.cancelling;
       this.ready = true;
       this.cancelUrl = data.cancel_url;
       this.cancelTarget.classList.toggle("hidden", !data.busy);
@@ -261,22 +354,29 @@ export default class extends Controller {
       this.statusTarget.textContent = "";
       this.refreshTarget.classList.add("hidden");
       if (this.opened) this.timer = setTimeout(() => this.refresh(), data.busy ? 1000 : 3000);
-      if (this.opened && data.refresh_requested && !this.updatesTarget.hidden && !this.questionTarget.value.trim() &&
+      if (!older && this.opened && data.refresh_requested && !this.updatesTarget.hidden && !this.questionTarget.value.trim() &&
           !this.quotation && !this.submitting && !this.actionPending && !transcript.querySelector("details[open]") && !window.getSelection()?.toString()) {
         queueMicrotask(() => { if (this.element.isConnected) this.refreshPage(); });
       }
       return true;
     } catch (error) {
       if (error.name !== "AbortError") {
-        this.statusTarget.textContent = error.userFacing ? error.message : this.networkErrorValue;
-        this.refreshTarget.classList.remove("hidden");
+        if (older) this.olderFailed = true;
+        else {
+          this.statusTarget.textContent = error.userFacing ? error.message : this.networkErrorValue;
+          this.refreshTarget.classList.remove("hidden");
+        }
       }
+      if (older && this.opened) this.timer = setTimeout(() => this.refresh(), this.busy ? 1000 : 3000);
       return false;
     } finally {
       this.loading = false;
+      this.loadingOlder = false;
+      this.cancelTarget.disabled = this.cancelling;
       this.scrollTarget.setAttribute("aria-busy", "false");
       if (this.hasLoadingTarget) this.loadingTarget.hidden = true;
       this.updateControls();
+      if (this.olderRequested && this.scrollTarget.scrollTop < 64) queueMicrotask(() => this.loadOlder());
     }
   }
 }

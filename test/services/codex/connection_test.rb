@@ -1,6 +1,13 @@
 require "test_helper"
 
 class CodexConnectionTest < ActiveSupport::TestCase
+  test "a missing executable reports an installation error before sending a request" do
+    error = assert_raises(LocalAi::Error) do
+      Codex::Connection.open(command: [ Rails.root.join("tmp/nonexistent-codex.exe").to_s ]) { flunk "Unexpected connection" }
+    end
+    assert_equal "runtime_not_found", error.code
+  end
+
   test "stdio transports Unicode and punctuation without shell interpolation" do
     with_fake_server do |connection|
         text = 'Zażółć gęślą jaźń: $(ignored); "hello"'

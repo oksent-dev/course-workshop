@@ -1,7 +1,10 @@
 class ConversationsController < ApplicationController
   include LearnerContext
+  HISTORY_PAGE_SIZE = 20
+
   before_action :require_local_ai
   before_action :set_conversation
+  before_action :set_history_cursor
   rescue_from Drafts::Error, with: :render_editing_error
 
   def show
@@ -94,21 +97,44 @@ class ConversationsController < ApplicationController
       browser_key: session[:lesson_chat_key], mode: mode)
   end
 
+  def set_history_cursor
+    cursors = params.slice(:before, :from).values
+    return if cursors.empty?
+    if cursors.size != 1 || !cursors.first.is_a?(String) || !cursors.first.match?(/\A[1-9][0-9]{0,18}\z/)
+      return head :bad_request
+    end
+    @history_cursor = @conversation.history.find(cursors.first)
+  end
+
+  def history_page
+    history = @conversation.history
+    if params[:from].present?
+      history.where("exchanges.id >= ?", @history_cursor.id)
+    else
+      history = history.where("exchanges.id < ?", @history_cursor.id) if @history_cursor
+      history.reorder(id: :desc).limit(HISTORY_PAGE_SIZE)
+    end
+  end
+
   def render_conversation
     @course.reload
-    exchanges = @conversation.history.includes(:course_changes, :assistant_activities, :draft_cover_requests).to_a
-    pending = exchanges.find(&:pending?)
-    exchanges.flat_map(&:assistant_activities).each(&:reconcile!) if @conversation.mode == "editor"
+    exchanges = history_page.includes(:conversation, :course_changes, :assistant_activities, :draft_cover_requests).sort_by(&:id)
+    pending = @conversation.history.pending.first
+    if @conversation.mode == "editor"
+      (exchanges + [ pending ]).compact.uniq.flat_map(&:assistant_activities).each(&:reconcile!)
+    end
     blocked = editor_blocked(pending)
     @undoable_change = CourseChange.latest_undoable(@course) if @course.draft? && !pending && !blocked
-    refresh_keys = exchanges.flat_map(&:assistant_activities).select { |activity| activity.completed? && activity.tool == "refresh_course_view" }.map(&:key)
+    refresh_keys = AssistantActivity.completed.where(tool: "refresh_course_view", exchange_id: @conversation.history.select(:id)).select(:key)
+    oldest_id = exchanges.first&.id
     render json: {
       html: render_to_string(partial: "conversations/transcript", formats: [ :html ], locals: { exchanges: exchanges }),
+      next_before: oldest_id && @conversation.history.where("exchanges.id < ?", oldest_id).exists? ? oldest_id : nil,
       activity_html: render_to_string(partial: "conversations/activity", formats: [ :html ], locals: { course: @course }),
       version: AssistantContext.version(@course),
       editor_blocked: blocked.present?,
       editor_hint: blocked ? t("editor.errors.#{blocked}", default: t("editor.errors.invalid_content")) : nil,
-      refresh_requested: refresh_keys.any? && DraftOperation.where(request_key: refresh_keys).where("result ->> 'revision' = ?", @course.revision.to_s).exists?,
+      refresh_requested: DraftOperation.where("request_key::text IN (?)", refresh_keys).where("result ->> 'revision' = ?", @course.revision.to_s).exists?,
       lesson_ids: @course.lessons.ids,
       overview_url: overview_url,
       busy: pending.present?,

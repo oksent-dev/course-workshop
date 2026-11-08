@@ -13,9 +13,9 @@ LOCAL_AI_ENABLED=true
 CODEX_EXECUTABLE=codex
 ```
 
-`CODEX_EXECUTABLE` is one executable path, not a shell command or a list of arguments. On Windows, an absolute path to `codex.exe` is recommended, especially if a package-manager shim points to an older CLI. Use the executable available on your machine; do not commit a personal installation path.
+`CODEX_EXECUTABLE` accepts a command on PATH or one executable path, not a shell command or argument list. For the Windows desktop installation, set `CODEX_EXECUTABLE=codex-desktop`: Course Workshop resolves the newest installed runtime by file modification time under `%LOCALAPPDATA%/OpenAI/Codex/bin/<version>/codex.exe` for each connection. It only considers hexadecimal version directories. This avoids retaining a deleted path after a desktop update and avoids older package-manager shims. The desktop layout is platform-specific; other installations can use an explicit executable path.
 
-A desktop update can replace a versioned runtime directory. If generation reports an unavailable runtime, confirm that the configured executable still exists, update the private path if needed, and restart Rails before resuming the saved generation.
+Restart both Rails and the queue worker after changing `.env`. Future desktop updates are resolved when the next connection starts. A missing executable has a distinct installation/configuration error; it is not reported as an authentication failure. Existing failed questions remain in history and can be sent again explicitly after the connection is repaired. Do not commit a personal installation path.
 
 Then run:
 
@@ -26,13 +26,17 @@ ruby bin/dev
 
 Open the application through `http://localhost:3000` or `http://127.0.0.1:3000`. Use the floating **Open course assistant** button in the bottom-right corner. Enter a question and send it; the app shows a queued, running or recovering state, then the answer. **Cancel reply** requests interruption. Closing the panel or navigating does not cancel a reply. A different course has a separate history and composer.
 
+Press **Enter** to send and **Shift+Enter** for a new line, or use the send button. Empty input, a pending reply, key repetition and IME composition cannot submit another message.
+
 The context label identifies the current outline or lesson. Outlines supply the title, description, language and ordered lesson titles; lessons add only their own body. Draft questions also include the saved generation topic, plan and state. Previously supplied material remains in conversation history. Draft panels require `COURSE_AUTHORING_ENABLED=true` as well as local AI. Their generation and cover activity cards reflect persisted application state, not inferred actions or model reasoning.
 
 Select text within the lesson body and choose **Ask about this passage**, or press **Alt+Enter** while the selection action is visible. The passage appears above the question field. You can remove it or select a different passage before sending. Selection alone never sends a request to the model. Each question may include one passage of up to 2,000 characters; longer selections show a prompt to choose a shorter passage. The full lesson still accompanies the question.
 
 Use **Expand conversation**, beside the close button, for a larger conversation window that can cover the lesson. The same button restores the compact panel. Resizing preserves the conversation, any pending reply, the question draft, and its quote. Open state and size survive navigation within the course and page reloads. The transition respects the system's reduced-motion preference.
 
-**Escape** or the close button returns focus to the launcher without moving the reading position. A Turbo permanent element retains the panel during navigation within a course and interface language. Per-tab `sessionStorage`, keyed by learner, course and mode, preserves unsent text, quote origin, size, open state, transcript scroll and submission identity on reload or a language switch. Storage failure falls back to tab memory. These unsent drafts are not backed up in PostgreSQL and need not survive closing the browser; accepted messages are durable. Separate tabs share saved history but do not overwrite each other's composers.
+**Escape** or the close button returns focus to the launcher without moving the reading position. A Turbo permanent element retains the panel and transcript scroll during navigation within a course and interface language. Reopening the panel or loading the page again shows the latest message. The initial transcript contains 20 exchanges; scrolling to the top or choosing **Load older messages** adds the preceding 20 without moving the visible passage. A failed page request keeps the conversation visible and offers a retry. See [transcript pagination](course-assistant.md#transcript-pagination) for the request contract.
+
+Per-tab `sessionStorage`, keyed by learner, course and mode, preserves unsent text, quote origin, size, open state and submission identity on reload or a language switch. Storage failure falls back to tab memory. These unsent drafts are not backed up in PostgreSQL and need not survive closing the browser; accepted messages are durable. Separate tabs share saved history but do not overwrite each other's composers.
 
 A retained quote always targets its original lesson or outline, even after navigation. Its source appears above the quote. Removing it makes the next question use the current page. The server resolves lesson IDs within the course, captures its own immutable snapshot, and rejects a quote whose material version changed. An accepted submission can still be replayed idempotently after such a change. The passage is shown with its saved question and is not automatically attached to later questions.
 

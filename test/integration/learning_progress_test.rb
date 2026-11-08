@@ -89,6 +89,32 @@ class LearningProgressTest < ActionDispatch::IntegrationTest
     assert_equal 1, LessonProgress.count
   end
 
+  test "completion streams update reader progress and undo without navigating" do
+    get lesson_path(@lesson)
+    visited_at = LessonProgress.last.last_opened_at
+    headers = { "Accept" => "text/vnd.turbo-stream.html" }
+
+    post completion_path(@lesson), headers: headers
+    assert_response :success
+    assert_equal "text/vnd.turbo-stream.html", response.media_type
+    assert_nil response.headers["Location"]
+    assert_select "turbo-stream[action=update][method=morph]", count: 3
+    assert_select "turbo-stream[targets='[data-reader-progress]'] template" do
+      assert_select "progress[value='1'][max='2']"
+      assert_select "a[aria-current=page]", text: /Completed/
+    end
+    assert_select "turbo-stream[target=lesson-completion] button", text: "Mark as incomplete"
+    assert_select "turbo-stream[target=lesson-navigation] a[rel=next].btn-primary"
+    assert_equal visited_at, LessonProgress.last.last_opened_at
+
+    delete completion_path(@lesson), headers: headers
+    assert_response :success
+    assert_select "turbo-stream[targets='[data-reader-progress]'] progress[value='0']"
+    assert_select "turbo-stream[target=lesson-completion] button", text: "Mark complete"
+    assert_select "turbo-stream[target=lesson-navigation] a[rel=next].btn-ghost"
+    assert_nil LessonProgress.last.completed_at
+  end
+
   test "prefetch and HEAD requests do not move the resume location" do
     get lesson_path(@lesson)
     record = LessonProgress.last

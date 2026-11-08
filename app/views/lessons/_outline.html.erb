@@ -2,7 +2,7 @@
   <% lessons.each_with_index do |lesson, index| %>
     <li>
       <%= link_to course_lesson_path(course, lesson), aria: { current: ("page" if lesson == current_lesson) },
-            class: "flex min-h-11 items-baseline gap-3 rounded-field px-3 py-2.5 text-primary hover:bg-secondary aria-[current=page]:bg-primary aria-[current=page]:font-semibold aria-[current=page]:text-primary-content aria-[current=page]:underline" do %>
+            class: "flex min-h-11 items-baseline gap-3 rounded-field px-3 py-2.5 text-primary hover:bg-secondary aria-[current=page]:bg-primary aria-[current=page]:font-semibold aria-[current=page]:text-primary-content" do %>
         <span aria-hidden="true" class="tabular-nums"><%= index + 1 %>.</span>
         <span class="min-w-0 wrap-anywhere">
           <span lang="<%= course.language %>"><%= lesson.title %></span>

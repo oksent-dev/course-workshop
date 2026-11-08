@@ -6,6 +6,7 @@ import GenerationController from "./generation_controller.js";
 import LessonChatController from "./lesson_chat_controller.js";
 import LanguageMenuController from "./language_menu_controller.js";
 import AiSettingsController from "./ai_settings_controller.js";
+import LessonCompletionController from "./lesson_completion_controller.js";
 
 application.register("conversation", ConversationController);
 application.register("lesson-image", LessonImageController);
@@ -15,3 +16,4 @@ application.register("generation", GenerationController);
 application.register("lesson-chat", LessonChatController);
 application.register("language-menu", LanguageMenuController);
 application.register("ai-settings", AiSettingsController);
+application.register("lesson-completion", LessonCompletionController);

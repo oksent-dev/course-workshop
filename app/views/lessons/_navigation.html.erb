@@ -1,0 +1,9 @@
+<% index = lessons.index(lesson) %>
+<% if index.positive? %>
+  <%= link_to t("reader.previous"), course_lesson_path(course, lessons[index - 1]), rel: "prev", class: "btn btn-ghost min-h-11" %>
+<% end %>
+<% if (next_lesson = lessons[index + 1]) %>
+  <%= link_to t("reader.next"), course_lesson_path(course, next_lesson), rel: "next", class: class_names("btn min-h-11", progress.completed?(lesson) ? "btn-primary" : "btn-ghost") %>
+<% else %>
+  <%= link_to t("reader.back_to_course"), course_path(course), class: "btn btn-ghost min-h-11 max-w-full h-auto py-3" %>
+<% end %>

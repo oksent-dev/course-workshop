@@ -157,6 +157,7 @@ pl:
         failed: "Nie udało się utworzyć okładki"
       errors:
         unavailable: "Codex nie dokończył okładki. Sprawdź lokalne uruchomienie i spróbuj ponownie."
+        runtime_not_found: "Nie znaleziono lokalnego programu Codex. Sprawdź jego instalację i konfigurację połączenia po aktualizacji."
         authentication: "Zaloguj się do lokalnego konta Codexa i ponów okładkę."
         model_unavailable: "Wybrany model jest niedostępny na tym koncie Codexa."
         reasoning_unavailable: "Zapisany poziom rozumowania nie jest obsługiwany przez ten model."
@@ -181,6 +182,7 @@ pl:
       uncertain: "Nie udało się potwierdzić wyniku ostatniego etapu. Przejrzyj zapisany materiał przed wznowieniem; niedokończony etap może zostać wykonany ponownie."
       incomplete: "Model zakończył pracę przed zapisaniem wszystkich poprawnych lekcji. Wznów, aby dokończyć szkic."
       unavailable: "Lokalny Codex nie dokończył pracy. Sprawdź jego konfigurację i wznów."
+      runtime_not_found: "Nie znaleziono lokalnego programu Codex. Sprawdź jego instalację i konfigurację połączenia po aktualizacji."
       authentication: "Zaloguj się do lokalnego konta Codexa i wznów."
       model_unavailable: "Wybrany model jest niedostępny na tym koncie Codexa."
       reasoning_unavailable: "Zapisany poziom rozumowania nie jest obsługiwany przez ten model."
@@ -221,6 +223,10 @@ pl:
     mark_complete: "Oznacz jako ukończoną"
     undo: "Cofnij ukończenie"
   conversation:
+    load_older: "Wczytaj starsze wiadomości"
+    loading_older: "Wczytywanie starszych wiadomości…"
+    older_error: "Nie udało się wczytać starszych wiadomości. Spróbuj ponownie przyciskiem powyżej."
+    keyboard_hint: "Enter wysyła · Shift+Enter dodaje nową linię"
     open: "Otwórz asystenta kursu"
     modes:
       tutor: "Tutor kursu"
@@ -266,6 +272,7 @@ pl:
       cancelled: "Odpowiedź anulowana."
     errors:
       unavailable: "Lokalny tutor jest niedostępny. Sprawdź instalację Codexa i zalogowanie, a potem spróbuj ponownie."
+      runtime_not_found: "Nie znaleziono lokalnego programu Codex. Sprawdź jego instalację i konfigurację połączenia po aktualizacji."
       authentication: "Zaloguj się w lokalnym Codex CLI i spróbuj ponownie."
       model_unavailable: "Wybrany model jest niedostępny na tym koncie Codexa."
       reasoning_unavailable: "Zapisany poziom rozumowania nie jest obsługiwany przez ten model."

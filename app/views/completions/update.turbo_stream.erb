@@ -1,0 +1,9 @@
+<%= turbo_stream.update_all "[data-reader-progress]", method: :morph do %>
+  <%= render "lessons/reader_progress", course: @course, lessons: @lessons, lesson: @lesson, progress: @progress %>
+<% end %>
+<%= turbo_stream.update "lesson-completion", method: :morph do %>
+  <%= render "lessons/completion", course: @course, lesson: @lesson, progress: @progress %>
+<% end %>
+<%= turbo_stream.update "lesson-navigation", method: :morph do %>
+  <%= render "lessons/navigation", course: @course, lessons: @lessons, lesson: @lesson, progress: @progress %>
+<% end %>

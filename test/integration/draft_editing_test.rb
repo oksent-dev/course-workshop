@@ -1,8 +1,10 @@
 require "test_helper"
 require_relative "../support/draft_editing"
+require_relative "../support/conversation_history"
 
 class DraftEditingTest < ActionDispatch::IntegrationTest
   include DraftEditing
+  include ConversationHistory
 
   setup do
     host! "localhost"
@@ -81,6 +83,27 @@ class DraftEditingTest < ActionDispatch::IntegrationTest
     assert response.parsed_body["refresh_requested"]
     @course.update!(title: "Later external change", revision: 2)
     get course_conversation_path(@course, locale: :en), headers: @local
+    assert_not response.parsed_body["refresh_requested"]
+  end
+
+  test "older editing receipts keep refresh state and undo after pagination" do
+    activate_editor(@exchange)
+    CourseMcp::EditorServer.new(exchange_id: @exchange.id, token: @token)
+      .execute("refresh_course_view", request_key: SecureRandom.uuid, expected_revision: 1)
+    @exchange.finish!(:completed, answer: "Refresh requested")
+    saved_exchanges(@exchange.conversation, 20)
+
+    get course_conversation_path(@course, locale: :en), headers: @local
+    assert response.parsed_body["refresh_requested"]
+    assert_not_includes response.parsed_body["html"], "data-change-preview"
+    get course_conversation_path(@course, locale: :en), params: { before: response.parsed_body["next_before"] }, headers: @local
+    assert_includes response.parsed_body["html"], "Undo this change"
+
+    post undo_change_course_conversation_path(@course, change_id: @change.id, locale: :en, mode: "editor", from: @exchange.id),
+      params: { expected_revision: 1 }, headers: @local
+    assert_response :success
+    assert_equal 21, Nokogiri::HTML.fragment(response.parsed_body["html"]).css("[data-exchange-id]").size
+    assert_includes response.parsed_body["html"], "Change undone"
     assert_not response.parsed_body["refresh_requested"]
   end
 end

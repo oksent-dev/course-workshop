@@ -157,6 +157,7 @@ en:
         failed: "Cover could not be created"
       errors:
         unavailable: "Codex could not finish the cover. Check the local runtime and try again."
+        runtime_not_found: "The local Codex executable was not found. Check its installation and connection configuration after an update."
         authentication: "Sign in to your local Codex account and retry the cover."
         model_unavailable: "The selected model is unavailable in this Codex account."
         reasoning_unavailable: "The saved reasoning level is not supported by this model."
@@ -181,6 +182,7 @@ en:
       uncertain: "The last step's outcome could not be confirmed. Review the saved material before resuming; the unfinished step may run again."
       incomplete: "The model finished before saving all valid lessons. Resume to complete the draft."
       unavailable: "The local Codex runtime could not finish. Check its setup and resume."
+      runtime_not_found: "The local Codex executable was not found. Check its installation and connection configuration after an update."
       authentication: "Sign in to your local Codex account and resume."
       model_unavailable: "The selected model is unavailable in this Codex account."
       reasoning_unavailable: "The saved reasoning level is not supported by this model."
@@ -219,6 +221,10 @@ en:
     mark_complete: "Mark complete"
     undo: "Mark as incomplete"
   conversation:
+    load_older: "Load older messages"
+    loading_older: "Loading older messages…"
+    older_error: "Could not load older messages. Use the button above to try again."
+    keyboard_hint: "Enter to send · Shift+Enter for a new line"
     open: "Open course assistant"
     modes:
       tutor: "Course tutor"
@@ -264,6 +270,7 @@ en:
       cancelled: "Reply cancelled."
     errors:
       unavailable: "The local tutor is unavailable. Check that Codex is installed and signed in, then try again."
+      runtime_not_found: "The local Codex executable was not found. Check its installation and connection configuration after an update."
       authentication: "Sign in to the local Codex CLI, then try again."
       model_unavailable: "The selected model is not available in this Codex account."
       reasoning_unavailable: "The saved reasoning level is not supported by this model."

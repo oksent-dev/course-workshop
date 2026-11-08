@@ -6,7 +6,7 @@ The assistant should follow a course from its outline into individual lessons. P
 
 ## Current behavior and verified capabilities
 
-- `Conversation` belongs to a course, learner profile and mode. Legacy lesson records remain intact. `Exchange` persists questions, selected passages, immutable context snapshots, answers and statuses in PostgreSQL. A permanent panel and per-tab session storage retain unsent input, quote origin, open/expanded state and scroll through navigation and reloads.
+- `Conversation` belongs to a course, learner profile and mode. Legacy lesson records remain intact. `Exchange` persists questions, selected passages, immutable context snapshots, answers and statuses in PostgreSQL. A permanent panel and per-tab session storage retain unsent input, quote origin and open/expanded state through navigation and reloads. Scroll stays stable during navigation with the panel open; reopening or reloading shows the latest message.
 - `Codex::Tutor` resumes a stored thread. Recovery can restore completed answers from mapped runtime history; a missing thread is replaced on the next explicit question with a bounded application-history handoff.
 - `Codex::CourseGenerator` still starts a fresh thread per step. New executions persist runtime identifiers in `AiRun`. Pre-existing generation identifiers were not recorded, so there is no single original generation conversation to resume.
 - Development uses Solid Queue with a separate database and threaded worker. Queued work survives restarts. Recovery reconciles completed turns and saved generation checkpoints; unresolved outcomes require explicit resubmission/resume. A local Codex process is not an independently durable service.
@@ -30,6 +30,14 @@ Do not attach every lesson body to every message. The draft editor may explicitl
 Each submitted message captures its course, mode, optional lesson ID, interface language, material revision and quote. The composer shows its current context and a separate source label for a retained quote. Saved messages show their original context. A running request keeps its original context if the user navigates. A changed course material version rejects a new quoted submission and preserves its composer for review; accepted request keys still replay their original result.
 
 The same panel is available on the plan/status and lesson pages. Preserve its open/expanded state, scroll position and unsent input while moving within a course. A different course has its own transcript and composer. Existing selection timing and keyboard shortcuts remain unchanged.
+
+### Transcript pagination
+
+The first request renders the latest 20 exchanges in chronological order. Scrolling up or choosing **Load older messages** requests the preceding 20 with `before=<exchange ID>`. The response's `next_before` cursor is null at the beginning. A page is a group of whole question/answer exchanges, so pending replies, selected passages and editing receipts stay together.
+
+Polls and action responses use `from=<oldest loaded exchange ID>` to refresh only the loaded window and any new messages. This keeps older undo controls and change previews current without dropping messages the reader explicitly loaded. Both cursors must resolve within the authorized course/profile/mode history, including owned legacy conversations; malformed, combined or foreign cursors are rejected before any mutation. Pending-work and view-refresh state are computed across the conversation independently of the page.
+
+The panel anchors the visible exchange while prepending or refreshing history, preserves expanded previews and focus, and follows new replies only when already at the bottom or submitting a question. Older-page failure preserves the transcript and offers an explicit retry; it does not repeatedly retry on scroll. A fresh page load or reopened panel moves to the latest message instead of restoring a stale pixel offset. Pagination changes only browser delivery: all accepted exchanges remain in PostgreSQL, and the runtime's context/recovery policy is unchanged.
 
 ## Continuity with generation
 

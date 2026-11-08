@@ -1,0 +1,12 @@
+<h2 id="completion-heading" class="font-serif text-2xl font-semibold"><%= t("learning_progress.heading") %></h2>
+<p role="status" class="mt-3 font-medium">
+  <% if progress.completed?(lesson) %>
+    <span aria-hidden="true">✓ </span><%= t("learning_progress.lesson_completed") %>
+  <% else %>
+    <%= t("learning_progress.hint") %>
+  <% end %>
+</p>
+<%= button_to t(progress.completed?(lesson) ? "learning_progress.undo" : "learning_progress.mark_complete"),
+  course_lesson_completion_path(course, lesson), method: (progress.completed?(lesson) ? :delete : :post),
+  id: "lesson-completion-toggle",
+  class: class_names("btn mt-4 min-h-11 max-w-full h-auto py-3", progress.completed?(lesson) ? "btn-ghost" : "btn-primary") %>

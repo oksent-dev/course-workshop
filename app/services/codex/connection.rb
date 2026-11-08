@@ -19,7 +19,7 @@ module Codex
       workspace = Rails.root.join("tmp", "codex-workspace")
       FileUtils.mkdir_p(workspace)
       command ||= [
-        Rails.configuration.x.local_ai.executable, "app-server", "--listen", "stdio://",
+        Executable.resolve(Rails.configuration.x.local_ai.executable), "app-server", "--listen", "stdio://",
         "-c", "features.hooks=false"
       ]
       @input, @output, @error, @process = Open3.popen3(*command, chdir: workspace.to_s)
@@ -40,6 +40,7 @@ module Codex
       write(method: "initialized")
     rescue StandardError => error
       close
+      raise LocalAi::Error, "runtime_not_found" if error.is_a?(Errno::ENOENT)
       raise LocalAi::Error, "unavailable" if error.is_a?(SystemCallError) || error.is_a?(IOError)
       raise
     end

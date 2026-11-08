@@ -112,6 +112,33 @@ class LessonConversationSystemTest < ApplicationSystemTestCase
     assert_button "Send question", disabled: false
   end
 
+  test "Enter sends once, Shift Enter inserts a line and composition never submits" do
+    visit course_lesson_path(lessons(:pitch).course, lessons(:pitch), locale: :en)
+    click_button "Open course assistant"
+    assert_text "Ask for an explanation"
+    field = find_field("Your question")
+    field.send_keys(:enter)
+    assert_field "Your question", with: ""
+    assert_equal 0, Exchange.count
+
+    field.send_keys("First line", [ :shift, :enter ], "Second line")
+    assert_field "Your question", with: "First line\nSecond line"
+    field.execute_script("this.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', isComposing: true, bubbles: true, cancelable: true }))")
+    assert_equal 0, Exchange.count
+    field.send_keys(:enter)
+    assert_text "Waiting to start"
+    assert_equal "First line\nSecond line", Exchange.last.question
+    fill_in "Your question", with: "Wait for this answer first"
+    field.send_keys(:enter)
+    assert_field "Your question", with: "Wait for this answer first"
+    assert_equal 1, Exchange.count
+    perform_enqueued_jobs
+    assert_text "A high note has a higher frequency."
+    field.send_keys(:enter)
+    assert_text "Waiting to start"
+    assert_equal 2, Exchange.count
+  end
+
   test "quote highlighted code, keep a draft while reading, and save the passage with the answer" do
     lesson = lessons(:pitch)
     code = "puts \"<example>\"\n"

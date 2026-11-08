@@ -38,7 +38,7 @@ POST   /:locale/courses/:course_slug/lessons/:lesson_id/completion
 DELETE /:locale/courses/:course_slug/lessons/:lesson_id/completion
 ```
 
-Both actions use normal Rails forms with CSRF protection and redirect with HTTP 303 to the lesson's progress panel. They work without JavaScript. The lesson is resolved through its course and the progress through the current profile.
+Both actions use Rails forms with CSRF protection. Turbo Stream responses morph only the desktop/mobile progress and outline, completion controls, and previous/next navigation. The lesson body, open exercise, assistant, keyboard focus and reading position remain in place. Completion does not add a history entry or replay entrance animations. Without JavaScript, HTML submissions redirect with HTTP 303 to the lesson's progress panel. The lesson is resolved through its course and the progress through the current profile.
 
 Reader GET requests record visits. HEAD and prefetch requests do not move the resume location. Turbo prefetching and page snapshots are disabled so background requests do not count as reading and browser back navigation refreshes progress. Personalized pages use `Cache-Control: private, no-store`.
 
