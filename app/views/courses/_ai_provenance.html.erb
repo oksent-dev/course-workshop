@@ -1,5 +1,0 @@
-<% if course.generation_model.present? %>
-  <p class="mt-3 text-sm text-muted-ink wrap-anywhere" data-course-ai-model="<%= course.generation_model %>">
-    <%= t("settings.course_model", provider: "Codex", model: course.generation_model_name.presence || course.generation_model) %>
-  </p>
-<% end %>

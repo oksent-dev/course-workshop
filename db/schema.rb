@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_11_07_200000) do
+ActiveRecord::Schema[8.1].define(version: 2026_11_08_220000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
 
@@ -200,6 +200,8 @@ ActiveRecord::Schema[8.1].define(version: 2026_11_07_200000) do
     t.string "generation_provider"
     t.string "generation_model"
     t.string "generation_model_name"
+    t.datetime "generated_at"
+    t.string "generation_reasoning_effort"
     t.index ["category_id"], name: "index_courses_on_category_id"
     t.index ["slug"], name: "index_courses_on_slug", unique: true
     t.check_constraint "revision >= 0", name: "courses_nonnegative_revision"

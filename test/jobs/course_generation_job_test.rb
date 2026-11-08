@@ -15,6 +15,26 @@ class CourseGenerationJobTest < ActiveSupport::TestCase
 
   teardown { @ai.enabled, @ai.generator, @authoring.enabled = @old }
 
+  test "generation date is written on completion and survives duplicate jobs editing and publication" do
+    assert_nil @generation.course.generated_at
+    @generator.lesson_count = 1
+    CourseGenerationJob.perform_now(@generation, 1)
+    assert_nil @generation.course.reload.generated_at
+    freeze_time do
+      approve_and_finish(@generation)
+      assert_equal Time.current, @generation.course.reload.generated_at
+    end
+    generated_at = @generation.course.reload.generated_at
+    travel 1.day do
+      CourseGenerationJob.perform_now(@generation, @generation.attempt, @generation.step)
+      cover = @generation.course.cover_generation
+      CourseCoverGenerationJob.perform_now(cover, cover.attempt)
+      @generation.course.update!(description: "A later correction")
+      Drafts::Editor.publish(course_id: @generation.course_id, expected_revision: @generation.course.reload.revision)
+      assert_equal generated_at, @generation.course.reload.generated_at
+    end
+  end
+
   test "the model selects eighteen lessons and no material is written before approval" do
     @generator.lesson_count = 18
     2.times { CourseGenerationJob.perform_now(@generation, 1) }

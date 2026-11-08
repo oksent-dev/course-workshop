@@ -1,0 +1,5 @@
+<% timestamp = course.generated_at || course.created_at %>
+<span data-course-date="<%= course.generated_at? ? "generated" : "created" %>">
+  <%= t(course.generated_at? ? "courses.generated_on" : "courses.created_on") %>
+  <%= time_tag timestamp, l(timestamp.to_date, format: :course_date) %>
+</span>

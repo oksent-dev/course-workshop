@@ -6,7 +6,7 @@
   <p class="font-medium text-primary"><%= t("drafts.preview") %></p>
   <h1 lang="<%= @course.language %>" class="mt-2 font-serif text-[clamp(2rem,5vw,3rem)] leading-tight font-medium"><%= @course.title %></h1>
   <p lang="<%= @course.language %>" class="mt-3 max-w-prose font-serif text-xl leading-relaxed"><%= @course.description %></p>
-  <%= render "courses/ai_provenance", course: @course %>
+  <%= render "courses/metadata", course: @course %>
 </header>
 <section aria-label="<%= t("drafts.approval") %>" class="mt-6 rounded-box bg-secondary p-6" data-motion="enter" data-motion-delay="1">
   <% generation = @course.course_generation %>

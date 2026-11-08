@@ -1,4 +1,7 @@
 en:
+  date:
+    formats:
+      course_date: "%d %b %Y"
   settings:
     title: "Settings"
     introduction: "Choose the AI model and the way it explains things."
@@ -34,6 +37,8 @@ en:
     invalid: "Check the selected model and keep the style instruction within 1,000 characters."
     conflict: "Settings changed in another tab. Review your values and save again, or reload the page to see the saved settings."
     course_model: "Generation model: %{model} · %{provider}"
+    course_reasoning: "Reasoning: %{effort}"
+    reasoning_not_recorded: "Not recorded"
   editor:
     work_details: "Assistant activity"
     saved: "Saved · revision %{revision}"
@@ -306,6 +311,8 @@ en:
     empty_title: "Your shelf is empty"
     library_description: "Your courses will appear here, ready to open and read."
   courses:
+    generated_on: "Generated:"
+    created_on: "Created:"
     languages:
       pl: "Polish"
       en: "English"

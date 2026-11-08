@@ -34,7 +34,13 @@ class GenerationsController < ApplicationController
     @saved_positions = @saved_lessons.keys
     respond_to do |format|
       format.html
-      format.json { render json: { html: render_to_string(partial: "status", formats: [ :html ]), busy: generation_busy?, version: generation_version } }
+      format.json do
+        render json: {
+          html: render_to_string(partial: "status", formats: [ :html ]),
+          metadata_html: render_to_string(partial: "courses/metadata", formats: [ :html ], locals: { course: @course }),
+          busy: generation_busy?, version: generation_version
+        }
+      end
     end
   end
 

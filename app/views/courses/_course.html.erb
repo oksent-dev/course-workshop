@@ -10,7 +10,10 @@
   <div class="card-body gap-4 p-5 pt-3">
     <p lang="<%= course.language %>" class="line-clamp-3 text-base leading-relaxed text-muted-ink"><%= course.description %></p>
     <div class="mt-auto space-y-4 pt-2">
-      <p class="text-xs text-muted-ink"><%= course_language_label(course) %></p>
+      <div class="space-y-1 text-xs text-muted-ink">
+        <p><%= course_language_label(course) %></p>
+        <p><%= render "courses/date", course: course %></p>
+      </div>
       <% if draft %>
         <%= render "drafts/card_actions", course: course %>
       <% else %>

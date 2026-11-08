@@ -24,6 +24,7 @@ class CourseGeneration < ApplicationRecord
       course = Course.new(slug: "generated-#{SecureRandom.uuid}", title: input[:topic].truncate(160),
         description: "Draft awaiting generation.", language: language,
         generation_provider: configuration.fetch("provider"), generation_model: configuration.fetch("model"), generation_model_name: configuration.fetch("model_name"),
+        generation_reasoning_effort: configuration["reasoning_effort"],
         category: Category.find_or_create_by!(name: "Drafts"))
       create!(**input, course: course, ai_configuration: configuration, expires_at: EXPIRY.from_now)
     end
@@ -140,6 +141,13 @@ class CourseGeneration < ApplicationRecord
     end
   end
 
+  def record_reasoning_effort!(effort)
+    return if effort.blank?
+    course.with_lock do
+      course.update!(generation_reasoning_effort: effort) unless course.generation_reasoning_effort.present?
+    end
+  end
+
   def attach_illustration!(expected_attempt, expected_step, upload)
     with_lock do
       return unless running? && stage == "illustrating" && attempt == expected_attempt && step == expected_step && expires_at.future?
@@ -170,6 +178,7 @@ class CourseGeneration < ApplicationRecord
           raise LocalAi::Error, "incomplete" if lesson.body.length < 200
         end
         update!(status: :completed, token_digest: nil, error_code: nil)
+        course.update!(generated_at: Time.current) unless course.generated_at?
         course.create_cover_generation!(expires_at: CourseCoverGeneration::EXPIRY.from_now) unless course.cover.attached? || course.cover_generation
       end
     end

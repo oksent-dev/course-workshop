@@ -15,12 +15,15 @@ class CourseGenerationSystemTest < ApplicationSystemTestCase
   teardown { @ai.enabled, @ai.generator, @authoring.enabled = @old }
 
   test "generate from the form, reload progress, review, approve and start learning" do
+    AiSetting.current.update!(reasoning_effort: "medium")
     visit localized_root_path(locale: :pl)
     click_link "Utwórz kurs"
     fill_in "Czego chcesz się nauczyć?", with: "Active Record: relacje i walidacje"
     assert_no_select "Liczba lekcji"
     click_button "Przygotuj plan kursu"
     assert_text "Oczekiwanie na rozpoczęcie"
+    assert_selector "[data-course-ai-reasoning=medium]", text: "Poziom rozumowania: Średni"
+    assert_selector "[data-course-date=created]", text: "Utworzono:"
     page.refresh
     assert_text "Dobieranie zakresu i kolejności lekcji"
     find_button("Anuluj generowanie").send_keys(:tab, [ :shift, :tab ])
@@ -33,12 +36,15 @@ class CourseGenerationSystemTest < ApplicationSystemTestCase
     assert_text "Oczekiwanie na rozpoczęcie"
     perform_course_steps
     assert_text "Gotowy do przeglądu"
+    assert_selector "[data-course-date=generated]", text: "Wygenerowano:"
     assert_text "Zapisano 3 z 3 lekcji"
     perform_enqueued_jobs
     assert_text "Okładka zapisana"
     assert_selector "#cover-heading + p", text: "Okładka zapisana"
     switch_interface_language("English")
     assert_text "Ready for review"
+    assert_selector "[data-course-ai-reasoning=medium]", text: "Reasoning: Medium"
+    assert_selector "[data-course-date=generated]", text: "Generated:"
     generation = CourseGeneration.last
     click_link "Drafts", exact: true
     click_link generation.course.title

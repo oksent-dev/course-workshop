@@ -107,7 +107,7 @@ Place a labeled 44 px gear control immediately to the right of the language sele
 
 Use a single quiet form panel, at most 42 rem wide: read-only Codex source, model selector populated from the account, dependent reasoning selector, and an optional tone/style textarea. Mark the default model in the picker. Update reasoning options in place when the model changes; retain a supported selection or use the model's default. A model without adjustable reasoning has a disabled explanatory option. Explain the instruction limit, clearing behavior, and when saved settings apply. Keep submitted values visible after validation or stale-save errors. If the model catalog is unavailable, retain the saved choices and allow style-only updates. Do not add a separate catalog-refresh control.
 
-Show the original generation model as quiet, localized metadata beneath the course, draft and generation headings when known. Do not label externally authored material with a guessed model or rewrite this credit after later editing.
+Show the original generation model and reasoning level together as quiet, localized metadata beneath the course, draft and generation headings. Let the row wrap on narrow screens. Place the generation date beneath it and repeat the date below the content language on library and draft cards. Use a semantic `time` element with a localized short date. Before generation completes, and for manually authored material, label the creation date as Created rather than Generated. Update the generation overview metadata when polling finishes the course. Do not label externally authored material with a guessed model, infer unrecorded historical effort, or rewrite the original credit/date after later editing or publication.
 
 ## Motion
 

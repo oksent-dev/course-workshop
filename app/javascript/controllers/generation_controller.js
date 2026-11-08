@@ -1,7 +1,7 @@
 import { Controller } from "@hotwired/stimulus";
 
 export default class extends Controller {
-  static targets = ["status", "error", "refresh"];
+  static targets = ["status", "metadata", "error", "refresh"];
   static values = { url: String, busy: Boolean, networkError: String, version: String };
 
   connect() {
@@ -30,6 +30,10 @@ export default class extends Controller {
         const hadFocus = this.statusTarget.contains(active);
         const focusedId = active?.id;
         this.statusTarget.innerHTML = data.html;
+        if (typeof data.metadata_html === "string" && this.metadataHTML !== data.metadata_html) {
+          this.metadataTarget.innerHTML = data.metadata_html;
+          this.metadataHTML = data.metadata_html;
+        }
         this.versionValue = data.version;
         if (hadFocus) {
           const target = document.getElementById(focusedId) || this.statusTarget.querySelector("h2");

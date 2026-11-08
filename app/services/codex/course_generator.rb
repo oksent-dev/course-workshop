@@ -64,6 +64,7 @@ module Codex
           cwd: Rails.root.join("tmp/codex-workspace").to_s, config: config,
           baseInstructions: INSTRUCTIONS, developerInstructions: Runtime.style_policy)
         raise LocalAi::Error, "model_unavailable" unless thread.fetch("model") == model
+        generation.record_reasoning_effort!(effort)
         thread_id = thread.fetch("thread").fetch("id")
         run&.record!(thread_id: thread_id)
         run&.submitted!

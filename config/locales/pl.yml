@@ -1,4 +1,7 @@
 pl:
+  date:
+    formats:
+      course_date: "%d.%m.%Y"
   settings:
     title: "Ustawienia"
     introduction: "Wybierz model AI i sposób, w jaki ma wyjaśniać materiał."
@@ -34,6 +37,8 @@ pl:
     invalid: "Sprawdź wybrany model i ogranicz instrukcję stylu do 1000 znaków."
     conflict: "Ustawienia zmieniły się w innej karcie. Sprawdź wpisane wartości i zapisz ponownie lub odśwież stronę, aby zobaczyć zapisane ustawienia."
     course_model: "Model generowania: %{model} · %{provider}"
+    course_reasoning: "Poziom rozumowania: %{effort}"
+    reasoning_not_recorded: "Nie zapisano"
   editor:
     work_details: "Działania asystenta"
     saved: "Zapisano · wersja %{revision}"
@@ -310,6 +315,8 @@ pl:
     empty_title: "Twoja półka jest jeszcze pusta"
     library_description: "Tutaj pojawią się Twoje kursy. Z tego miejsca przejdziesz do lekcji."
   courses:
+    generated_on: "Wygenerowano:"
+    created_on: "Utworzono:"
     languages:
       pl: "polski"
       en: "angielski"

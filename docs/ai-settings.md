@@ -32,9 +32,13 @@ The instruction is sent to Codex with the task and can remain in local database 
 
 ## Course provenance
 
-The course stores its original generation provider, model ID and display name. The outline, draft preview and generation overview display this information. Later editing with another model does not rewrite the original generation credit; execution snapshots record those later choices. The model is the Codex orchestrator, not a claim about the underlying image-generation model version.
+The course stores its original generation provider, model ID, display name and reasoning effort. The effort is copied from the accepted request; an automatic choice is recorded when the first verified runtime session resolves it. The outline, draft preview and generation overview show the original model and localized reasoning level together. Later settings changes, retries and editing do not rewrite this credit; execution snapshots record subsequent choices. Unknown historical effort is labelled Not recorded. The model is the Codex orchestrator, not a claim about the underlying image-generation model version.
+
+`Course#generated_at` is written atomically when all approved lessons and required lesson illustrations pass completion checks. The optional course cover finishes independently. The timestamp is retained across duplicate delivery, cover retries, later edits and publication. Course overviews, generation status and library/draft cards display this date; unfinished or manually authored courses display their creation date with a distinct label. Dates use the application time zone and locale, with an ISO timestamp in the HTML `time` element. Status polling updates the overview metadata without reloading the page.
 
 The migration backfills known form-generated courses and existing AI requests with the previously fixed Sol configuration. Seeded or externally authored courses without known generation provenance remain unlabelled. The style instruction is not exposed in course metadata.
+
+The generation-metadata migration copies historical effort only from saved request configurations. For completed courses it recovers the completion date from the original cover job's creation checkpoint, or the completed generation's timestamp when no subsequent editing receipts exist. When neither is reliable, the generation date remains unknown and the interface uses the creation date. It never uses current AI settings to fill historical metadata.
 
 After updating, run `ruby bin/rails db:prepare` and restart `ruby bin/dev` so the queue worker loads the new code. Subsequent preference changes take effect without restarting the worker.
 
