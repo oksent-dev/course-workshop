@@ -1,6 +1,6 @@
 # Local AI settings
 
-Open the gear to the right of the language selector. Settings are shared by the local application and stored in PostgreSQL. They require local AI to be enabled and the same development/test and loopback checks as the assistant. Production does not expose this page or its update endpoint.
+Open the gear to the right of the language selector. Editable settings are shared by the local application and stored in PostgreSQL. They require local AI to be enabled and the same development/test and loopback checks as the assistant. In demo mode the page remains visible as a disabled preview using defaults, without reading saved preferences or contacting Codex. Production never accepts settings updates; without demo mode it also hides the page. See [demo access rules](demo.md#feature-gate).
 
 Codex is the fixed provider. **GPT-6.1 Sol** (`gpt-6.1-sol`) remains the application default. The model picker reads the authenticated runtime's paginated `model/list`, using its IDs and display names instead of a hard-coded catalog. It includes visible text-capable models and the application default when advertised. Availability, image support and account limits can differ between models. See the official [Codex App Server documentation](https://learn.chatgpt.com/docs/app-server).
 

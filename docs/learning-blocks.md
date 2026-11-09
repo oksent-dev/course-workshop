@@ -1,6 +1,6 @@
 # Math, diagrams, and practice exercises
 
-Lessons support three fenced block types: `math`, `mermaid`, and `exercise`. They are data formats, not a way to insert scripts or arbitrary HTML. The same validation applies to prepared material and future generated lessons.
+Lessons support three fenced block types: `math`, `mermaid`, and `exercise`. They are data formats, not a way to insert scripts or arbitrary HTML. The renderer validates these blocks in prepared and generated lessons; local authoring also rejects invalid blocks before saving.
 
 ## Display math
 

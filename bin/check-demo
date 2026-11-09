@@ -1,0 +1,84 @@
+#!/usr/bin/env ruby
+require "bundler/setup"
+require "net/http"
+require "uri"
+require "nokogiri"
+
+class DemoCheck
+  def initialize(base_url)
+    @base = URI(base_url)
+    @cookies = {}
+  end
+
+  def request(method, path, expected: 200, token: nil, accept: "text/html")
+    uri = URI.join(@base.to_s, path)
+    message = Net::HTTP.const_get(method.capitalize).new(uri)
+    message["Cookie"] = @cookies.map { |key, value| "#{key}=#{value}" }.join("; ")
+    message["Accept"] = accept
+    if token
+      message["X-CSRF-Token"] = token
+      message["Origin"] = @base.dup.tap { |origin| origin.path = ""; origin.query = nil; origin.fragment = nil }.to_s
+      message["Content-Type"] = "application/json"
+      message.body = "{}"
+    end
+    response = Net::HTTP.start(uri.host, uri.port, use_ssl: uri.scheme == "https", open_timeout: 5, read_timeout: 15) do |http|
+      http.request(message)
+    end
+    response.get_fields("Set-Cookie").to_a.each do |cookie|
+      key, value = cookie.split(";", 2).first.split("=", 2)
+      @cookies[key] = value
+    end
+    raise "#{method} #{path}: expected #{expected}, got #{response.code}" unless response.code.to_i == expected
+    return response if response["Content-Type"].to_s.start_with?("image/")
+    Nokogiri::HTML(response.body)
+  end
+
+  def run!
+    %w[pl en].each do |locale|
+      library = request("get", "/#{locale}")
+      check(library.css("[data-course-card]").size == 2, "Expected exactly two demo cards")
+      check(library.at_css("[data-demo-notice]"), "Demo mode is required")
+      %w[generations/new settings].each do |page|
+        form = request("get", "/#{locale}/#{page}")
+        check(form.at_css("main form fieldset[disabled]"), "An AI form is not disabled")
+      end
+    end
+
+    outline_path = "/en/courses/demo-statistics-over-coffee"
+    outline = request("get", outline_path)
+    lesson_paths = outline.css("main a[href*='/lessons/']").map { |link| link["href"] }.uniq
+    check(lesson_paths.size == 4, "Expected four English lessons")
+    token = outline.at_css("meta[name=csrf-token]")["content"]
+    lesson_paths.each do |path|
+      lesson = request("get", path)
+      check(lesson.at_css(".lesson-exercise summary"), "Missing practice exercise")
+      check(lesson.at_css("#demo-chat-panel fieldset[disabled]"), "Assistant composer is not disabled")
+      lesson.css(".lesson-content img").each do |image|
+        check(image["src"].start_with?("/demo-media/"), "Image is not bundled")
+        check(request("get", image["src"]).is_a?(Net::HTTPSuccess), "Unexpected image response")
+      end
+    end
+
+    [ [ "post", "/en/generations" ], [ "patch", "/en/settings" ],
+      [ "get", "#{outline_path}/conversation" ], [ "post", "#{outline_path}/conversation/exchanges" ],
+      [ "post", "/rails/active_storage/direct_uploads" ], [ "get", "/en/drafts" ] ].each do |method, path|
+      request(method, path, expected: 404, token: method == "get" ? nil : token)
+    end
+
+    completion = "#{lesson_paths.first}/completion"
+    request("post", completion, token: token, accept: "text/vnd.turbo-stream.html")
+    check(request("get", lesson_paths.first).at_css("#lesson-completion-toggle").text.include?("Mark as incomplete"), "Completion did not persist")
+    visitor = self.class.new(@base.to_s)
+    check(visitor.request("get", lesson_paths.first).at_css("#lesson-completion-toggle").text.include?("Mark complete"), "Progress leaked between visitors")
+    request("delete", completion, token: token, accept: "text/vnd.turbo-stream.html")
+    puts "Demo checks passed: catalog, disabled forms, bundled media, blocked endpoints and isolated progress."
+  end
+
+  private
+
+  def check(condition, message)
+    raise message unless condition
+  end
+end
+
+DemoCheck.new(ENV.fetch("DEMO_URL", "http://127.0.0.1:3000")).run!

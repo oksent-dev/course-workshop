@@ -54,7 +54,7 @@ Use the importer through the Rails task:
 ruby bin/rails lessons:attach_image LESSON=1 KEY=commute-times "FILE=C:/Images/commute-times.png" "ALT=Daily commute times in minutes"
 ```
 
-Replace the lesson ID and file path with your own values. Unix absolute paths work too. This command runs locally with the application's database access; there is no public upload endpoint or editing UI.
+Replace the lesson ID and file path with your own values. Unix absolute paths work too. This command runs locally with the application's database access; there is no lesson-upload form. Standard Active Storage framework routes exist outside demo mode; demo boot removes them entirely.
 
 The task prints a reference to place in the lesson body:
 
@@ -76,11 +76,11 @@ The importer reads at most 5 MB plus one byte, detects the type from the file co
 
 ## Storage and rendering
 
-A `LessonImage` belongs to one lesson and owns one Active Storage attachment. Its key and alternative text live in PostgreSQL. File bytes use the Disk service: `storage/` in development and production, `tmp/storage/` in tests. libvips is required for import validation; the production Dockerfile and CI install it.
+A `LessonImage` belongs to one lesson and owns one Active Storage attachment. Its key and alternative text live in PostgreSQL. Imported and generated file bytes use the Disk service: `storage/` in development and standard production, `tmp/storage/` in tests. The bilingual demo uses immutable files in `public/demo-media/` through the read-only `bundled` service. libvips is required for import validation; the production Dockerfile and CI install it.
 
 The renderer only accepts `image:key` references to images attached to the current lesson. It generates the Active Storage URL itself. External image URLs, data URLs, unknown keys, and missing files show a localized placeholder with the available description. A Stimulus controller provides the same fallback if an image fails after the page is rendered.
 
-Active Storage serves these library images through signed URLs. The current library is public and does not implement per-user media authorization. Back up PostgreSQL and the storage directory together. Runtime uploads stay outside Git; the repository includes only the original prepared demo chart under `db/seeds/images/`.
+Active Storage serves local library images through signed URLs; bundled demo assets use same-origin static paths and require no Active Storage HTTP routes. The current library is public and does not implement per-user media authorization. Back up PostgreSQL and the storage directory together. Runtime uploads stay outside Git. The repository includes the original development chart under `db/seeds/images/` and the explicitly public [demo assets](demo-assets.md).
 
 ## Prepared example and checks
 

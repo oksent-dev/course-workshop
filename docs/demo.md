@@ -29,9 +29,12 @@ Compose also sets `DEMO_LOCAL_HTTP=true` for this localhost preview. This disabl
 docker compose --env-file .env.demo -f compose.demo.yml stop
 docker compose --env-file .env.demo -f compose.demo.yml up -d --wait
 docker compose --env-file .env.demo -f compose.demo.yml exec web ruby bin/rails demo:prepare
+docker compose --env-file .env.demo -f compose.demo.yml exec web ruby bin/check-demo
 ```
 
-The last command refreshes owned course content in place. It does not delete unrelated courses, lesson progress, or existing lesson IDs. The two `demo-*` slugs are reserved for this catalog: edit their Markdown sources rather than authoring unrelated courses under those slugs. Re-importing intentionally replaces edits to these eight lessons. Removing the database volume destroys demo progress; stopping the stack does not.
+The prepare command refreshes owned course content in place. It does not delete unrelated courses, lesson progress, or existing lesson IDs. The two `demo-*` slugs are reserved for this catalog: edit their Markdown sources rather than authoring unrelated courses under those slugs. Re-importing intentionally replaces edits to these eight lessons. Removing the database volume destroys demo progress; stopping the stack does not.
+
+`bin/check-demo` verifies the running application over HTTP, including CSRF-protected requests to disabled endpoints and separate progress cookies. It creates isolated anonymous test profiles and reverses its completion change. CI runs it against a freshly built production container. Browser tests additionally verify client-side math, diagram and image rendering.
 
 ## Feature gate
 

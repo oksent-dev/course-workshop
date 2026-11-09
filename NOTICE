@@ -1,0 +1,11 @@
+Required Notice: Copyright 2026 Course Workshop authors
+
+Original application code, documentation, course text, and original illustrations
+are offered under the PolyForm Noncommercial License 1.0.0 in LICENSE.
+
+Third-party dependencies and assets retain their own licenses. In particular:
+- DM Sans and Spectral fonts: SIL Open Font License 1.1, with the original
+  copyright notices in docs/licenses/dm-sans.txt and docs/licenses/spectral.txt.
+- The demo coffee photograph: CC0 1.0; see docs/demo-assets.md for its source.
+
+This notice does not replace or amend any third-party license.

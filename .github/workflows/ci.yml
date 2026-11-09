@@ -13,6 +13,23 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  demo:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+      - uses: ruby/setup-ruby@v1
+      - name: Build and start the production demo
+        run: ruby bin/demo
+      - name: Check the public demo over HTTP
+        run: docker compose --env-file .env.demo -f compose.demo.yml exec -T web ruby bin/check-demo
+      - name: Show demo logs on failure
+        if: failure()
+        run: docker compose --env-file .env.demo -f compose.demo.yml logs --tail 100
+      - name: Stop the demo
+        if: always()
+        run: docker compose --env-file .env.demo -f compose.demo.yml down
+
   verify:
     runs-on: ubuntu-latest
     env:

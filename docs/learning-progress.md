@@ -6,11 +6,11 @@ The library and course outline show a completed-lesson count and a progress bar.
 
 Development uses one shared local learner profile by default. Requests must come from a loopback address and use a localhost or loopback host name to access it. Its progress is shared across local browsers and survives browser changes, application restarts, and cookie removal because it belongs to a stable database record.
 
-Set `LOCAL_PROGRESS_ENABLED=false` and restart Rails to try browser-specific progress locally. Test and production environments default to browser profiles. Production always uses browser profiles, even if this setting is explicitly enabled. Nonlocal requests also use browser profiles.
+Set `LOCAL_PROGRESS_ENABLED=false` and restart Rails to try browser-specific progress locally. Test and production environments default to browser profiles. Production and demo mode always use browser profiles, even if this setting is explicitly enabled. Nonlocal requests also use browser profiles.
 
 A browser profile is identified by a random 256-bit key in an encrypted cookie. The cookie expires one year after creation, is HTTP-only, uses `SameSite=Lax`, and is marked secure on HTTPS. Only the server chooses the profile; request parameters cannot select another learner. Profile IDs and completion data are not stored in the cookie.
 
-This is anonymous browser continuity, not an account or sign-in system. A separate browser, private window, cleared cookie, expired cookie, or changed encryption key starts a separate profile. Existing database records remain, but there is no recovery or cross-device synchronization. Switching between local and browser modes does not merge their progress. Conversation history still follows its separate browser-session rules.
+This is anonymous browser continuity, not an account or sign-in system. A separate browser, private window, cleared cookie, expired cookie, or changed encryption key starts a separate profile. Existing database records remain, but there is no recovery or cross-device synchronization. Switching between local and browser modes does not merge their progress. Accepted conversations use the same learner identity and remain in PostgreSQL, scoped additionally to course and tutor/editor mode; only unsent composers and panel state live in per-tab session storage. Demo mode does not expose conversation history.
 
 ## Completion and resume rules
 

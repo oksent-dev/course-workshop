@@ -16,7 +16,7 @@ COURSE_AUTHORING_ENABLED=true
 CODEX_EXECUTABLE=codex
 ```
 
-Use an absolute executable path on Windows if needed. Restart `ruby bin/dev` after configuration changes. PostgreSQL and the local application must stay running. The generator launches its own scoped MCP child process; no global MCP registration is required. Native image generation must be available for covers and requested lesson illustrations. It uses the Codex account allowance, without a separate Image API key.
+For the Windows desktop installation, prefer `CODEX_EXECUTABLE=codex-desktop` to follow runtime updates; an explicit executable path is also supported. Restart `ruby bin/dev` after configuration changes. PostgreSQL and the local application must stay running. The generator launches its own scoped MCP child process; no global MCP registration is required. Native image generation must be available for covers and requested lesson illustrations. It uses the Codex account allowance, without a separate Image API key.
 
 ## What the learner sees
 
@@ -81,7 +81,7 @@ Every distinct mutation requires a UUID `request_key`. The existing `DraftOperat
 
 Text sessions enable only their MCP allow list and live web search. Image sessions enable only native image generation and receive a bounded visual brief. Both use the generation request's saved model and style preferences, disable unrelated MCP servers, shell, apps, plugins, project instructions and hooks, and use a read-only sandbox. Session-only MCP approval authorizes writes within the submitted workflow; global Codex configuration is unchanged. Unexpected interactive requests are rejected.
 
-HTTP actions require both feature flags, development/test and loopback host/client addresses. Production rejects them regardless of flags. This is one local workspace, not a multi-tenant permission system. Topics are filtered from HTTP logs; local SQL logs and Codex history may contain course material and should stay outside Git.
+Generation actions require both feature flags, development/test and loopback host/client addresses. Production rejects execution regardless of flags. Demo mode exposes only the disabled creation form, omits recent generations, and rejects all generation mutations on the server. This is one local workspace, not a multi-tenant permission system. Topics are filtered from HTTP logs; local SQL logs and Codex history may contain course material and should stay outside Git.
 
 ## Verification
 

@@ -1,68 +1,118 @@
+<p align="center">
+  <img src="app/assets/images/logo.svg" width="72" height="72" alt="Course Workshop logo">
+</p>
+
 # Course Workshop
 
-A workspace for creating and studying structured courses, with a Polish and English interface.
+**From Idea to Knowledge.** A bilingual workspace for creating, refining and studying structured courses with a local AI assistant.
 
-## Status
+Build a course from a topic, review its plan, and learn through lessons with code, mathematics, diagrams and exercises. Course Workshop combines a Rails application with a local Codex runtime; the prepared demo works without an AI account.
 
-The library displays cover cards with category filters, descriptions, and learning progress. Each course has an outline and a reader with previous and next lesson links. A three-lesson Polish course on everyday statistics is included. Optional covers use local Active Storage with optimized WebP thumbnails; see [course covers](docs/course-covers.md) for import and the verified Codex image-generation workflow.
+[Documentation](docs/README.md) · [Try the demo](#try-the-demo) · [Development setup](#development-setup) · [Design system](DESIGN.md) · [License](LICENSE)
 
-Mark lessons complete, undo completion, and resume from the library. Development shares a local profile across browsers; production keeps separate browser profiles without requiring sign-in. See [learning progress](docs/learning-progress.md) for ownership, persistence, and resume rules.
+![Course library with Polish and English statistics courses, cover illustrations, category filters and progress controls](docs/screenshots/library.png)
 
-Local MCP tools can create and revise course drafts. Review them in the local draft preview and explicitly approve a course before it appears in the library. See [course authoring](docs/course-authoring.md) for the tool contract, Codex configuration, and retry rules.
+## What you can do
 
-In local mode, **Create a course** asks the selected AI model to propose a plan and choose an appropriate lesson count and category. Approve the plan to start writing lessons in separate, resumable steps. Every generated lesson includes a table, formula, diagram or image; the model can request an AI illustration. The progress screen shows stages, current activity, saved lessons and image generation. A separate job creates the cover. The completed draft requires review before adding it to the library. See [course generation](docs/course-generation.md) for setup, scoped MCP access, and restart recovery.
+- **Generate a structured course.** Describe a topic and learning goal. Review the proposed outline before the model writes lessons, then approve the finished draft before it enters the library.
+- **Learn with varied material.** Read sanitized Markdown, highlighted code, LaTeX formulas, Mermaid diagrams, local images, tables and exercises with answers to reveal.
+- **Keep your place.** Mark lessons complete, resume a course from the library, and update progress without losing your reading position.
+- **Ask in context.** Open the floating assistant from an outline or lesson, quote a passage, and continue the same conversation while navigating. Accepted messages persist in PostgreSQL.
+- **Refine a draft.** Ask the editor to revise material, add or reorder lessons, remove a lesson, or replace a cover. Inspect saved changes and undo eligible operations.
+- **Choose how the model responds.** Select an available model, supported reasoning level and optional response style. Courses retain their original generation model, effort and date.
+- **Use Polish or English.** Interface language and course language are independent. The Reading Room design uses warm paper, sage accents, accessible controls and reduced-motion support.
 
-Lessons render Markdown with headings, lists, syntax-highlighted code, links, and tables. Rouge colors labeled code fences on the server using the Reading Room palette. Local images use Active Storage, with descriptions and optional captions. The example course includes a prepared chart. See [lesson content and image import](docs/lesson-content.md) for authoring instructions.
+## Two operating modes
 
-The statistics lesson also includes a KaTeX formula, a Mermaid flow diagram, and a practice exercise with a revealable answer. See [learning blocks](docs/learning-blocks.md) for the supported formats.
+| | Local workspace | Demo |
+| --- | --- | --- |
+| Catalog | Your published courses and private local drafts | Two prepared courses, four lessons each |
+| AI | Opt-in Codex integration, generation, tutoring and draft editing | Disabled, including server-side endpoints |
+| Creation and settings | Editable when local AI is enabled | Visible, disabled previews |
+| Assistant | Persistent conversations and scoped tools | Openable explanation with a disabled composer |
+| Progress | One local profile by default; browser profiles optional | Separate progress for each browser |
+| Media | Local Active Storage uploads and generated images | Versioned assets bundled with the application |
 
-An optional local assistant uses the selected model through Codex App Server. Its shared panel follows course outlines, lessons and drafts, retaining unsent text, quotes and panel state during navigation. Each question captures its original context; draft editing and published tutoring have separate histories. The draft assistant can revise material, add, remove and reorder lessons, and replace a cover. Saved changes have before/after previews and revision-safe undo. A database queue and bounded recovery checks preserve accepted work across restarts and recover completed replies from Codex history. See [local AI setup](docs/local-ai.md) and [draft editing](docs/draft-editing.md); AI is disabled by default and unavailable in production.
+**The demo courses:** *Statystyka przy kawie* and *Statistics over coffee*. Both follow the same invented coffee waiting-time dataset, from measurement to an honest statistical conclusion. Each course includes a photograph, tables, a chart, Ruby examples, formulas, a flowchart and practice exercises.
 
-The gear beside the language selector opens shared local [AI settings](docs/ai-settings.md): a model picker from the Codex account, reasoning levels supported by that model, and a short tone/style instruction. GPT-6.1 Sol is the default. New requests capture these preferences; running work and retries keep their original configuration. Course and draft overviews show the original generation model.
+## Try the demo
 
-## Requirements
+With Docker running and Ruby available, run from the checkout:
 
-- Ruby 4.0.9 and Bundler 4.0.20
-- Node.js 24 and npm 11
-- Docker with the Compose plugin
-- Chrome or Chromium for browser tests
-- libvips for validating and importing lesson images
+```sh
+ruby bin/demo
+```
 
-On Windows, use RubyInstaller with MSYS2/Devkit. Native gems may install build dependencies during the first bundle installation.
+Open **[localhost:3001/en](http://localhost:3001/en)** or **[localhost:3001/pl](http://localhost:3001/pl)**.
 
-## Quick start
+The launcher builds the production image, creates a private `.env.demo` with random secrets, starts an isolated PostgreSQL service, and prepares both courses. Host Node.js, a Codex login and AI keys are not needed. Existing development data is not used. This command runs locally; it does not publish a website.
 
-From the project directory:
+```sh
+# Verify the running demo, including blocked writes and browser progress isolation
+docker compose --env-file .env.demo -f compose.demo.yml exec web ruby bin/check-demo
+
+# Stop it while keeping the database and progress
+docker compose --env-file .env.demo -f compose.demo.yml stop
+```
+
+[`DEMO_MODE=true`](docs/demo.md#feature-gate) controls the feature boundary. See the [demo guide](docs/demo.md) for restart behavior, bundled media, environment variables and Vercel container deployment preparation.
+
+## A focused reader
+
+The outline stays beside the lesson, wide tables and code scroll within their own regions, and exercise answers use a native disclosure. Math and diagrams load only when needed. Progress updates preserve the lesson, open exercise and assistant state.
+
+![Lesson reader showing a course outline, clear typography and the mean formula](docs/screenshots/reader.png)
+
+<details>
+<summary>See code, tables and a diagram inside lessons</summary>
+
+![Comparison table and syntax-highlighted Ruby example in the lesson reader](docs/screenshots/code.png)
+
+![Mermaid diagram that connects statistical questions to the mean, median and the limits of the data](docs/screenshots/diagram.png)
+
+</details>
+
+Screenshots come from the running demo. [Reproduce them](docs/screenshots/README.md) after UI changes.
+
+## Development setup
+
+| Dependency | Version / purpose |
+| --- | --- |
+| Ruby / Bundler | 4.0.9 / 4.0.20 |
+| Node.js / npm | 24 / 11 |
+| Docker Compose | PostgreSQL 18 |
+| libvips | Image validation and processing |
+| Chrome or Chromium | Browser tests |
+
+On Windows, use RubyInstaller with MSYS2/Devkit. From a checkout:
 
 ```sh
 ruby bin/setup
 ruby bin/dev
 ```
 
-Setup installs dependencies, creates a private `.env` with a generated database password, starts PostgreSQL, prepares the databases, loads the example course into development, and builds assets. Existing `.env` values are preserved. Review `.env.example` for available settings.
+Open [localhost:3000](http://localhost:3000). Setup installs dependencies, prepares the database and development seed, and builds assets. `bin/dev` runs Rails, the database-backed job worker, and asset watchers. AI is off by default.
 
-Open [http://localhost:3000](http://localhost:3000). The application redirects to `/pl`; English is available at `/en`.
+To enable AI, follow [local Codex setup](docs/local-ai.md), then [course generation](docs/course-generation.md). The application checks the authenticated runtime's model catalog; GPT-6.1 Sol is the default. On Windows, `CODEX_EXECUTABLE=codex-desktop` follows installed desktop runtime updates. Generating text and images uses the connected Codex account's allowance.
 
-Open **Statystyka na co dzień** in the library, then select the first lesson from the course outline. Follow the navigation to the final lesson or jump to a title in the outline. Switching the interface to English keeps the current lesson open and the original Polish text visible.
+The [development guide](docs/development.md) covers configuration, updates, troubleshooting and backups. Do not expose the development workspace through a public tunnel; its AI access is designed for a single local workspace.
 
-The development command runs Rails, a Solid Queue worker, the JavaScript watcher, and the Tailwind watcher. Stop them with Ctrl+C. The worker uses the threaded supervisor mode on Windows and Linux. Queued jobs persist in the development queue database; a running model request may need recovery after stopping the worker. If PowerShell does not find Ruby, reopen the terminal after installing RubyInstaller.
+## Architecture
 
-## Database and files
+| Layer | Implementation |
+| --- | --- |
+| Application | Ruby on Rails 8.1, ERB, Puma and PostgreSQL |
+| Interface | Turbo, Stimulus, Tailwind CSS, daisyUI and Rails I18n |
+| Lesson rendering | Commonmarker, Rouge, KaTeX, Mermaid and DOMPurify |
+| Background work | Solid Queue, persisted execution state, scoped credentials and idempotent operation receipts |
+| AI boundary | Local Codex App Server plus narrowly scoped MCP tools |
+| Media | Active Storage; local uploads or read-only bundled demo assets |
 
-PostgreSQL runs in a dedicated Docker Compose service, bound to `127.0.0.1:5432`. Set `POSTGRES_PORT` in `.env` before setup if that port is occupied.
+Generation, editing and images run outside database transactions. Short locked transitions and revision checks coordinate writes; uncertain interrupted work is reconciled before an explicit retry. Published tutors have no editing tools. Plan approval and library publication remain human actions.
 
-```sh
-docker compose up -d --wait db
-docker compose stop db
-```
+See the [architecture guide](docs/architecture.md) for request flow, records, recovery and access boundaries, and the [documentation index](docs/README.md) for individual feature contracts.
 
-Database files live in the `postgres_data` named volume. Active Storage uses `storage/` locally. Both are private runtime data and are excluded from Git. Removing the database volume destroys its contents; changing the password in `.env` does not rotate the password in an existing PostgreSQL volume.
-
-For an existing checkout, run `ruby bin/rails db:prepare db:seed` to migrate the databases and refresh the example in development. The [seed material](db/seeds/everyday-statistics.yml) supplies the course slug and the lessons in reading order. Re-running the seed updates those records in place and preserves their links.
-
-Image imports use libvips to validate the file contents and dimensions. Install libvips before importing images or running the seed and tests. The production Dockerfile and CI already include it.
-
-## Checks
+## Verification
 
 ```sh
 ruby bin/rails test
@@ -74,31 +124,14 @@ ruby bin/bundler-audit
 npm audit
 ```
 
-Tests use a separate `course_workshop_test` database. Browser tests run headless Chrome. GitHub Actions runs the checks against PostgreSQL.
+Automated AI tests use fake adapters and do not call a model. [CI](.github/workflows/ci.yml) checks Ruby style, application security, dependencies, application/browser behavior, and a fresh production demo build. Browser tests cover Polish/English, keyboard use, narrow layouts and recovery scenarios.
 
-## Stack
+## Current scope
 
-- Rails 8.1, PostgreSQL 18, Puma, and Propshaft
-- ERB, Turbo, Stimulus, and esbuild
-- Tailwind CSS through `tailwindcss-rails`, with daisyUI components in ERB views
-- Rails I18n with English and Polish locale dictionaries
-- Active Storage with the local disk adapter
-- Solid Queue in development and production; Solid Cache and Solid Cable for production infrastructure
+The local workspace is for a single owner. Demo progress is anonymous browser continuity, with no login or cross-device synchronization. Clearing the identity cookie starts a new profile. Demo charts are static; arbitrary generated JavaScript, interactive Chart.js lessons and automatic imports of web images are not implemented. Generated material still needs human review.
 
-Commonmarker renders lesson Markdown, KaTeX renders math, and Mermaid with DOMPurify renders restricted flow diagrams. The Ruby MCP SDK serves local course-authoring tools. Chart.js is installed for upcoming interactive chart features.
+## License and contributions
 
-## Configuration and deployment
+Source available under the **[PolyForm Noncommercial License 1.0.0](LICENSE)**. Use, modification and redistribution must comply with its permitted purposes and conditions. [Third-party assets and dependencies retain their own licenses](NOTICE).
 
-For the isolated bilingual showcase, run `ruby bin/demo` and open [localhost:3001](http://localhost:3001). It builds a production-mode demo with its own PostgreSQL volume, two complete courses, bundled media, disabled AI forms and assistant, and separate progress per browser. See [demo setup and Vercel preparation](docs/demo.md). Nothing is published by this command.
-
-Keep secrets in environment variables or encrypted Rails credentials. Never commit `.env`, credential keys, uploaded files, or logs.
-
-The production Dockerfile builds a standalone Rails image:
-
-```sh
-docker build -t course-workshop .
-```
-
-A standard deployment must provide `SECRET_KEY_BASE`, PostgreSQL connection settings, and persistent storage mounted at `/rails/storage`. The entrypoint prepares the primary and Solid databases unless `PREPARE_DATABASE_ON_BOOT=false`; the database role needs the corresponding privileges. Demo mode uses one primary database and bundled read-only media instead. Run behind a TLS-terminating reverse proxy. A live Codex runtime is not included in the image.
-
-See [architecture](docs/architecture.md) for component boundaries and the [Reading Room design system](DESIGN.md) for interface guidelines.
+This repository **does not accept external contributions or pull requests**. See the [contribution policy](CONTRIBUTING.md).

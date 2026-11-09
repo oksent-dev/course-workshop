@@ -4,7 +4,7 @@
 
 Course Workshop is a server-rendered Rails application. ERB produces HTML; Turbo handles navigation and partial updates; Stimulus provides focused browser behavior. esbuild bundles JavaScript, and the standalone Tailwind executable builds CSS.
 
-PostgreSQL is the application database. Active Storage stores file metadata in PostgreSQL and file contents on disk. Production uses the standard Solid adapters, with separate cache, queue, and cable databases.
+PostgreSQL is the application database. Active Storage stores file metadata in PostgreSQL and file contents on disk. Standard production uses the Solid adapters with separate cache, queue, and cable databases. Demo production uses one primary database, an in-process cache, inline jobs, and versioned public media bundled in the image; no agent worker is needed.
 
 ## Localization
 
@@ -32,7 +32,7 @@ esbuild splits the renderer bundles into content-hashed chunks. Chunk and font f
 
 `LessonImage` stores a unique key per lesson and alternative text, and owns one Active Storage file. `LessonImages::Import` validates local image contents and performs repeatable imports through a Rails task or the seed. Missing files produce a text fallback, including when a request fails in the browser. See [lesson content](lesson-content.md) for syntax, limits, and storage behavior.
 
-The [seed script](../db/seeds.rb) loads the prepared course in a transaction. It reuses the category name and course slug, and updates the demo lessons by their one-based position in the source file. Those positions identify the seeded lessons across runs. Append new lessons or edit the material at its existing position to preserve the meaning of saved links.
+The [seed script](../db/seeds.rb) loads the development example or, under `DEMO_MODE=true`, the two packaged courses through `DemoCatalog`. Both paths reuse category names and course slugs, updating seeded lessons by their one-based source position. Those positions identify the lessons across runs. Append new lessons or edit material at its existing position to preserve the meaning of saved links.
 
 The library uses `?category=ID` for filtering. Counts are computed from published courses before filtering. An unknown category, or one containing only drafts, returns 404. Covers, categories, lesson outlines, and learner progress are loaded in batches for the selected courses. `CourseCovers::Import` and `LessonImages::Import` share `ImageUpload` for content detection, size limits, and full image decoding. Course covers use a named 960 × 540 WebP variant. The browser's image-fallback controller is shared with lesson images. See [course covers](course-covers.md).
 
@@ -42,7 +42,7 @@ The library uses `?category=ID` for filtering. Counts are computed from publishe
 
 `CourseProgress` calculates counts and resume targets from current lessons. Library queries batch outlines and progress across courses. `CompletionsController` scopes the lesson through its course and writes only to the current profile. Standard Rails forms provide CSRF protection and work with or without Turbo. Personalized responses disable caching; prefetch and HEAD requests do not record visits. See [learning progress](learning-progress.md) for behavior and persistence boundaries.
 
-## Planned course features
+## Course assistant and extensions
 
 Additional interactive components remain possible extensions.
 
@@ -105,3 +105,7 @@ The integration is opt-in and restricted to local development. Production reject
 Development runs Ruby on the host and PostgreSQL in Docker. The production image runs Rails on Linux and includes compiled assets. Dependency lockfiles cover Windows and Linux.
 
 Development credentials and uploaded content are local runtime data. The public repository contains configuration examples, not credentials.
+
+`DemoMode` supplies the server-side gate. `Course.in_library` restricts demo readers and completion requests to the two packaged course slugs. `LocalAi` and `LocalAuthoring` reject execution whenever demo mode is enabled. Creation and settings expose disabled previews; the latter constructs unsaved default settings instead of loading local preferences or discovering models. A separate `demo-chat` controller opens a preview without conversation endpoints or storage.
+
+`DemoCatalog` imports the two manifests, Markdown lessons and validated bundled attachments transactionally. Reserved slugs and one-based lesson positions retain identities across imports. `BundledService` resolves strict versioned asset keys to read-only files; database attachment purges do not delete application assets. Demo boot does not mount Active Storage routes. Browser progress remains writable and private to its encrypted learner cookie, including on localhost. See [demo setup](demo.md) for production startup, HTTP preview, storage and Vercel preparation.
