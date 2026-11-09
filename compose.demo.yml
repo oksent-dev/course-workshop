@@ -1,0 +1,44 @@
+name: course-workshop-demo
+
+services:
+  db:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: course_workshop
+      POSTGRES_PASSWORD: ${DEMO_POSTGRES_PASSWORD:?Set DEMO_POSTGRES_PASSWORD in .env.demo}
+      POSTGRES_DB: course_workshop_production
+    volumes:
+      - demo_postgres_data:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U course_workshop -d course_workshop_production"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  web:
+    build: .
+    environment:
+      DEMO_MODE: "true"
+      DEMO_LOCAL_HTTP: "true"
+      RAILS_ENV: production
+      SECRET_KEY_BASE: ${DEMO_SECRET_KEY_BASE:?Set DEMO_SECRET_KEY_BASE in .env.demo}
+      POSTGRES_HOST: db
+      POSTGRES_USER: course_workshop
+      POSTGRES_PASSWORD: ${DEMO_POSTGRES_PASSWORD}
+      LOCAL_AI_ENABLED: "false"
+      COURSE_AUTHORING_ENABLED: "false"
+      PORT: "3000"
+    ports:
+      - "127.0.0.1:${DEMO_PORT:-3001}:3000"
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "ruby", "-rnet/http", "-e", "exit(Net::HTTP.get_response(URI('http://127.0.0.1:3000/up')).code == '200' ? 0 : 1)"]
+      interval: 5s
+      timeout: 5s
+      start_period: 20s
+      retries: 20
+
+volumes:
+  demo_postgres_data:

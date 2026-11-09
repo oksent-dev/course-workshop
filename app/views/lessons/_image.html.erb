@@ -1,6 +1,7 @@
 <%= content_tag(standalone ? :figure : :span, class: "lesson-image", data: { controller: "lesson-image" }) do %>
   <% if image %>
-    <%= image_tag rails_blob_path(image.file, disposition: "inline"),
+    <% source = image.file.blob.service_name == "bundled" ? image.file.blob.url : rails_blob_path(image.file, disposition: "inline") %>
+    <%= image_tag source,
       alt: alt_text, loading: "lazy", decoding: "async",
       width: image.file.metadata["width"], height: image.file.metadata["height"],
       data: { lesson_image_target: "image", action: "error->lesson-image#failed load->lesson-image#loaded" } %>

@@ -3,7 +3,8 @@
     <%= render "pages/bookshelf" %>
   </div>
   <% if course.cover.attached? %>
-    <%= image_tag course.cover.variant(:card), alt: "", width: 960, height: 540,
+    <% source = course.cover.blob.service_name == "bundled" ? course.cover.blob.url : course.cover.variant(:card) %>
+    <%= image_tag source, alt: "", width: 960, height: 540,
       loading: eager ? "eager" : "lazy", decoding: "async", class: "relative h-full w-full object-cover",
       data: { course_cover_target: "image", action: "error->course-cover#failed load->course-cover#loaded" } %>
   <% end %>

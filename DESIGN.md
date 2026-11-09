@@ -109,6 +109,10 @@ Use a single quiet form panel, at most 42 rem wide: read-only Codex source, mode
 
 Show the original generation model and reasoning level together as quiet, localized metadata beneath the course, draft and generation headings. Let the row wrap on narrow screens. Place the generation date beneath it and repeat the date below the content language on library and draft cards. Use a semantic `time` element with a localized short date. Before generation completes, and for manually authored material, label the creation date as Created rather than Generated. Update the generation overview metadata when polling finishes the course. Do not label externally authored material with a guessed model, infer unrecorded historical effort, or rewrite the original credit/date after later editing or publication.
 
+## Demo previews
+
+Keep course creation and settings discoverable in demo navigation. Show the real form structure in a disabled fieldset, preceded by a readable explanation and a working library link. Use default preview values without loading personal settings or a model catalog. The demo assistant opens a matching panel with a clear explanation and disabled composer; it must not imply that a message was sent or fetch conversation history. A quiet page notice explains the two prepared courses and browser-specific progress. Lessons, exercises and progress controls retain their normal behavior.
+
 ## Motion
 
 Use a short fade-up to introduce a new screen, not to pace the learner's reading. Page headings, library filters and result counts, course cards, outlines, lesson articles, and forms enter once when rendered, including Turbo navigation. Animate the lesson article as one surface; scrolling does not hide or reveal individual paragraphs. The site header stays steady. Never transform an ancestor of the fixed chat widget.

@@ -12,6 +12,7 @@ class Course < ApplicationRecord
   end
 
   enum :status, { draft: "draft", published: "published" }, validate: true
+  scope :in_library, -> { DemoMode.enabled? ? published.where(slug: DemoMode::COURSE_SLUGS) : published }
   validates :revision, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
   validates :title, length: { maximum: 160 }
   validates :description, length: { maximum: 2_000 }

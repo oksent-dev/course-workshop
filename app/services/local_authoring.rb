@@ -1,6 +1,6 @@
 module LocalAuthoring
   def self.enabled?
-    (Rails.env.development? || Rails.env.test?) && Rails.configuration.x.local_authoring.enabled == true
+    !DemoMode.enabled? && (Rails.env.development? || Rails.env.test?) && Rails.configuration.x.local_authoring.enabled == true
   end
 
   def self.available?(request)

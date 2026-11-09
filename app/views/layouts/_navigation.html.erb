@@ -1,14 +1,14 @@
 <header class="border-b border-base-300" data-site-header>
-  <div class="mx-auto grid max-w-5xl grid-cols-[1fr_auto] items-center gap-x-2 gap-y-3 px-4 py-4 sm:gap-x-6 sm:px-8 lg:grid-cols-[auto_1fr_auto_auto]">
+  <div class="mx-auto flex max-w-5xl flex-wrap items-center justify-between gap-x-2 gap-y-3 px-4 py-4 sm:gap-x-6 sm:px-8 lg:grid lg:grid-cols-[auto_1fr_auto_auto]">
     <%= link_to localized_root_path, aria: { label: t("app.name") }, data: { site_brand: true },
-      class: "order-1 inline-flex min-h-11 min-w-0 w-fit items-center gap-2.5 rounded-field font-medium" do %>
+      class: "order-1 inline-flex min-h-11 min-w-0 max-w-full w-fit items-center gap-2.5 rounded-field font-medium wrap-anywhere" do %>
       <%= image_tag "logo.svg", width: 36, height: 36, alt: "", class: "size-9 shrink-0" %>
       <span class="min-w-0">
         <span class="block leading-tight"><%= t("app.name") %></span>
         <span class="mt-1 block text-[0.6875rem] leading-snug font-normal text-muted-ink sm:text-xs"><%= t("app.tagline") %></span>
       </span>
     <% end %>
-    <div class="order-3 col-span-2 flex items-center justify-between gap-2 lg:contents">
+    <div class="order-3 flex w-full flex-wrap items-center justify-between gap-2 lg:contents">
     <nav aria-label="<%= t("navigation.main") %>" class="flex flex-wrap items-center gap-1 lg:order-2 lg:justify-self-end" data-primary-navigation>
       <% active = navigation_section == :library %>
       <%= link_to t("navigation.library"), localized_root_path, aria: { current: ("page" if active) },
@@ -19,15 +19,15 @@
           class: class_names("inline-flex min-h-11 items-center rounded-field px-2 text-sm font-medium hover:bg-secondary sm:px-3", active ? "bg-secondary text-primary underline decoration-2 underline-offset-8" : "text-muted-ink") %>
       <% end %>
     </nav>
-    <% if LocalGeneration.available?(request) %>
+    <% if DemoMode.enabled? || LocalGeneration.available?(request) %>
       <%= link_to t("generation.title"), new_generation_path,
         aria: { current: ("page" if navigation_section == :create) },
-        class: class_names("btn btn-primary min-h-11 h-auto px-3 py-3 text-sm lg:order-3", "underline decoration-2 underline-offset-4" => navigation_section == :create) %>
+        class: class_names("btn btn-primary min-h-11 h-auto max-w-full px-3 py-3 text-sm whitespace-normal lg:order-3", "underline decoration-2 underline-offset-4" => navigation_section == :create) %>
     <% end %>
     </div>
     <div class="order-2 flex items-center justify-self-end gap-1 lg:order-4">
       <%= render "layouts/language_menu" %>
-      <% if LocalAi.available?(request) %>
+      <% if DemoMode.enabled? || LocalAi.available?(request) %>
         <%= link_to settings_path, title: t("settings.title"), aria: { label: t("settings.title"), current: ("page" if navigation_section == :settings) },
           class: class_names("btn btn-ghost btn-circle order-3 min-h-11 min-w-11", "bg-secondary text-primary" => navigation_section == :settings) do %>
           <svg aria-hidden="true" class="size-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">

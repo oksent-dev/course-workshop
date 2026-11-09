@@ -1,3 +1,8 @@
+if DemoMode.enabled?
+  DemoCatalog.prepare!
+  return
+end
+
 demo = YAML.safe_load_file(Rails.root.join("db/seeds/everyday-statistics.yml"))
 course_attributes = demo.fetch("course")
 category_name = demo.fetch("category")

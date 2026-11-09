@@ -1,0 +1,19 @@
+category: Statystyka
+course:
+  slug: demo-statystyka-przy-kawie
+  language: pl
+  title: Statystyka przy kawie
+  description: Ile naprawdę czekasz na kawę? W czterech krótkich lekcjach przejdziesz od pomiaru do wniosku. Poznasz średnią i medianę, odczytasz wykres i sprawdzisz obliczenia w Ruby. Wystarczy podstawowa arytmetyka; kod możesz prześledzić bez znajomości języka. Dane są wymyślone na potrzeby nauki.
+lessons:
+  - title: Najpierw dobre pytanie
+    images:
+      - key: coffee
+        file: cw-demo-coffee-v1.jpg
+        alt_text: Biała filiżanka kawy widziana z góry na czerwonym blacie. Zdjęcie ilustracyjne.
+  - title: Średnia i mediana opowiadają różne historie
+  - title: Zobacz rozrzut, zanim wyciągniesz wniosek
+    images:
+      - key: waiting-times
+        file: cw-demo-chart-pl-v1.png
+        alt_text: Wykres pięciu czasów oczekiwania — 4, 6, 8, 10 i 32 minuty. Mediana to 8 minut, a średnia 12. Wszystkie wartości są również podane w tabeli.
+  - title: Od obliczenia do uczciwej odpowiedzi

@@ -3,6 +3,13 @@ class SettingsController < ApplicationController
   before_action :require_local_ai
 
   def show
+    if DemoMode.enabled?
+      @settings = AiSetting.new
+      @models = [ { "id" => @settings.model, "name" => @settings.model_label,
+        "reasoning_efforts" => [ @settings.reasoning_effort ].compact,
+        "default_reasoning_effort" => @settings.reasoning_effort } ]
+      return
+    end
     @settings = AiSetting.current
     load_models
   end
@@ -43,6 +50,7 @@ class SettingsController < ApplicationController
   end
 
   def require_local_ai
+    return if DemoMode.enabled? && action_name == "show"
     head :not_found unless LocalAi.available?(request)
   end
 

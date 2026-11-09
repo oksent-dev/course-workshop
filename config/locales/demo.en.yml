@@ -1,0 +1,8 @@
+en:
+  demo:
+    badge: Demo
+    introduction: Explore two complete courses. Your reading progress is saved in this browser.
+    preview_title: A preview of the full application
+    preview_description: Course creation and AI settings are available in the local application. These controls are disabled in the public demo. Explore the prepared courses and try the exercises instead.
+    chat_description: In the local application, the assistant explains lessons and answers questions about selected passages. Conversations are disabled in this demo.
+    chat_placeholder: Conversations are unavailable in the demo

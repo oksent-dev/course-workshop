@@ -20,6 +20,8 @@ module CourseWorkshop
     config.i18n.available_locales = %i[pl en]
     config.i18n.default_locale = :pl
     config.time_zone = "UTC"
+    config.x.demo_mode = ENV["DEMO_MODE"] == "true"
+    config.active_storage.draw_routes = false if config.x.demo_mode
     config.generators.system_tests = :test_unit
   end
 end

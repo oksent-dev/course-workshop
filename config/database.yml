@@ -24,6 +24,7 @@ production:
   primary: &primary_production
     <<: *default
     database: course_workshop_production
+<% unless ENV["DEMO_MODE"] == "true" %>
   cache:
     <<: *primary_production
     database: course_workshop_production_cache
@@ -36,3 +37,4 @@ production:
     <<: *primary_production
     database: course_workshop_production_cable
     migrations_paths: db/cable_migrate
+<% end %>

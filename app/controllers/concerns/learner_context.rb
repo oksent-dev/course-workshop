@@ -15,7 +15,7 @@ module LearnerContext
   end
 
   def learner_key
-    if (Rails.env.development? || Rails.env.test?) && Rails.configuration.x.learning_progress.local_profile &&
+    if !DemoMode.enabled? && (Rails.env.development? || Rails.env.test?) && Rails.configuration.x.learning_progress.local_profile &&
         [ "127.0.0.1", "::1" ].include?(request.remote_ip) &&
         [ "localhost", "127.0.0.1", "::1", "[::1]" ].include?(request.host)
       return "local"

@@ -5,6 +5,8 @@
 </header>
 <%= form_with model: @settings, url: settings_path, method: :patch, class: "mt-8 max-w-2xl space-y-7 rounded-box bg-base-200 p-6 sm:p-8",
   data: { motion: "enter", motion_delay: "1", controller: "ai-settings", ai_settings_models_value: reasoning_model_options(@models), ai_settings_not_configurable_value: t("settings.reasoning_not_configurable") } do |form| %>
+  <%= render "layouts/demo_notice" if DemoMode.enabled? %>
+  <%= tag.fieldset disabled: DemoMode.enabled?, class: "min-w-0 space-y-7" do %>
   <%= form.hidden_field :lock_version %>
   <% if @error %><p role="alert" class="font-medium"><%= @error %></p><% end %>
   <div>
@@ -39,4 +41,5 @@
   </div>
   <p class="text-sm leading-relaxed text-muted-ink"><%= t("settings.applies_to") %></p>
   <%= form.submit t("settings.save"), class: "btn btn-primary min-h-11 h-auto max-w-full py-3 whitespace-normal", data: { turbo_submits_with: t("settings.saving") } %>
+  <% end %>
 <% end %>

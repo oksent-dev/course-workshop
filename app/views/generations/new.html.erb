@@ -4,6 +4,8 @@
   <p class="mt-3 max-w-prose font-serif text-xl leading-relaxed"><%= t("generation.introduction") %></p>
 </header>
 <%= form_with model: @generation, url: generations_path, class: "mt-8 max-w-2xl space-y-6 rounded-box bg-base-200 p-6 sm:p-8", data: { motion: "enter", motion_delay: "1" } do |form| %>
+  <%= render "layouts/demo_notice" if DemoMode.enabled? %>
+  <%= tag.fieldset disabled: DemoMode.enabled?, class: "min-w-0 space-y-6" do %>
   <% if @error %><p role="alert" class="font-medium text-error-content"><%= @error %></p><% end %>
   <%= form.hidden_field :request_key %>
   <div>
@@ -19,6 +21,7 @@
   </div>
   <p class="text-sm leading-relaxed text-muted-ink"><%= t("generation.consent") %></p>
   <%= form.submit t("generation.submit"), class: "btn btn-primary min-h-11 h-auto max-w-full py-3", data: { turbo_submits_with: t("generation.submitting") } %>
+  <% end %>
 <% end %>
 <% if @recent.any? %>
   <section class="mt-10 max-w-2xl" aria-labelledby="recent-heading" data-motion="enter" data-motion-delay="2">

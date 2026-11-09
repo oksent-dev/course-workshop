@@ -10,7 +10,7 @@ class GenerationsController < ApplicationController
 
   def new
     @generation = CourseGeneration.new(language: I18n.locale, request_key: SecureRandom.uuid)
-    @recent = CourseGeneration.includes(:course).order(id: :desc).limit(10)
+    @recent = DemoMode.enabled? ? [] : CourseGeneration.includes(:course).order(id: :desc).limit(10)
   end
 
   def create
@@ -73,6 +73,7 @@ class GenerationsController < ApplicationController
 
   def require_local_generation
     response.headers["Cache-Control"] = "private, no-store"
+    return if DemoMode.enabled? && action_name == "new"
     head :not_found unless LocalGeneration.available?(request)
   end
 

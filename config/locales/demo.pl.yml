@@ -1,0 +1,8 @@
+pl:
+  demo:
+    badge: Demo
+    introduction: Poznaj dwa kompletne kursy. Postęp nauki jest zapisywany osobno dla tej przeglądarki.
+    preview_title: Podgląd pełnej aplikacji
+    preview_description: Tworzenie kursów i ustawienia AI są dostępne w lokalnej aplikacji. W publicznym demo te formularze są wyłączone. Możesz za to poznać gotowe kursy i rozwiązać zadania.
+    chat_description: W lokalnej aplikacji asystent wyjaśnia lekcje i odpowiada na pytania o zaznaczone fragmenty. W tym demo rozmowy są wyłączone.
+    chat_placeholder: Rozmowy są niedostępne w demo

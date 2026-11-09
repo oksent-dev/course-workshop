@@ -14,7 +14,7 @@ module LocalAi
   class Cancelled < StandardError; end
 
   def self.enabled?
-    (Rails.env.development? || Rails.env.test?) && Rails.configuration.x.local_ai.enabled == true
+    !DemoMode.enabled? && (Rails.env.development? || Rails.env.test?) && Rails.configuration.x.local_ai.enabled == true
   end
 
   def self.available?(request)

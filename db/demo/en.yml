@@ -1,0 +1,19 @@
+category: Statistics
+course:
+  slug: demo-statistics-over-coffee
+  language: en
+  title: Statistics over coffee
+  description: How long do you really wait for coffee? In four short lessons, go from a measurement to a useful conclusion. Learn about the mean and median, read a chart, and check your calculations in Ruby. Basic arithmetic is enough; you can follow the code without knowing the language. All data is invented for teaching.
+lessons:
+  - title: Start with a useful question
+    images:
+      - key: coffee
+        file: cw-demo-coffee-v1.jpg
+        alt_text: A white cup of coffee seen from above on a red table. An illustrative photograph.
+  - title: The mean and median tell different stories
+  - title: Look at the spread before drawing a conclusion
+    images:
+      - key: waiting-times
+        file: cw-demo-chart-en-v1.png
+        alt_text: Five waiting times — 4, 6, 8, 10 and 32 minutes. The median is 8 minutes and the mean is 12. All values are also provided in a table.
+  - title: Turn a calculation into an honest answer

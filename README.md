@@ -89,6 +89,8 @@ Commonmarker renders lesson Markdown, KaTeX renders math, and Mermaid with DOMPu
 
 ## Configuration and deployment
 
+For the isolated bilingual showcase, run `ruby bin/demo` and open [localhost:3001](http://localhost:3001). It builds a production-mode demo with its own PostgreSQL volume, two complete courses, bundled media, disabled AI forms and assistant, and separate progress per browser. See [demo setup and Vercel preparation](docs/demo.md). Nothing is published by this command.
+
 Keep secrets in environment variables or encrypted Rails credentials. Never commit `.env`, credential keys, uploaded files, or logs.
 
 The production Dockerfile builds a standalone Rails image:
@@ -97,6 +99,6 @@ The production Dockerfile builds a standalone Rails image:
 docker build -t course-workshop .
 ```
 
-A deployment must provide `SECRET_KEY_BASE`, PostgreSQL connection settings, and persistent storage mounted at `/rails/storage`. The entrypoint prepares the primary and Solid databases; the database role needs the corresponding privileges. Run behind a TLS-terminating reverse proxy. A live Codex runtime is not included in the image.
+A standard deployment must provide `SECRET_KEY_BASE`, PostgreSQL connection settings, and persistent storage mounted at `/rails/storage`. The entrypoint prepares the primary and Solid databases unless `PREPARE_DATABASE_ON_BOOT=false`; the database role needs the corresponding privileges. Demo mode uses one primary database and bundled read-only media instead. Run behind a TLS-terminating reverse proxy. A live Codex runtime is not included in the image.
 
 See [architecture](docs/architecture.md) for component boundaries and the [Reading Room design system](DESIGN.md) for interface guidelines.

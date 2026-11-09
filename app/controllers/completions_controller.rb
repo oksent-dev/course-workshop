@@ -29,7 +29,7 @@ class CompletionsController < ApplicationController
   end
 
   def set_lesson
-    @course = Course.published.find_by!(slug: params[:course_slug])
+    @course = Course.in_library.find_by!(slug: params[:course_slug])
     @lesson = @course.lessons.find(params[:lesson_id])
   end
 end

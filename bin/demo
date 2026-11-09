@@ -1,0 +1,9 @@
+#!/usr/bin/env ruby
+require "securerandom"
+
+Dir.chdir(File.expand_path("..", __dir__)) do
+  unless File.exist?(".env.demo")
+    File.write(".env.demo", "DEMO_POSTGRES_PASSWORD=#{SecureRandom.hex(32)}\nDEMO_SECRET_KEY_BASE=#{SecureRandom.hex(64)}\n", perm: 0o600)
+  end
+  exec "docker", "compose", "--env-file", ".env.demo", "-f", "compose.demo.yml", "up", "-d", "--build", "--wait"
+end

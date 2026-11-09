@@ -12,5 +12,7 @@ test:
   <<: *default
 
 production:
+<% unless ENV["DEMO_MODE"] == "true" %>
   database: cache
+<% end %>
   <<: *default
