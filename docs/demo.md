@@ -1,5 +1,7 @@
 # Public demo
 
+Hosted demo: [Polish](https://course-workshop-solvepatch.vercel.app/pl) · [English](https://course-workshop-solvepatch.vercel.app/en).
+
 The demo includes **Statystyka przy kawie** (Polish) and **Statistics over coffee** (English), each with four complete lessons. Both use an explicitly invented dataset of five coffee waiting times: 4, 6, 8, 10 and 32 minutes. Interface language and course language remain independent.
 
 | Lesson | Material to explore |
@@ -69,6 +71,8 @@ Run `ruby bin/rails demo:illustrations` to regenerate the original cover and cha
 The local Docker commands above do not create external resources. Hosted deployments use Vercel's [Container Runtime](https://vercel.com/docs/functions/runtimes/container), currently documented as beta, and Neon PostgreSQL through the Vercel Marketplace. The container preserves the project's Ruby version and native dependencies. Confirm the target project and current platform limits before publishing.
 
 `vercel.json` selects the Container preset and the Frankfurt (`fra1`) function region. Provision Neon in the same region, with Auth and Realtime disabled. The demo uses ordinary Active Record and the `pg` gem; no provider SDK is required. Connect the database to Production only unless a separate preview database has been deliberately prepared.
+
+The container runs as the unprivileged `rails` user with `HOME=/home/rails`. Puma drains requests and exits normally on `SIGTERM`, which container platforms use during scale-in and deployment replacement. This avoids reporting routine shutdown as an application crash. Both the application and the free database may idle between visits; allow for a cold start.
 
 Configure `DEMO_MODE=true`, `RAILS_ENV=production`, `PORT=3000`, a stable random `SECRET_KEY_BASE`, and the provider's `DATABASE_URL` (including its required TLS options). Keep `LOCAL_AI_ENABLED=false` and `COURSE_AUTHORING_ENABLED=false`. The two bundled courses need no writable media volume or cloud bucket; PostgreSQL must remain persistent.
 

@@ -8,7 +8,7 @@
 
 Build a course from a topic, review its plan, and learn through lessons with code, mathematics, diagrams and exercises. Course Workshop combines a Rails application with a local Codex runtime; the prepared demo works without an AI account.
 
-[Documentation](docs/README.md) · [Try the demo](#try-the-demo) · [Development setup](#development-setup) · [Design system](DESIGN.md) · [License](LICENSE)
+[Live demo](https://course-workshop-solvepatch.vercel.app/en) · [Documentation](docs/README.md) · [Run locally](#try-the-demo) · [Development setup](#development-setup) · [Design system](DESIGN.md) · [License](LICENSE)
 
 ![Course library with Polish and English statistics courses, cover illustrations, category filters and progress controls](docs/screenshots/library.png)
 
@@ -36,6 +36,8 @@ Build a course from a topic, review its plan, and learn through lessons with cod
 **The demo courses:** *Statystyka przy kawie* and *Statistics over coffee*. Both follow the same invented coffee waiting-time dataset, from measurement to an honest statistical conclusion. Each course includes a photograph, tables, a chart, Ruby examples, formulas, a flowchart and practice exercises.
 
 ## Try the demo
+
+Explore the hosted demo in [English](https://course-workshop-solvepatch.vercel.app/en) or [Polish](https://course-workshop-solvepatch.vercel.app/pl). It runs on Vercel with Neon PostgreSQL. AI forms are disabled and each browser keeps its own progress. The first visit after inactivity may take longer while the application and database wake up.
 
 With Docker running and Ruby available, run from the checkout:
 

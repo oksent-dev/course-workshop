@@ -48,6 +48,7 @@ RUN groupadd --system --gid 1000 rails && \
 COPY --from=build --chown=rails:rails /usr/local/bundle /usr/local/bundle
 COPY --from=build --chown=rails:rails /rails /rails
 
+ENV HOME=/home/rails
 USER rails:rails
 
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]

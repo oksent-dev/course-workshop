@@ -31,6 +31,9 @@ threads threads_count, threads_count
 # Specifies the `port` that Puma will listen on to receive requests; default is 3000.
 port ENV.fetch("PORT", 3000)
 
+# Container platforms use SIGTERM for normal scale-in and deployment shutdown.
+raise_exception_on_sigterm false
+
 # Allow puma to be restarted by `bin/rails restart` command.
 plugin :tmp_restart
 
