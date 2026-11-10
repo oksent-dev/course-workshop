@@ -15,7 +15,7 @@ gem "rails-i18n", "~> 8.1"
 gem "commonmarker", "~> 2.10"
 gem "rouge", "~> 5.1"
 gem "mcp", "~> 1.9", require: false
-gem "image_processing", "~> 1.2", require: false
+gem "image_processing", "~> 2.2", require: false
 
 gem "solid_cache"
 gem "solid_queue"
