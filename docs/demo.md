@@ -66,11 +66,30 @@ Run `ruby bin/rails demo:illustrations` to regenerate the original cover and cha
 
 ## Vercel deployment preparation
 
-No deployment or external resources are created by these commands. The intended hosting route is Vercel's [Container Runtime](https://vercel.com/docs/functions/runtimes/container), currently documented as beta, using this Rails image and an external PostgreSQL database. It preserves the project's Ruby version and native dependencies. Confirm the target project and current platform limits before publishing.
+The local Docker commands above do not create external resources. Hosted deployments use Vercel's [Container Runtime](https://vercel.com/docs/functions/runtimes/container), currently documented as beta, and Neon PostgreSQL through the Vercel Marketplace. The container preserves the project's Ruby version and native dependencies. Confirm the target project and current platform limits before publishing.
+
+`vercel.json` selects the Container preset and the Frankfurt (`fra1`) function region. Provision Neon in the same region, with Auth and Realtime disabled. The demo uses ordinary Active Record and the `pg` gem; no provider SDK is required. Connect the database to Production only unless a separate preview database has been deliberately prepared.
 
 Configure `DEMO_MODE=true`, `RAILS_ENV=production`, `PORT=3000`, a stable random `SECRET_KEY_BASE`, and the provider's `DATABASE_URL` (including its required TLS options). Keep `LOCAL_AI_ENABLED=false` and `COURSE_AUTHORING_ENABLED=false`. The two bundled courses need no writable media volume or cloud bucket; PostgreSQL must remain persistent.
 
 Run `ruby bin/rails db:prepare demo:prepare` as a controlled release step against the target database, then set `PREPARE_DATABASE_ON_BOOT=false` for the web service. This avoids simultaneous migrations on auto-scaled instance startup. The local Compose preview intentionally retains automatic preparation for an easy fresh start. Run a hosted deployment behind HTTPS; the production configuration assumes a TLS-terminating proxy.
+
+For the release command, use Neon's `DATABASE_URL_UNPOOLED` as the process's `DATABASE_URL`. Normal web requests use the pooled `DATABASE_URL` supplied by the integration. Preserve the database name and TLS parameters in both connection strings. Verify the target Neon project before running migrations. Import the packaged catalog rather than copying a development database.
+
+Store `SECRET_KEY_BASE` as a Vercel Secret and retain it across deployments. Keep non-sensitive flags as Config variables. `.vercel/` and environment files are excluded from Git, Docker and Vercel source uploads. If credentials are needed locally for a release, pull them to an explicitly ignored production filename; never overwrite the development `.env` or `.env.local`. Remove temporary credential files after the release.
+
+Stage a production build, check its protected URL with the authenticated CLI, and promote that exact build:
+
+```sh
+vercel project inspect --non-interactive
+vercel deploy --dry --json
+vercel deploy --prod --skip-domain
+vercel curl https://<deployment-host>/up
+vercel curl https://<deployment-host>/en
+vercel promote https://<deployment-host>
+```
+
+The production alias must be accessible to visitors without a Vercel login. Keep preview and individual deployment URLs protected. After promotion, run `DEMO_URL=https://<public-host> ruby bin/check-demo` from a shell with the project dependencies installed, then verify the browser behavior below. The smoke check creates fresh anonymous profiles and reverses its lesson completion.
 
 Before publication, verify both language versions, all eight lessons, media loading, equations, the diagram, exercise disclosure, progress persistence after restart, isolation in a second browser, disabled forms, and rejection of direct POST/PATCH requests. Test the actual preview deployment before assigning a public domain.
 

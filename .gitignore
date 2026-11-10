@@ -1,4 +1,5 @@
 /.bundle/
+/.vercel/
 /.env*
 !/.env.example
 /config/*.key
