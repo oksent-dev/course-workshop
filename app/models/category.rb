@@ -6,6 +6,11 @@ class Category < ApplicationRecord
   validates :name, presence: true, uniqueness: { case_sensitive: false }
   validates :name, length: { maximum: 80 }
 
+  def self.for_drafts
+    insert_all([ { name: "Drafts" } ], unique_by: :index_categories_on_normalized_name)
+    find_by!("LOWER(name) = ?", "drafts")
+  end
+
   def self.catalog
     where.not(name: "Drafts").order(:name, :id).map { |category| { id: category.id, name: category.name } }
   end

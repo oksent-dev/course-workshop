@@ -25,7 +25,7 @@ class CourseGeneration < ApplicationRecord
         description: "Draft awaiting generation.", language: language,
         generation_provider: configuration.fetch("provider"), generation_model: configuration.fetch("model"), generation_model_name: configuration.fetch("model_name"),
         generation_reasoning_effort: configuration["reasoning_effort"],
-        category: Category.find_or_create_by!(name: "Drafts"))
+        category: Category.for_drafts)
       create!(**input, course: course, ai_configuration: configuration, expires_at: EXPIRY.from_now)
     end
   rescue ActiveRecord::RecordNotUnique

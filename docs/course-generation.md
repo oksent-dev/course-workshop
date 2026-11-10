@@ -36,6 +36,8 @@ Leaving the page does not cancel work. Return through **Create a course → Rece
 
 `CourseGeneration` owns one reserved draft, submission UUID, topic, language, nullable lesson count, plan, approval time, status, stage, attempt, step number, current lesson position, activity timestamp, deadline and token digest. Before planning, the lesson count is unknown. Legacy completed generations retain their content and approval eligibility.
 
+Concurrent submissions reuse the reserved Drafts category through an atomic insert guarded by its case-insensitive unique index. Repeating the same submission UUID returns the existing generation instead of creating another course.
+
 | Status | Meaning | Action |
 | --- | --- | --- |
 | `queued` | A persisted step is waiting for a worker | Cancel or inspect |
