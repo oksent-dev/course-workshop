@@ -22,7 +22,7 @@
     <%= render "layouts/navigation" %>
     <main id="main-content" tabindex="-1" class="mx-auto max-w-5xl px-4 py-12 wrap-anywhere sm:px-8">
       <% if DemoMode.enabled? %>
-        <p class="mb-6 flex flex-wrap items-start gap-3 text-sm text-muted-ink" data-demo-notice>
+        <p class="mb-6 flex flex-wrap items-center gap-3 text-sm text-muted-ink" data-demo-notice>
           <span class="badge badge-soft shrink-0"><%= t("demo.badge") %></span>
           <span class="min-w-0 wrap-anywhere"><%= t("demo.introduction") %></span>
         </p>
