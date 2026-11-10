@@ -19,6 +19,7 @@ development:
 test:
   <<: *default
   database: course_workshop_test
+  seeds: false
 
 production:
   primary: &primary_production

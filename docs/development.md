@@ -71,6 +71,8 @@ npm audit
 
 Tests use `course_workshop_test`, fake AI/image adapters and headless Chrome. They require no Codex account or model allowance. Run test processes sequentially against this database; concurrent suites can interfere through fixtures. To select one browser test file, use `ruby bin/rails test test/system/demo_test.rb`; `test:system` runs the full browser suite.
 
+The test database disables automatic seeding during `db:prepare`. Tests load fixtures or create their own catalog, so a fresh test database must not contain the development course or its attachments.
+
 The [CI workflow](../.github/workflows/ci.yml) runs these checks on Linux. A separate job builds the production demo against a fresh PostgreSQL volume and runs HTTP smoke checks. The real-runtime checks described in the AI guides are historical manual verification, not part of CI.
 
 ## Common problems
