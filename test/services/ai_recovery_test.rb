@@ -5,12 +5,21 @@ class AiRecoveryTest < ActiveSupport::TestCase
   include ActiveJob::TestHelper
 
   setup do
+    @ai = Rails.configuration.x.local_ai
+    @authoring = Rails.configuration.x.local_authoring
+    @previous_ai_enabled, @previous_authoring_enabled = @ai.enabled, @authoring.enabled
+    @ai.enabled = @authoring.enabled = true
     conversation = lessons(:pitch).conversations.create!(browser_key: SecureRandom.hex(32), runtime_thread_id: "thread-1")
     @exchange = conversation.ask!(question: "Explain", request_key: SecureRandom.uuid, locale: "en")
     @exchange.update!(status: :running)
     @run = AiRun.start!(@exchange, "reply", SecureRandom.uuid)
     @run.update!(thread_id: "thread-1", turn_id: "turn-1", submitted_at: Time.current,
       status: :recovering, recovery_attempts: 1)
+  end
+
+  teardown do
+    @ai.enabled = @previous_ai_enabled
+    @authoring.enabled = @previous_authoring_enabled
   end
 
   test "a completed stored turn restores one answer and deduplicates runtime item IDs" do

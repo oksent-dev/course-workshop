@@ -1,4 +1,6 @@
 ENV["RAILS_ENV"] ||= "test"
+ENV["LOCAL_AI_ENABLED"] = "false"
+ENV["COURSE_AUTHORING_ENABLED"] = "false"
 require_relative "../config/environment"
 require "rails/test_help"
 require_relative "support/fake_cover_generator"

@@ -73,6 +73,8 @@ Tests use `course_workshop_test`, fake AI/image adapters and headless Chrome. Th
 
 The test database disables automatic seeding during `db:prepare`. Tests load fixtures or create their own catalog, so a fresh test database must not contain the development course or its attachments.
 
+The test helper starts with AI and authoring disabled, regardless of the local `.env`. Tests that exercise those features enable them explicitly and restore the previous configuration afterward.
+
 The [CI workflow](../.github/workflows/ci.yml) runs these checks on Linux. A separate job builds the production demo against a fresh PostgreSQL volume and runs HTTP smoke checks. The real-runtime checks described in the AI guides are historical manual verification, not part of CI.
 
 ## Common problems
