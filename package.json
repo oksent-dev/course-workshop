@@ -22,7 +22,7 @@
     "mermaid": "12.3.0"
   },
   "devDependencies": {
-    "concurrently": "9.2.5",
+    "concurrently": "10.0.7",
     "daisyui": "5.7.50",
     "esbuild": "0.28.2"
   }
