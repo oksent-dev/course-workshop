@@ -82,7 +82,19 @@ For the release command, use Neon's `DATABASE_URL_UNPOOLED` as the process's `DA
 
 Store `SECRET_KEY_BASE` as a Vercel Secret and retain it across deployments. Keep non-sensitive flags as Config variables. `.vercel/` and environment files are excluded from Git, Docker and Vercel source uploads. If credentials are needed locally for a release, pull them to an explicitly ignored production filename; never overwrite the development `.env` or `.env.local`. Remove temporary credential files after the release.
 
-Stage a production build, check its protected URL with the authenticated CLI, and promote that exact build:
+### Automatic production deployments
+
+The Vercel project is connected to `oksent-dev/course-workshop`, with `main` as its production branch. Each push starts the existing GitHub Actions CI workflow and a Vercel container build. Vercel's production Deployment Checks require both GitHub Actions jobs, `verify` and `demo`, to pass for that commit before assigning the public production domain. While checks are pending or fail, visitors keep the previous deployment.
+
+The checks are named **CI / verify** and **CI / demo** in Vercel and match the exact job names in [ci.yml](../.github/workflows/ci.yml). Keep those names stable, or update the corresponding Deployment Checks when renaming a job. Automatic production domain assignment must remain enabled. Do not use Force Promote to bypass a failed check.
+
+Preview deployments are disabled: the Neon database and demo environment variables are connected only to Production. GitHub still runs CI for pull requests. Enabling hosted previews later requires a separate preview database and explicit demo configuration. No Vercel token or production database credentials are stored in GitHub Actions.
+
+Database schema changes remain a controlled release step using the direct Neon connection described above. They must be compatible with the currently running version until the new build is promoted. The Git integration does not run database migrations or refresh seeded course content automatically.
+
+### Manual deployment verification
+
+For a deliberate manual release, stage a production build, check its protected URL with the authenticated CLI, and promote that exact build only after its required checks pass:
 
 ```sh
 vercel project inspect --non-interactive
