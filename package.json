@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "concurrently": "9.2.5",
-    "daisyui": "5.7.50",
+    "daisyui": "5.8.2",
     "esbuild": "0.28.2"
   }
 }
